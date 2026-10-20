@@ -102,6 +102,7 @@
 |---|---|---|---|---|---|
 | [x] | T06 | Переход на spec v0.2.6 | Claude, проверяю я | — | — |
 | [x] | T07 | Переход на spec v0.2.9 | Claude, проверяю я | — | T06 |
+| [ ] | T08 | Подъём общих проверок `.github` до v0.1.1 | я + Claude | — | T07; pull request Dependabot, не раньше 2026-10-23 |
 | [ ] | T01 | Что внутри пакета (Т-15) | Claude, проверяю я | да | T06; начало эпика E2 `spec` |
 | [ ] | T02 | Генератор случайности и тест-векторы (Т-18) | Claude, проверяю я | да | T01; начало эпика E2 `spec` |
 | [ ] | T03 | Лимиты песочницы Starlark | Claude, проверяю я | да | T01, T02 |
@@ -111,6 +112,7 @@
 **Почему такой порядок.**
 - T06 — первой, хотя заведена последней. На v0.1.0 общая проверка документов, которую подключила T17 `spec`, была бы красной (R32 spec), а T01 и T02 должны видеть `spec` v0.2.6: R27 spec, R25 spec и ответ о термине для того, что называет дайджесты обеих частей пакета. На новый тег репозиторий переходит отдельной задачей и записывает переход решением (RULES.md, Across repositories; R01).
 - T07 — следующий переход, на v0.2.9, сделан до T01: тег приносит правило 12 и R33 spec, и T01 начнётся уже с правилом 12 (R02). Решений для задач E1 тег не принёс, поэтому T01 от T07 не зависит.
+- T08 — не детализация, а подъём ссылок на `.github`: она ждёт pull request Dependabot, а не задач E1, и задачи E1 не ждут её.
 - У карточки три пункта «Решить при детализации» — T01–T03 (architecture 3.7 spec). T04 — сверх карточки, его называет задача, которая завела этот репозиторий (T05 `spec`): сравнение версий по semver карточка называет среди того, что `module-kit` делает, а правила `spec` задаёт только для мажорной версии (concepts 3 spec; [docs/architecture.md](docs/architecture.md), раздел 2.4). Команду CLI для открытых видов R25 spec оставил детализации `module-kit` — её решает итог, T05 ([docs/architecture.md](docs/architecture.md), раздел 2.5).
 - Из задач детализации пакет — первым: что в нём лежит, решает, на чём записаны тест-векторы (T02), попадают ли в пакет ключи, которые посчитал решатель (T03), и что сравнивает `diff` (T04).
 - T03 — после T02: посчитать ключ шаблона заранее можно, только если перебрать все его зёрна ([docs/architecture.md](docs/architecture.md), раздел 2.3), а какие у шаблона зёрна, предлагает T02.
@@ -263,6 +265,50 @@
   - Д2 — Go в CodeQL, по Д9 в таблице 4 RUN.md `spec`: когда общий `codeql.yml` примет Go;
   - Д10 там же — подпись коммита Dependabot проверкой «DCO / sign-off» — долг `spec`, а здесь его покажет первый pull request Dependabot;
   - правило 12 действует со следующей задачи: она начинается с находок по этой.
+
+#### T08. Подъём общих проверок `.github` до v0.1.1
+
+- **Цель:** вызывающие файлы `module-kit` — `ci.yml` со ссылками на `secrets.yml`, `dco.yml` и `documents.yml`, а ещё `codeql.yml` и `scorecard.yml` — закреплены на `.github` v0.1.1, их подняли pull request Dependabot, и задача показала `.github` и `spec` две вещи: держит ли пауза `cooldown` ссылки на `.github` и проходит ли «DCO / sign-off» с подписью Dependabot.
+- **Почему:** `.github` выпустил v0.1.1 — коммит e4bdb9b от 2026-10-20 22:04:41 UTC, релиз вышел в 22:05:59 UTC. В нём у общего `codeql.yml` появился вход `paths-ignore`; `module-kit` он не нужен — прототипа здесь нет. Но вызывающие файлы закреплены на v0.1.0 (ff2a359), а поднимает их Dependabot (R04 .github; architecture 3.5 .github). Это первый подъём ссылок на `.github` у вызывающего, и на деле он проверит то, что пока известно только по исходникам и документации:
+  - пауза в три дня держит и ссылки на `.github` (architecture 2.6 и 2.10 .github; В13 в RUN.md .github). По исходникам dependabot-core она считается от даты тега, с точностью до дня, а тег релиза — лёгкий, и его дата — дата коммита. Значит, v0.1.1 Dependabot может предложить не раньше 2026-10-23 00:00 UTC. Исходники — dependabot-core, коммит fda701f, прочитано 2026-10-20:
+    - ссылка, закреплённая по SHA, на коммите которого есть тег версии, — у нас ff2a359 и v0.1.0, — получает в предложение тег, а не SHA: `if git_commit_checker.pinned_ref_looks_like_commit_sha? && latest_version_tag` … `return latest_version` ([`package_details_fetcher.rb`](https://github.com/dependabot/dependabot-core/blob/fda701f/github_actions/lib/dependabot/github_actions/package/package_details_fetcher.rb));
+    - дату тега даёт `git for-each-ref --format="%(refname:short) %(creatordate:short)" refs/tags` — одна дата, без времени ([`git_metadata_fetcher.rb`](https://github.com/dependabot/dependabot-core/blob/fda701f/common/lib/dependabot/git_metadata_fetcher.rb)); у лёгкого тега это дата коммита;
+    - пауза сравнивается в секундах: `(Time.now.to_i - release_date.to_i) < (cooldown_days * DAY_IN_SECONDS)` ([`cooldown_calculation.rb`](https://github.com/dependabot/dependabot-core/blob/fda701f/common/lib/dependabot/update_checkers/cooldown_calculation.rb)). Так 2026-10-20 без времени — это полночь по часам процесса Dependabot, и пауза кончается 2026-10-23 в ту же полночь;
+    - дату релиза GitHub, `published_at`, Dependabot берёт, только когда предлагает голый SHA без тега ([`latest_version_finder.rb`](https://github.com/dependabot/dependabot-core/blob/fda701f/github_actions/lib/dependabot/github_actions/update_checker/latest_version_finder.rb), `cooldown_filter` и `resolve_commit_metadata_details`) — это не наш случай;
+  - «DCO / sign-off» принимает подпись Dependabot — Д10 в таблице 4 RUN.md `spec`, у нас — в «Открыто» T07. `dco.yml` принимает `Signed-off-by: dependabot[bot] <support@github.com>`, только если pull request открыл `dependabot[bot]`, а коммиттер — `GitHub <noreply@github.com>` (architecture 3.1 .github). Саму подпись Dependabot ставит потому, что у репозитория и организации включена обязательная подпись веб-коммитов, `web_commit_signoff_required` (R22 spec; architecture 3.1 .github).
+- **Когда:** после паузы. `dependabot.yml` проверяет `github-actions` раз в неделю и дня не задаёт, а без него это понедельник, в случайное время: «Use `weekly` to run once a week, by default on Monday», «By default, Dependabot randomly assigns a time to apply all the updates in the configuration file» ([GitHub Docs, Dependabot options reference](https://docs.github.com/en/code-security/reference/supply-chain-security/dependabot-options-reference), `schedule`, прочитано 2026-10-20). Первый прогон по расписанию после паузы — 2026-10-26; раньше, с 2026-10-23, — если я нажму «Check for updates».
+- **Решено автором (2026-10-20):** задачу завёл автор. Ветку, коммиты, push и мерж — и pull request Dependabot, и этой задачи — делает исполнитель, когда проверки зелёные: правило 7 в этой задаче не действует. Настройки GitHub и другие репозитории — только после подтверждения автора (правило 4).
+- **Сделать:**
+  - прогоны Dependabot с 2026-10-20 22:05 UTC — `gh run list --workflow "Dependabot Updates"` и их журналы:
+    - прогон до 2026-10-23, если он был, pull request не открывает. В его журнале — строки dependabot-core о паузе: «Initializing cooldown filter», «Days since release : … (cooldown days 3)», «All versions are in cooldown period», «Proposed commit SHA is in cooldown». Тег v0.1.0 тоже лёгкий и тоже от 2026-10-20, так что до 2026-10-23 в паузе оба тега, и ждать стоит «All versions are in cooldown period, returning current version» (`latest_version_finder.rb`, `cooldown_filter`);
+    - дата и вывод прогона, который открыл pull request;
+  - pull request Dependabot — по одному на ссылку, их до пяти: зависимость reusable workflow dependabot-core называет репозиторием вместе с путём к файлу workflow ([`file_parser.rb`](https://github.com/dependabot/dependabot-core/blob/fda701f/github_actions/lib/dependabot/github_actions/file_parser.rb), коммит fda701f, прочитано 2026-10-20). В каждом сверить:
+    - SHA и комментарий стали `e4bdb9b… # v0.1.1`;
+    - это тег v0.1.1: `git ls-remote https://github.com/altnovatrail/.github refs/tags/v0.1.1`, `gh release verify v0.1.1 -R altnovatrail/.github`;
+    - других правок нет;
+  - проверки каждого pull request зелёные. Для «DCO / sign-off» записать автора, коммиттера и строку подписи коммита. Если «DCO / sign-off» красная, сначала сверить, что `web_commit_signoff_required` у репозитория по-прежнему `true` и подпись в коммите есть; если есть, а проверка красная, — это дефект `dco.yml` `.github`: здесь его не чинить, а назвать в отчёте;
+  - мерж — только merge-коммитом (ruleset 25488826; R30 spec). Ветка перед мержем должна быть актуальна, поэтому после первого мержа остальные устареют: попросить Dependabot `@dependabot rebase` и дождаться зелёных проверок;
+  - после мержа на `main` зелёные CI, CodeQL и Scorecard, а все пять ссылок — на v0.1.1;
+  - «Сделано» и «Открыто» (правило 9). Д10 `spec`, названный в «Открыто» T07, закрывает эта задача: чем — говорит её «Сделано», а тело T07 не правится. В журнал — поправка к R02 или новая запись, если подъём что-то поменял в устройстве;
+  - если пять pull request и их rebase после каждого мержа обошлись дорого, — строкой таблицы 3 «в реестр spec»: собирать ссылки на `.github` в один pull request группой в `dependabot.yml`. Файл — общий у всех вызывающих (architecture 3.3 .github), здесь его не править.
+- **Не делать:** не поднимать ссылки руками и не трогать `.github`, `spec` и их настройки. Не передавать `paths-ignore` и не менять языки CodeQL: Go в CodeQL — Д2, он ждёт общего `codeql.yml` с Go — его `.github` готовит в эпике E3 (R13 .github) — и первого кода `module-kit`.
+- **Как проверить:**
+  - pull request Dependabot слиты merge-коммитами, на `main` все пять ссылок — `e4bdb9b… # v0.1.1`, а CI, CodeQL и Scorecard зелёные;
+  - в «Сделано» — строки журнала Dependabot о паузе, дата прогона, который открыл pull request, и автор, коммиттер и подпись коммита Dependabot;
+  - `just -f spec/justfile docs-check-repo` зелёный; `/code-review high`, не больше двух кругов.
+- **Мой шаг:** «Check for updates», если не ждать понедельника; подтверждение, если понадобятся настройки GitHub (правило 4).
+- **Разделы:** правила 4, 9 и 12; R02; Д2; R30 spec, R33 spec; Д10 в таблице 4 RUN.md `spec`; R04 .github; architecture 2.6, 2.10, 3.1, 3.3 и 3.5 .github; В13 в RUN.md .github.
+- **Выяснилось при планировании (2026-10-20, 22:17 UTC):**
+  - находки по T07 (правило 12). На `main` после её мержа, коммит 16208b2, CI, CodeQL и Scorecard зелёные. Открыты те же семь находок Scorecard, все из списка R33 spec; у SonarCloud открытых находок и горячих точек нет, quality gate — OK. Править нечего;
+  - v0.1.1 — лёгкий тег: ссылка `refs/tags/v0.1.1` указывает прямо на коммит e4bdb9b, а не на объект тега. Дата коммита — 2026-10-20 22:04:41 UTC, релиз вышел в 22:05:59 UTC; он неизменяемый, и `gh release verify v0.1.1 -R altnovatrail/.github` — «Release v0.1.1 verified!»;
+  - v0.1.0 — тоже лёгкий тег, на коммите ff2a359 от 2026-10-20 13:17:26 UTC: до 2026-10-23 в паузе оба тега;
+  - `web_commit_signoff_required` — `true` и у `module-kit`, и у организации (API GitHub);
+  - прогонов Dependabot после выхода v0.1.1 ещё не было. Последние два — 2026-10-20 16:20 UTC, `github_actions` и `docker`, когда T17 `spec` добавила `dependabot.yml`: оба зелёные, pull request не открыли;
+  - запись задачи прошла `/code-review high`, круг 1 — 9 находок:
+    - исправлены пять: время коммита и релиза v0.1.1 названы порознь; у расчёта паузы — исходники dependabot-core с цитатами; красная «DCO / sign-off» сначала сверяется с `web_commit_signoff_required`; Д10 из «Открыто» T07 закрывает «Сделано» этой задачи, без правки тела T07; срок Д2 назван, как в таблице 4;
+    - группа для ссылок на `.github` в `dependabot.yml` — не здесь: файл общий у всех вызывающих. Решать по тому, чего стоили пять pull request, — в «Сделать»;
+    - не исправлены три. Две — что Dependabot считает паузу от `published_at` релиза, в секундах, и предложит v0.1.1 не раньше 2026-10-23 22:06 UTC: так он делает только для голого SHA, а у ссылки на тег берёт дату тега без времени (исходники выше). Третья — что ветку, коммиты и мерж делает исполнитель: это поручение автора, как в T07;
+    - второй круг — в конце задачи.
 
 #### T01. Что внутри пакета (Т-15)
 
