@@ -21,3 +21,4 @@ The working rules, for people and coding agents alike, are in [CLAUDE.md](CLAUDE
 ## License
 
 [Apache-2.0](LICENSE).
+
