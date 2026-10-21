@@ -1,6 +1,6 @@
 # module-kit — архитектура
 
-> Статус: каркас из заготовки `spec`, 2026-10-19; сверен с `spec` v0.2.11 2026-10-20 (R03) и с v0.2.13 2026-10-21 (R05); первый код — заготовка CLI, 2026-10-21 (R04).
+> Статус: каркас из заготовки `spec`, 2026-10-19; сверен с `spec` v0.2.11 2026-10-20 (R03) и с v0.2.13 2026-10-21 (R05); первый код — заготовка CLI, 2026-10-21 (R04); релизы — общим `release.yml` `.github`, с 2026-10-21 (R07).
 >
 > Что делает компонент, чего не делает и что о нём ещё предстоит решить. Это подробности его карточки — architecture 3.7 spec. Карточка остаётся сводкой: если подробности меняют то, что в ней сказано, она правится в `spec` тем же путём, что и вопросы в его реестры (RULES.md, Across repositories).
 >
@@ -23,7 +23,7 @@
 - выносит вердикт: сравнивает наблюдение с ключом или условием (architecture 1 spec; concepts 9.1 spec; R03 spec). Вердикт допускается, только если ключ или условие дал автор, решатель или взрослый, а при ключе, выведенном ИИ, вердикта нет (concepts 9.4 spec; R04 spec);
 - держит проверку утечки — поиск ключа и фраз-утечек, которые указал автор (concepts 10 spec). `api` проверяет ею текст наставника до того, как он уйдёт на устройство (architecture 3.5 spec), а проверка модуля — запасные тексты автора (concepts 10 spec);
 - исполняет решатели на Starlark в песочнице, как в standalone (architecture 3.7 spec; repositories 7 spec);
-- проверяет подпись пакета (architecture 3.7 spec; R17 spec). Что именно проверяется — Т-27. Его рекомендация — сверять и SAN — путь общего `release.yml` `.github` с SHA одного из релизов `.github`, — и репозиторий и workflow того, кто этот общий workflow вызвал. Условие такой проверки — неизменяемые релизы `.github` и ruleset его тегов `v*`: без них тег можно перенести на другой коммит. Решается с первым релизом `module-kit`, и там же — откуда берётся список релизов `.github`: сама библиотека в сеть не ходит;
+- проверяет подпись пакета (architecture 3.7 spec; R17 spec). Что именно проверяется — Т-27. Его рекомендация — сверять и SAN — путь общего `release.yml` `.github` с SHA одного из релизов `.github`, — и репозиторий и workflow того, кто этот общий workflow вызвал. Условие такой проверки — неизменяемые релизы `.github` и ruleset его тегов `v*`: без них тег можно перенести на другой коммит. Решает его T37 `spec` по первому релизу `module-kit` (R07), и там же — откуда берётся список релизов `.github`: сама библиотека в сеть не ходит;
 - даёт автору CLI: проверить модуль, собрать пакет, построить индекс (architecture 3.7 spec).
 
 **Не делает:**
@@ -43,7 +43,7 @@
 - `sim` его не берёт: пакеты модулей он читает по типам канонического вида из `spec` (architecture 3.9 spec; Т-15). `learner-model` и `engine` пакетов не читают: граф им передаёт `api` (architecture 3.8 spec);
 - вердикт воспроизводим: попытка хранит дайджест своего пакета, версию формата и зерно, а вердикт повторяется по сохранённому наблюдению, без ИИ (architecture 1 spec; R03 spec). По рекомендации Т-18 изменение поведения вида проверки поднимает версию формата;
 - новую модель ИИ допускают по eval, и ложные тревоги там считаются по вердикту, через `module-kit` (architecture 4.6 spec; repositories 4 spec);
-- проверки CI пришли ещё до кода: общие проверки из `.github`, среди них `docs-check-repo`. Какие они и что держит мерж — R30 spec и architecture 3.11 spec. Подключила их T17 `spec`, и файлы CI сюда писала её сессия, а не задача этого репозитория. Находки CodeQL, Scorecard и SonarCloud закрываются перед новой задачей (правило 12 [RUN.md](../RUN.md)), а общие для всех репозиториев причины тех, что остаются открытыми, записаны в R33 spec. Проверки Go пришли с заготовкой CLI (R04): рецепты у них свои, а запускает их обёртка Go — общий `go.yml` `.github`, который на ней и проверен (R16 .github). Релиз из общих workflow `.github` придёт с первым релизом, а обёртка TypeScript проверяется на первом коде на TypeScript, у `canvas` (repositories 6 spec; architecture 3.11 spec). Go CodeQL читает с T12: общий `codeql.yml` `.github` v0.1.3 собирает его с Go из стадии `toolchain` (R06);
+- проверки CI пришли ещё до кода: общие проверки из `.github`, среди них `docs-check-repo`. Какие они и что держит мерж — R30 spec и architecture 3.11 spec. Подключила их T17 `spec`, и файлы CI сюда писала её сессия, а не задача этого репозитория. Находки CodeQL, Scorecard и SonarCloud закрываются перед новой задачей (правило 12 [RUN.md](../RUN.md)), а общие для всех репозиториев причины тех, что остаются открытыми, записаны в R33 spec. Проверки Go пришли с заготовкой CLI (R04): рецепты у них свои, а запускает их обёртка Go — общий `go.yml` `.github`, который на ней и проверен (R16 .github). Релиз выпускает общий `release.yml` `.github`, а файлы для него собирает свой рецепт `release-files` (R07; раздел 3.1). Обёртка TypeScript проверяется на первом коде на TypeScript, у `canvas` (repositories 6 spec; architecture 3.11 spec). Go CodeQL читает с T12: общий `codeql.yml` `.github` v0.1.3 собирает его с Go из стадии `toolchain` (R06);
 - этап 1, вместе с `modules`: формат модуля v0 сразу проверяется на двух предметах (repositories 6 spec; R08 spec; product 11 spec).
 
 ## 2. Решить при детализации
@@ -142,7 +142,7 @@
 
 Сюда переезжает то, что решено по разделу 2: из каких частей компонент состоит, его типы и данные, как он связан с другими репозиториями. Пока здесь только то, с чего начался код (R04).
 
-### 3.1. Код и проверки Go
+### 3.1. Код, проверки и релизы
 
 - **Модуль** — `github.com/altnovatrail/module-kit`. В `go.mod` — `go 1.27.0`, нижняя граница для тех, кто его импортирует, а сам Go 1.27.3 закреплён в стадии `toolchain` devcontainer, где `GOTOOLCHAIN=local` (R04).
 - **CLI** — `cmd/module-kit`. Пока он отвечает только на `--version`; проверка модуля, сборка пакета и индекса придут с форматом v0 (раздел 1).
@@ -157,7 +157,21 @@
 
   Инструменты идут через `go run` по точной версии модуля. Их, как и Go в Dockerfile, поднимают руками (R04). Своих исключений лицензий нет.
 - **CodeQL** читает и Go: общий `codeql.yml` `.github` v0.1.3 со входом `languages: go` собирает код с Go из стадии `toolchain`, а проверка — «CodeQL / analyze (go)» (R06).
-- **Чего ещё нет:** gopls в образе — Д5 в таблице 4 [RUN.md](../RUN.md); релиза — он придёт с общим `release.yml` `.github` (T16 .github).
+- **Релиз** — `.github/workflows/release.yml` зовёт общий `release.yml` `.github` v0.1.4 по SHA, после зелёного CI на `main` или по кнопке (R07; R18 .github):
+  - номер — следующий патч линии `RELEASE_LINE` `0.1`, первый — v0.1.0; считают его рецепты релиза `spec`. Релиз выходит, только если с прошлого изменилось что-то из `paths` — всё, кроме `docs/`, файлов `*.md`, `.github/` и подмодуля `spec`. Его дают код и тесты, `go.mod`, `justfile`, `LICENSE` и весь `.devcontainer/`, даже если бинарник от правки не меняется; не дают — документы, CI, в том числе смена `RELEASE_LINE`, и тег `spec` (R07; В6 в таблице 3 [RUN.md](../RUN.md));
+  - файлы собирает рецепт `release-files <версия>` — в стадии `toolchain` выпускаемого коммита, из его дерева без git и подмодулей, в `dist/`, которую он создаёт с нуля:
+
+    | Файл | Что это |
+    |---|---|
+    | `module-kit_<версия>_<os>_<arch>`, у windows — с `.exe` | CLI для linux, darwin и windows, на amd64 и arm64: `CGO_ENABLED=0`, `-trimpath`, `-buildvcs=false`, `-ldflags "-s -w -X main.version=<версия>"` |
+    | `LICENSE` | Apache-2.0 самого `module-kit` |
+    | `LICENSE-go` | лицензия Go, BSD-3-Clause: бинарник несёт его стандартную библиотеку |
+    | `SHA256SUMS` | суммы sha256 всех файлов выше |
+
+    Сборка воспроизводима: окружение Go вызывающего в неё не попадает, и из дерева `git archive` и из рабочей копии она даёт те же суммы. CLI, поставленный `go install` по тегу, берёт версию из сведений о сборке;
+  - каждый файл общий workflow подписывает cosign без ключей, кладёт рядом его `.sigstore.json`, сверяет подписи до публикации, а после — `gh release verify` и `verify-asset`. Релизы неизменяемые, а теги `v*` держит ruleset 25559103 — условие Т-27;
+  - что проверяет у подписи потребитель — Т-27, T37 `spec`.
+- **Чего ещё нет:** gopls в образе — Д5 в таблице 4 [RUN.md](../RUN.md).
 
 ## 4. Источники
 
@@ -182,3 +196,7 @@
 - **Образец рецептов** (R04) — [`justfile` canvas-api](https://github.com/MathTrail/canvas-api/blob/0901af0439280334b3da33ffc4cc5c853e4403ff/justfile), коммит 0901af0, прочитано 2026-10-21: `ci-lint`, `ci-test`, `ci-vuln` и `ci-licenses`, а об инструментах — «Each is a Go program run straight from its module, so none of them is installed anywhere».
 - **SonarCloud, docker:S8545** (R04) — правило «Go dependencies should be locked to verified versions» (API SonarCloud, `api/rules/show?key=docker:S8545`, 2026-10-21). На pull request #8 оно отметило строку `go install` gopls в Dockerfile: «Dependency versions are not predictable. Use a lock-file enforcing command instead». У canvas-api такие находки открыты у двух строк его Dockerfile, 198 и 199, хотя там стоит `-mod=readonly` (API SonarCloud, проект MathTrail_canvas-api, 2026-10-21).
 - **Autobuild Go в CodeQL** (R06) — [GitHub Docs, «CodeQL build options and steps for compiled languages»](https://docs.github.com/en/code-security/reference/code-scanning/codeql/build-options-for-compiled-languages), раздел «Autodetection for Go», исходник в `github/docs` на коммите c008b66, прочитано 2026-10-21: «Invoke `make`, `ninja`, `./build` or `./build.sh` (in that order) until one of these commands succeeds and a subsequent `go list ./...` also succeeds»; «By default, test code (code in files ending in `_test.go`) is not analyzed».
+- **Лицензии в релизе** (R07):
+  - Apache-2.0 — [LICENSE](../LICENSE), раздел 4 (a): «You must give any other recipients of the Work or Derivative Works a copy of this License»;
+  - лицензия Go — `LICENSE` в корне Go 1.27.3 стадии `toolchain`, `$(go env GOROOT)/LICENSE`, прочитано 2026-10-21: «Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution». Бинарник Go несёт стандартную библиотеку, а сторонних модулей у `module-kit` нет (`go.mod`).
+- **Общий релиз** (R07) — [`release.yml`](https://github.com/altnovatrail/.github/blob/11435dbe61d3d4885c9a8dd30686e8111e26cabb/.github/workflows/release.yml) и R18 .github, релиз `.github` v0.1.4, коммит 11435db, прочитано 2026-10-21: условия рецепту `release-files` — стадия `toolchain` выпускаемого коммита, его дерево из `git archive`, запуск под uid раннера с `HOME=/tmp` и без токенов, в `dist/` — только простые файлы с именами по `^[A-Za-z0-9_+][A-Za-z0-9._+-]*$` и без `.sigstore.json`. Релиз неизменяемый: `gh release verify v0.1.4 -R altnovatrail/.github` — «Release v0.1.4 verified!».

@@ -1,2 +1,4 @@
 # What the build recipe writes.
 /bin/
+# What release-files writes, for .github's shared release to sign and publish.
+/dist/

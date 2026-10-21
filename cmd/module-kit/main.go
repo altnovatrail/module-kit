@@ -7,10 +7,11 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"runtime/debug"
 )
 
-// version is the release a build comes from: dev in a build from a checkout, and the release's
-// own version once a release sets it at link time.
+// version is the release a build comes from: the release's own version, which release-files
+// sets at link time (R07), or dev until something says otherwise.
 var version = "dev"
 
 func main() {
@@ -21,9 +22,23 @@ func main() {
 // 2 when it was asked for something it does not do.
 func run(args []string, stdout, stderr io.Writer) int {
 	if len(args) == 1 && args[0] == "--version" {
-		fmt.Fprintf(stdout, "module-kit %s\n", version)
+		fmt.Fprintf(stdout, "module-kit %s\n", currentVersion())
 		return 0
 	}
 	fmt.Fprintln(stderr, "usage: module-kit --version")
 	return 2
+}
+
+// currentVersion is version when a release set it. Otherwise it is the version of the module the
+// binary was built from, as go install module-kit/cmd/module-kit@v0.1.0 records it, and dev when
+// there is none: a build from a checkout without git, or one that records (devel).
+func currentVersion() string {
+	if version != "dev" {
+		return version
+	}
+	info, ok := debug.ReadBuildInfo()
+	if !ok || info.Main.Version == "" || info.Main.Version == "(devel)" {
+		return version
+	}
+	return info.Main.Version
 }

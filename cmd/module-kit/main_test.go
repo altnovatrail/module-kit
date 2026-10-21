@@ -34,3 +34,11 @@ func TestRun(t *testing.T) {
 		})
 	}
 }
+
+func TestCurrentVersionTakesTheReleaseVersion(t *testing.T) {
+	defer func(saved string) { version = saved }(version)
+	version = "v0.1.0"
+	if got := currentVersion(); got != "v0.1.0" {
+		t.Errorf("currentVersion() = %q with version set to v0.1.0, want v0.1.0", got)
+	}
+}

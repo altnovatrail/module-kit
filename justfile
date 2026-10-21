@@ -17,6 +17,43 @@ default:
 build:
     go build -o bin/module-kit ./cmd/module-kit
 
+# What .github's shared release.yml runs to build a release, in the toolchain stage of the commit
+# it releases, from that commit's tree with no git in it, and then signs every file (R07; R18
+# .github). dist/ is made afresh and holds plain files alone: the CLI for each platform below,
+# built without cgo and named module-kit_<version>_<os>_<arch>, the licenses a binary has to come
+# with, and SHA256SUMS over the rest.
+# Build a release's files into dist/, for a version such as v0.1.0.
+release-files version:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    version={{ quote(version) }}
+    if ! [[ "$version" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$ ]]; then
+        echo "release-files: the version is v<major>.<minor>.<patch>, as v0.1.0, not ${version}" >&2
+        exit 1
+    fi
+    # Nothing of the caller's Go environment reaches the build: the binaries are the same wherever
+    # the recipe runs, and a release can be built again here and compared with its SHA256SUMS.
+    export GOENV=off GOFLAGS= GOEXPERIMENT=
+    unset GOAMD64 GOARM64 GOOS GOARCH
+    rm -rf dist
+    mkdir dist
+    for platform in linux/amd64 linux/arm64 darwin/amd64 darwin/arm64 windows/amd64 windows/arm64; do
+        os="${platform%/*}"
+        arch="${platform#*/}"
+        name="module-kit_${version}_${os}_${arch}"
+        if [ "$os" = windows ]; then
+            name="${name}.exe"
+        fi
+        # No VCS stamp, so that a build from a checkout matches one from the release's tree.
+        CGO_ENABLED=0 GOOS="$os" GOARCH="$arch" go build -trimpath -buildvcs=false \
+            -ldflags "-s -w -X main.version=${version}" -o "dist/${name}" ./cmd/module-kit
+    done
+    # Apache-2.0 asks a copy of itself to go with the work, and Go's BSD license asks a binary
+    # that holds its standard library to reproduce its notice.
+    cp LICENSE dist/LICENSE
+    cp "$(go env GOROOT)/LICENSE" dist/LICENSE-go
+    (cd dist && sha256sum -- module-kit_* LICENSE LICENSE-go > SHA256SUMS)
+
 # Fail on code gofmt would rewrite, and on what go vet reports.
 ci-lint:
     #!/usr/bin/env bash
