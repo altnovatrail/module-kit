@@ -15,3 +15,12 @@ updates:
       interval: weekly
     cooldown:
       default-days: 3
+
+  # The Go modules the code is built from (R04). Go itself, in the Dockerfile, and the tools the
+  # recipes run by `go run` at an exact version are not among them: those are raised by hand.
+  - package-ecosystem: gomod
+    directory: /
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 3
