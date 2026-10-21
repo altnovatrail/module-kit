@@ -402,6 +402,28 @@
 - **Мой шаг:** мерж — после релиза `.github` с `go.yml` и закрепления ссылки на него; ruleset `main` — обязательные «Go / lint», «Go / test», «Go / vuln» и «Go / licenses», от GitHub Actions (правило 4); затем Rebuild Container и проверка из Д4.
 - **Разделы:** RULES.md, Across repositories и Hard rules; правила 4, 7 и 12; R12 spec, R30 spec, R34 spec; architecture 3.7 и 3.11 spec; R03, R04; Д2, Д3, Д4; T09; T15 и R16 .github.
 - **Стоимость:** $0.
+- **Сделано (2026-10-21):**
+  - работа — в ветке `t10-go-cli` от `main` (aa2ac1a), pull request #8. Ветку, коммиты, push и pull request сделала сессия `.github`, по поручению автора (R04);
+  - находки по прошлой задаче, T09 (правило 12): на `main` (aa2ac1a) CI, CodeQL и Scorecard зелёные, открыты те же семь находок Scorecard из списка R33 spec, у SonarCloud — 0 находок и 0 мест безопасности на проверку (API GitHub и SonarCloud, 2026-10-21). Править нечего;
+  - `go.mod` — `go 1.27.0`; `cmd/module-kit/main.go` с тестом; `justfile` — `build` и рецепты `ci-*`; `.gitignore`; Go 1.27.3 в стадии `toolchain` с суммами sha256 и `GOTOOLCHAIN=local`; `gomod` в `dependabot.yml`; job «Go» в `ci.yml`;
+  - журнал — R04, поправки к R02 и R03; architecture — статус, разделы 1, 3.1 и 4; README.md — статус; таблица 4 — Д3 закрыт, Д4 и Д5 открыты; T09 — итог после мержа;
+  - проверено:
+    - локально, с Go 1.27.3, скачанным и сверенным по сумме go.dev: `just ci-lint`, `ci-test`, `ci-vuln` и `ci-licenses` со списком `go.yml` — зелёные. `ci-licenses` без списка и со списком из одной MIT — красный, а `ci-lint` ловит неотформатированный файл, даже ещё не добавленный в git, и пропускает `testdata/`. `module-kit --version` печатает `module-kit dev`, без аргументов — подсказку и код 2;
+    - `just -f spec/justfile docs-check-repo` — ok; actionlint 1.7.12 — без замечаний;
+    - в pull request #8 на cc31fbf зелёные все одиннадцать проверок (прогон CI 39537465211), среди них «Go / lint», «Go / test», «Go / vuln» и «Go / licenses». В журнале каждого job Go видно, что стадия `toolchain` собрана с Go 1.27.3 и его сумма для amd64 сошлась; «Documents / docs-check-repo» — тоже. «SonarCloud Code Analysis» зелёная после того, как gopls ушёл из образа;
+  - `/code-review high`, круг 1 — 10 находок, исправлены все:
+    - SonarCloud держал pull request находкой docker:S8545 у `go install` gopls — gopls ушёл из образа, а как его закрепить, говорит Д5. Вместе с ним ушли и две находки о gopls — об `-mod=readonly` и о списке версий, которые поднимают руками;
+    - R02 и R03 говорили неправду после R04 — у них поправки;
+    - ссылка на R48 canvas-api, где речь о лицензиях npm, — теперь на `justfile` canvas-api с адресом и датой;
+    - RUN.md и T05 ещё говорили, что кода в E1 нет и обёртку Go проверит первый код формата;
+    - `ci-lint` по каталогам пакетов зашёл бы в `spec/` и `testdata/` и падал без файлов Go — теперь он идёт по точному списку файлов;
+    - `go 1.27.3` в `go.mod` сделал бы каждый патч Go нижней границей для `api` и `tutor` — теперь `go 1.27.0`;
+    - описание `ci-licenses` в `just --list` было второй половиной фразы;
+    - у источника о рецептах canvas-api не было адреса и даты.
+- **Открыто:**
+  - до мержа: ссылка job «Go» встаёт на SHA первого релиза `.github` с `go.yml` — он выйдет с мержем #26 `.github` — и pull request #8 проходит проверки ещё раз;
+  - мои шаги: мерж; «Go / lint», «Go / test», «Go / vuln» и «Go / licenses» в ruleset `main`; Rebuild Container и проверка из Д4;
+  - Д5 — gopls в образе; Д2 — Go в CodeQL, T19 .github; В3 «в реестр spec»; T08 по-прежнему ждёт pull request Dependabot.
 
 #### T01. Что внутри пакета (Т-15)
 
