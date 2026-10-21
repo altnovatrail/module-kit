@@ -29,3 +29,8 @@ jobs:
   documents:
     name: Documents
     uses: altnovatrail/.github/.github/workflows/documents.yml@ff2a3597769ca85e59e476b1a41bdcbc1f50e3ed # v0.1.0
+
+  # The Go code, by this repository's own ci- recipes in its toolchain stage (R04; R16 .github).
+  go:
+    name: Go
+    uses: altnovatrail/.github/.github/workflows/go.yml@d01dd881d6b4efb6013dd72f40a713b8d2dd3bad # v0.1.2

@@ -1,6 +1,6 @@
 # module-kit — архитектура
 
-> Статус: каркас из заготовки `spec`, 2026-10-19; сверен с `spec` v0.2.11 2026-10-20 (R03).
+> Статус: каркас из заготовки `spec`, 2026-10-19; сверен с `spec` v0.2.11 2026-10-20 (R03); первый код — заготовка CLI, 2026-10-21 (R04).
 >
 > Что делает компонент, чего не делает и что о нём ещё предстоит решить. Это подробности его карточки — architecture 3.7 spec. Карточка остаётся сводкой: если подробности меняют то, что в ней сказано, она правится в `spec` тем же путём, что и вопросы в его реестры (RULES.md, Across repositories).
 >
@@ -43,7 +43,7 @@
 - `sim` его не берёт: пакеты модулей он читает по типам канонического вида из `spec` (architecture 3.9 spec; Т-15). `learner-model` и `engine` пакетов не читают: граф им передаёт `api` (architecture 3.8 spec);
 - вердикт воспроизводим: попытка хранит дайджест своего пакета, версию формата и зерно, а вердикт повторяется по сохранённому наблюдению, без ИИ (architecture 1 spec; R03 spec). По рекомендации Т-18 изменение поведения вида проверки поднимает версию формата;
 - новую модель ИИ допускают по eval, и ложные тревоги там считаются по вердикту, через `module-kit` (architecture 4.6 spec; repositories 4 spec);
-- проверки CI пришли ещё до кода: общие проверки из `.github`, среди них `docs-check-repo`. Какие они и что держит мерж — R30 spec и architecture 3.11 spec. Подключила их T17 `spec`, и файлы CI сюда писала её сессия, а не задача этого репозитория. Находки CodeQL, Scorecard и SonarCloud закрываются перед новой задачей (правило 12 [RUN.md](../RUN.md)), а общие для всех репозиториев причины тех, что остаются открытыми, записаны в R33 spec. Проверки Go придут с первым кодом, а с ними — обёртка Go и релиз из общих workflow `.github` для кода: на `module-kit` они и проверяются, а обёртка TypeScript — на первом коде на TypeScript, у `canvas` (repositories 6 spec; architecture 3.11 spec). Go CodeQL прочтёт, когда его примет общий `codeql.yml` (Д2 в таблице 4 [RUN.md](../RUN.md));
+- проверки CI пришли ещё до кода: общие проверки из `.github`, среди них `docs-check-repo`. Какие они и что держит мерж — R30 spec и architecture 3.11 spec. Подключила их T17 `spec`, и файлы CI сюда писала её сессия, а не задача этого репозитория. Находки CodeQL, Scorecard и SonarCloud закрываются перед новой задачей (правило 12 [RUN.md](../RUN.md)), а общие для всех репозиториев причины тех, что остаются открытыми, записаны в R33 spec. Проверки Go пришли с заготовкой CLI (R04): рецепты у них свои, а запускает их обёртка Go — общий `go.yml` `.github`, который на ней и проверен (R16 .github). Релиз из общих workflow `.github` придёт с первым релизом, а обёртка TypeScript проверяется на первом коде на TypeScript, у `canvas` (repositories 6 spec; architecture 3.11 spec). Go CodeQL прочтёт, когда его примет общий `codeql.yml` (Д2 в таблице 4 [RUN.md](../RUN.md));
 - этап 1, вместе с `modules`: формат модуля v0 сразу проверяется на двух предметах (repositories 6 spec; R08 spec; product 11 spec).
 
 ## 2. Решить при детализации
@@ -140,7 +140,23 @@
 
 ## 3. Устройство
 
-Пока пусто. Сюда переезжает то, что решено по разделу 2: из каких частей компонент состоит, его типы и данные, как он связан с другими репозиториями.
+Сюда переезжает то, что решено по разделу 2: из каких частей компонент состоит, его типы и данные, как он связан с другими репозиториями. Пока здесь только то, с чего начался код (R04).
+
+### 3.1. Код и проверки Go
+
+- **Модуль** — `github.com/altnovatrail/module-kit`. В `go.mod` — `go 1.27.0`, нижняя граница для тех, кто его импортирует, а сам Go 1.27.3 закреплён в стадии `toolchain` devcontainer, где `GOTOOLCHAIN=local` (R04).
+- **CLI** — `cmd/module-kit`. Пока он отвечает только на `--version`; проверка модуля, сборка пакета и индекса придут с форматом v0 (раздел 1).
+- **Проверки** — рецепты `justfile`. Общий `go.yml` `.github` запускает их по одному в job, в стадии `toolchain` (R16 .github):
+
+  | Рецепт | Что делает | Проверка в ruleset |
+  |---|---|---|
+  | `ci-lint` | gofmt по файлам `.go` модуля, без `testdata/` и `spec/`, и `go vet` | «Go / lint» |
+  | `ci-test` | `go test -race -count=1 ./...` | «Go / test» |
+  | `ci-vuln` | govulncheck v1.9.0 — известные уязвимости в коде, до которого модуль доходит | «Go / vuln» |
+  | `ci-licenses` | go-licenses v2.0.1 — лицензии пакетов, из которых собирается модуль, по списку `ALLOWED_LICENSES` из `go.yml` | «Go / licenses» |
+
+  Инструменты идут через `go run` по точной версии модуля. Их, как и Go в Dockerfile, поднимают руками (R04). Своих исключений лицензий нет.
+- **Чего ещё нет:** CodeQL для Go — Д2 в таблице 4 [RUN.md](../RUN.md); gopls в образе — Д5 там же; релиза — он придёт с общим `release.yml` `.github` (T16 .github).
 
 ## 4. Источники
 
@@ -158,3 +174,9 @@
   - вне тестов `math/rand/v2` импортируют только `internal/store/drive/calls.go` и `internal/transport/mcp/afresh.go`, и оба вызова дают случайную длительность паузы (`time.Duration`); генератора задач от зерна там нет;
   - в тестах генераторы PCG получают зерно числами, без хеша: `rand.NewPCG(uint64(grade), uint64(child))` в `internal/domain/tutor/simulation_test.go`, `rand.NewPCG(7, 7)` в `pause_test.go`, `rand.NewPCG(d.Dice, 0)` в `property_test.go` и другие.
 - **Вывод зёрен в стенде standalone** (раздел 2.2) — [`tools/learners/child.go`](https://github.com/mathtrail/mathtrail-standalone/blob/c6cbeb2/tools/learners/child.go), коммит c6cbeb2, прочитано 2026-10-19: функция `seeded(unit, purpose string) *rand.Rand` с комментарием «seeded is the random stream of one unit of the experiment for one purpose»; она пишет в `fnv.New64a()` строку `"%d|%s|%s|%s"` из `masterSeed`, `experiment`, `unit` и `purpose` и возвращает `rand.New(rand.NewPCG(hash.Sum64(), masterSeed))` из `math/rand/v2`. Та же функция есть в `research/experiments/` того же коммита.
+- **Go 1.27.3** (R04) — список релизов go.dev, `https://go.dev/dl/?mode=json`, прочитано 2026-10-21: новейший стабильный релиз — `go1.27.3`; sha256 архива `go1.27.3.linux-amd64.tar.gz` — `65efbc80fdc1fa2cd2631cad5b481777a68e8725f34e89f50fc6ac714e379b40`, `go1.27.3.linux-arm64.tar.gz` — `a06e99309dbcbdca1a8ccd2282c3ee146e55930886e26b4f1193269587165f49`. Оба архива скачаны и сверены `sha256sum` 2026-10-21.
+- **`GOTOOLCHAIN=local`** (R04) — [Go Toolchains](https://go.dev/doc/toolchain), прочитано 2026-10-21: «When GOTOOLCHAIN is set to local, the go command always runs the bundled Go toolchain».
+- **Инструменты** (R04) — прокси модулей Go, `https://proxy.golang.org/<модуль>/@latest`, прочитано 2026-10-21: `golang.org/x/vuln` — v1.9.0 (2026-10-11), `github.com/google/go-licenses/v2` — v2.0.1 (2025-09-08). Лицензии — API GitHub, `repos/<владелец>/<репозиторий>/license`, 2026-10-21: golang/vuln — BSD-3-Clause, google/go-licenses — Apache-2.0.
+- **`go-licenses check`** (R04) — [README v2.0.1](https://github.com/google/go-licenses/blob/v2.0.1/README.md), раздел Usages, Check, прочитано 2026-10-21: «Allow only specific license names» — `go-licenses check <package> [package...] --allowed_licenses=<comma separated license names>`. Проба 2026-10-21: со списком `spec` рецепт `ci-licenses` проходит, а со списком из одной MIT отвечает «Not allowed license 'Apache-2.0' found for library 'github.com/altnovatrail/module-kit/cmd/module-kit'».
+- **Образец рецептов** (R04) — [`justfile` canvas-api](https://github.com/MathTrail/canvas-api/blob/0901af0439280334b3da33ffc4cc5c853e4403ff/justfile), коммит 0901af0, прочитано 2026-10-21: `ci-lint`, `ci-test`, `ci-vuln` и `ci-licenses`, а об инструментах — «Each is a Go program run straight from its module, so none of them is installed anywhere».
+- **SonarCloud, docker:S8545** (R04) — правило «Go dependencies should be locked to verified versions» (API SonarCloud, `api/rules/show?key=docker:S8545`, 2026-10-21). На pull request #8 оно отметило строку `go install` gopls в Dockerfile: «Dependency versions are not predictable. Use a lock-file enforcing command instead». У canvas-api такие находки открыты у двух строк его Dockerfile, 198 и 199, хотя там стоит `-mod=readonly` (API SonarCloud, проект MathTrail_canvas-api, 2026-10-21).
