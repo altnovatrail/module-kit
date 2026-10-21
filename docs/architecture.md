@@ -1,6 +1,6 @@
 # module-kit — архитектура
 
-> Статус: каркас из заготовки `spec`, 2026-10-19; сверен с `spec` v0.2.11 2026-10-20 (R03); первый код — заготовка CLI, 2026-10-21 (R04).
+> Статус: каркас из заготовки `spec`, 2026-10-19; сверен с `spec` v0.2.11 2026-10-20 (R03) и с v0.2.13 2026-10-21 (R05); первый код — заготовка CLI, 2026-10-21 (R04).
 >
 > Что делает компонент, чего не делает и что о нём ещё предстоит решить. Это подробности его карточки — architecture 3.7 spec. Карточка остаётся сводкой: если подробности меняют то, что в ней сказано, она правится в `spec` тем же путём, что и вопросы в его реестры (RULES.md, Across repositories).
 >
@@ -43,7 +43,7 @@
 - `sim` его не берёт: пакеты модулей он читает по типам канонического вида из `spec` (architecture 3.9 spec; Т-15). `learner-model` и `engine` пакетов не читают: граф им передаёт `api` (architecture 3.8 spec);
 - вердикт воспроизводим: попытка хранит дайджест своего пакета, версию формата и зерно, а вердикт повторяется по сохранённому наблюдению, без ИИ (architecture 1 spec; R03 spec). По рекомендации Т-18 изменение поведения вида проверки поднимает версию формата;
 - новую модель ИИ допускают по eval, и ложные тревоги там считаются по вердикту, через `module-kit` (architecture 4.6 spec; repositories 4 spec);
-- проверки CI пришли ещё до кода: общие проверки из `.github`, среди них `docs-check-repo`. Какие они и что держит мерж — R30 spec и architecture 3.11 spec. Подключила их T17 `spec`, и файлы CI сюда писала её сессия, а не задача этого репозитория. Находки CodeQL, Scorecard и SonarCloud закрываются перед новой задачей (правило 12 [RUN.md](../RUN.md)), а общие для всех репозиториев причины тех, что остаются открытыми, записаны в R33 spec. Проверки Go пришли с заготовкой CLI (R04): рецепты у них свои, а запускает их обёртка Go — общий `go.yml` `.github`, который на ней и проверен (R16 .github). Релиз из общих workflow `.github` придёт с первым релизом, а обёртка TypeScript проверяется на первом коде на TypeScript, у `canvas` (repositories 6 spec; architecture 3.11 spec). Go CodeQL прочтёт, когда его примет общий `codeql.yml` (Д2 в таблице 4 [RUN.md](../RUN.md));
+- проверки CI пришли ещё до кода: общие проверки из `.github`, среди них `docs-check-repo`. Какие они и что держит мерж — R30 spec и architecture 3.11 spec. Подключила их T17 `spec`, и файлы CI сюда писала её сессия, а не задача этого репозитория. Находки CodeQL, Scorecard и SonarCloud закрываются перед новой задачей (правило 12 [RUN.md](../RUN.md)), а общие для всех репозиториев причины тех, что остаются открытыми, записаны в R33 spec. Проверки Go пришли с заготовкой CLI (R04): рецепты у них свои, а запускает их обёртка Go — общий `go.yml` `.github`, который на ней и проверен (R16 .github). Релиз из общих workflow `.github` придёт с первым релизом, а обёртка TypeScript проверяется на первом коде на TypeScript, у `canvas` (repositories 6 spec; architecture 3.11 spec). Go CodeQL читает с T12: общий `codeql.yml` `.github` v0.1.3 собирает его с Go из стадии `toolchain` (R06);
 - этап 1, вместе с `modules`: формат модуля v0 сразу проверяется на двух предметах (repositories 6 spec; R08 spec; product 11 spec).
 
 ## 2. Решить при детализации
@@ -52,7 +52,7 @@
 
 У карточки три пункта — подразделы 2.1–2.3. Подраздел 2.4 — сверх карточки: сравнение версий по semver карточка называет среди того, что `module-kit` делает (architecture 3.7 spec), но правила для него `spec` задаёт только для мажорной версии (concepts 3 spec). Этот пункт называет задача, которая завела репозиторий (T05 `spec`). Подраздел 2.5 — тоже сверх карточки: его вопрос R25 spec оставил детализации `module-kit`. Карточку под пункты сверх неё правит итог детализации, T05, — строкой таблицы 3 «в реестр spec», когда решение уже принято (architecture 3 spec).
 
-Два первых пункта — вопросы реестра `spec`, Т-15 и Т-18. Их закрывает эпик формата модуля v0 — E2 в RUN.md `spec`, вместе со схемами пакета и индекса и с тест-векторами (repositories 5 spec). Здесь задачи приносят варианты и рекомендацию от того, кто будет это исполнять, а то, что закрывает вопрос, уходит «в реестр spec». Задачи этих двух пунктов, T01 и T02, идут одновременно с E2, а не до него: так `spec` ответил на В19 (строка E2 в таблице 2 RUN.md `spec`).
+Два первых пункта — вопросы реестра `spec`, Т-15 и Т-18. Их закрывает эпик формата модуля v0 — E2 в RUN.md `spec`, вместе со схемами пакета и индекса и с тест-векторами (repositories 5 spec). Здесь задачи приносят варианты и рекомендацию от того, кто будет это исполнять, а то, что закрывает вопрос, уходит «в реестр spec». Задачи этих двух пунктов, T01 и T02, идут одновременно с E2, а не до него: так `spec` ответил на В19. С v0.2.12 E2 — текущий эпик `spec`: Т-15 закрывает его T34, которая ждёт T01, а Т-18 — T32, которая ждёт T02 (таблица 1 RUN.md `spec`; R05).
 
 ### 2.1. Что внутри пакета (Т-15)
 
@@ -156,7 +156,8 @@
   | `ci-licenses` | go-licenses v2.0.1 — лицензии пакетов, из которых собирается модуль, по списку `ALLOWED_LICENSES` из `go.yml` | «Go / licenses» |
 
   Инструменты идут через `go run` по точной версии модуля. Их, как и Go в Dockerfile, поднимают руками (R04). Своих исключений лицензий нет.
-- **Чего ещё нет:** CodeQL для Go — Д2 в таблице 4 [RUN.md](../RUN.md); gopls в образе — Д5 там же; релиза — он придёт с общим `release.yml` `.github` (T16 .github).
+- **CodeQL** читает и Go: общий `codeql.yml` `.github` v0.1.3 со входом `languages: go` собирает код с Go из стадии `toolchain`, а проверка — «CodeQL / analyze (go)» (R06).
+- **Чего ещё нет:** gopls в образе — Д5 в таблице 4 [RUN.md](../RUN.md); релиза — он придёт с общим `release.yml` `.github` (T16 .github).
 
 ## 4. Источники
 
@@ -180,3 +181,4 @@
 - **`go-licenses check`** (R04) — [README v2.0.1](https://github.com/google/go-licenses/blob/v2.0.1/README.md), раздел Usages, Check, прочитано 2026-10-21: «Allow only specific license names» — `go-licenses check <package> [package...] --allowed_licenses=<comma separated license names>`. Проба 2026-10-21: со списком `spec` рецепт `ci-licenses` проходит, а со списком из одной MIT отвечает «Not allowed license 'Apache-2.0' found for library 'github.com/altnovatrail/module-kit/cmd/module-kit'».
 - **Образец рецептов** (R04) — [`justfile` canvas-api](https://github.com/MathTrail/canvas-api/blob/0901af0439280334b3da33ffc4cc5c853e4403ff/justfile), коммит 0901af0, прочитано 2026-10-21: `ci-lint`, `ci-test`, `ci-vuln` и `ci-licenses`, а об инструментах — «Each is a Go program run straight from its module, so none of them is installed anywhere».
 - **SonarCloud, docker:S8545** (R04) — правило «Go dependencies should be locked to verified versions» (API SonarCloud, `api/rules/show?key=docker:S8545`, 2026-10-21). На pull request #8 оно отметило строку `go install` gopls в Dockerfile: «Dependency versions are not predictable. Use a lock-file enforcing command instead». У canvas-api такие находки открыты у двух строк его Dockerfile, 198 и 199, хотя там стоит `-mod=readonly` (API SonarCloud, проект MathTrail_canvas-api, 2026-10-21).
+- **Autobuild Go в CodeQL** (R06) — [GitHub Docs, «CodeQL build options and steps for compiled languages»](https://docs.github.com/en/code-security/reference/code-scanning/codeql/build-options-for-compiled-languages), раздел «Autodetection for Go», исходник в `github/docs` на коммите c008b66, прочитано 2026-10-21: «Invoke `make`, `ninja`, `./build` or `./build.sh` (in that order) until one of these commands succeeds and a subsequent `go list ./...` also succeeds»; «By default, test code (code in files ending in `_test.go`) is not analyzed».
