@@ -31,6 +31,10 @@ release-files version:
         echo "release-files: the version is v<major>.<minor>.<patch>, as v0.1.0, not ${version}" >&2
         exit 1
     fi
+    # Nothing of the caller's Go environment reaches the build: the binaries are the same wherever
+    # the recipe runs, and a release can be built again here and compared with its SHA256SUMS.
+    export GOENV=off GOFLAGS= GOEXPERIMENT=
+    unset GOAMD64 GOARM64 GOOS GOARCH
     rm -rf dist
     mkdir dist
     for platform in linux/amd64 linux/arm64 darwin/amd64 darwin/arm64 windows/amd64 windows/arm64; do
