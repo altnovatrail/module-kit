@@ -538,6 +538,30 @@
   - мерж — мой шаг; после него — проверка релиза из «Как проверить» и «Итог после мержа» с расширениями сертификата для T37 `spec`;
   - Д6 — бинарники, кроме linux amd64, не запускались.
   - В6 и В7, «в реестр spec», — шаблон `paths` и то, как CI `modules` и `canvas` берут CLI.
+- **Итог после мержа (2026-10-21):**
+  - pull request #11 слил автор, merge-коммит 7e0144a;
+  - CI на 7e0144a кончился зелёным, и `workflow_run` запустил Release — прогон 39636884292, создан в 16:40:31 UTC, `success`. Его единственный job — «Release / release». Шаг «Whether this commit may be released by hand» пропущен — это не кнопка; зелёные — checkout, «Work out the version», «Build the files», «Sign every file», «Publish the release» и «Verify the release». Релиз v0.1.0 опубликован в 16:42:12 UTC;
+  - проверено здесь, 2026-10-21, во временной папке вне репозитория:
+    - `gh release view v0.1.0 -R altnovatrail/module-kit --json isImmutable,targetCommitish,assets`: `isImmutable` — `true`, `targetCommitish` — 7e0144a, 18 файлов — девять из `release-files` и у каждого его `.sigstore.json`. Тег `refs/tags/v0.1.0` — на 7e0144a (`git ls-remote`). Latest — по `gh release list`: поля `isLatest` у `gh release view` нет, и «Как проверить» выше называл его зря;
+    - `gh release verify v0.1.0` — «Release v0.1.0 verified!»; `gh release verify-asset` — «Verification succeeded!» у всех девяти файлов;
+    - `sha256sum -c SHA256SUMS` — OK у восьми файлов, которые он перечисляет: шести бинарников, `LICENSE` и `LICENSE-go`;
+    - cosign 3.1.4 — `cosign-linux-amd64` с релиза sigstore, сумма сошлась с `424e2c97…bbfa`. `cosign verify-blob` с идентичностью общего `release.yml` на 11435db, issuer GitHub Actions, репозиторием `altnovatrail/module-kit` и SHA 7e0144a — «Verified OK» у всех девяти файлов. С SHA ae2ccb4 вместо 7e0144a он отказывает — «expected GithubWorkflowSHA to be "ae2ccb4…", got "7e0144a…"», — а bundle `SHA256SUMS` с файлом `LICENSE` — «invalid signature»;
+    - скачанный `module-kit_v0.1.0_linux_amd64 --version` — «module-kit v0.1.0»;
+    - сверх пункта 4: дерево 7e0144a из `git archive`, `env -i` и свой `HOME`, `just release-files v0.1.0` — `SHA256SUMS` побайтно совпал с опубликованным. Релиз собирается здесь заново, и суммы те же (R07);
+  - расширения сертификата — для T37 `spec` (Т-27). Взяты из bundle `SHA256SUMS.sigstore.json` (`jq -r '.verificationMaterial.certificate.rawBytes' | base64 -d | openssl x509 -inform der -noout -text`); у всех девяти сертификатов SAN и расширения 1.8–1.22 одинаковы. Сертификат выдан `sigstore-intermediate`, действует 16:41:32–16:51:32 UTC:
+    - SAN и Build Signer URI (1.9) — `https://github.com/altnovatrail/.github/.github/workflows/release.yml@11435dbe61d3d4885c9a8dd30686e8111e26cabb`: общий workflow по SHA, без другого ref, так что находки для `.github` нет;
+    - Issuer (1.8) — `https://token.actions.githubusercontent.com`;
+    - Build Signer Digest (1.10) — 11435dbe…, коммит `.github`;
+    - Runner Environment (1.11) — `github-hosted`;
+    - Source Repository URI (1.12) — `https://github.com/altnovatrail/module-kit`; Source Repository Identifier (1.15) — 1425817249, тот же, что `id` репозитория в API GitHub; Source Repository Owner URI (1.16) — `https://github.com/altnovatrail`, его Identifier (1.17) — 344507087;
+    - Source Repository Digest (1.13) и Build Config Digest (1.19) — 7e0144a…, коммит тега; Source Repository Ref (1.14) — `refs/heads/main`;
+    - Build Config URI (1.18) — `https://github.com/altnovatrail/module-kit/.github/workflows/release.yml@refs/heads/main`;
+    - Build Trigger (1.20) — `workflow_run`; Run Invocation URI (1.21) — `https://github.com/altnovatrail/module-kit/actions/runs/39636884292/attempts/1`; Source Repository Visibility (1.22) — `public`.
+
+    Всё это совпало с тем, что увидела сессия `.github`;
+  - находки по этой задаче (правило 12): на 7e0144a CI, CodeQL, Scorecard и Release зелёные; открыты те же семь находок Scorecard из списка R33 spec, у CodeQL открытых нет; у SonarCloud анализ 7e0144a — 0 находок, 0 мест безопасности на проверку, quality gate — OK (API GitHub и SonarCloud, 2026-10-21). Править нечего;
+  - к R07 — поправка: релиз вышел, как он описывает, и пересборка дала его суммы;
+  - остаются: Д6 — другие платформы здесь не запускались; В6 и В7 «в реестр spec». По В6 сессия `.github` согласна с рекомендацией — перечень вместо исключений: шаблон `paths` живёт в architecture 3.3 .github, и его поменяет та же запись в `spec`.
 
 #### T01. Что внутри пакета (Т-15)
 
