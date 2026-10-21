@@ -410,7 +410,7 @@
   - проверено:
     - локально, с Go 1.27.3, скачанным и сверенным по сумме go.dev: `just ci-lint`, `ci-test`, `ci-vuln` и `ci-licenses` со списком `go.yml` — зелёные. `ci-licenses` без списка и со списком из одной MIT — красный, а `ci-lint` ловит неотформатированный файл, даже ещё не добавленный в git, и пропускает `testdata/`. `module-kit --version` печатает `module-kit dev`, без аргументов — подсказку и код 2;
     - `just -f spec/justfile docs-check-repo` — ok; actionlint 1.7.12 — без замечаний;
-    - в pull request #8 на cc31fbf зелёные все одиннадцать проверок (прогон CI 39537465211), среди них «Go / lint», «Go / test», «Go / vuln» и «Go / licenses». В журнале каждого job Go видно, что стадия `toolchain` собрана с Go 1.27.3 и его сумма для amd64 сошлась; «Documents / docs-check-repo» — тоже. «SonarCloud Code Analysis» зелёная после того, как gopls ушёл из образа;
+    - в pull request #8 на cc31fbf зелёные все одиннадцать проверок (прогон CI 39537465211), среди них «Go / lint», «Go / test», «Go / vuln» и «Go / licenses». Затем job «Go» встал на SHA релиза `.github` `v0.1.2`, d01dd88: релиз неизменяемый, и `gh release verify v0.1.2 -R altnovatrail/.github` его подтверждает. В журнале каждого job Go видно, что стадия `toolchain` собрана с Go 1.27.3 и его сумма для amd64 сошлась; «Documents / docs-check-repo» — тоже. «SonarCloud Code Analysis» зелёная после того, как gopls ушёл из образа;
   - `/code-review high`, круг 1 — 10 находок, исправлены все:
     - SonarCloud держал pull request находкой docker:S8545 у `go install` gopls — gopls ушёл из образа, а как его закрепить, говорит Д5. Вместе с ним ушли и две находки о gopls — об `-mod=readonly` и о списке версий, которые поднимают руками;
     - R02 и R03 говорили неправду после R04 — у них поправки;
@@ -421,8 +421,8 @@
     - описание `ci-licenses` в `just --list` было второй половиной фразы;
     - у источника о рецептах canvas-api не было адреса и даты.
 - **Открыто:**
-  - до мержа: ссылка job «Go» встаёт на SHA первого релиза `.github` с `go.yml` — он выйдет с мержем #26 `.github` — и pull request #8 проходит проверки ещё раз;
-  - мои шаги: мерж; «Go / lint», «Go / test», «Go / vuln» и «Go / licenses» в ruleset `main`; Rebuild Container и проверка из Д4;
+  - мерж и «Go / lint», «Go / test», «Go / vuln» и «Go / licenses» в ruleset `main`: по поручению автора 2026-10-21 их делает исполнитель, а итог — в «Итог после мержа»;
+  - Rebuild Container и проверка из Д4 — мой шаг;
   - Д5 — gopls в образе; Д2 — Go в CodeQL, T19 .github; В3 «в реестр spec»; T08 по-прежнему ждёт pull request Dependabot.
 
 #### T01. Что внутри пакета (Т-15)
