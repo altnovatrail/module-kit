@@ -3,9 +3,9 @@
 # every Go repository of NovaTrail, and what they run is this repository's own.
 
 # The tools only the checks need, at exact versions. Each is a Go program run straight from its
-# module, as canvas-api runs them (R48 canvas-api), so nothing is installed for it: the Go module
-# proxy serves that version and the checksum database vouches for it. Dependabot does not see
-# them, so they are raised by hand.
+# module, as canvas-api's justfile runs them, so nothing is installed for it: the Go module proxy
+# serves that version and the checksum database vouches for it. Dependabot does not see them,
+# so they are raised by hand.
 GOVULNCHECK := "golang.org/x/vuln/cmd/govulncheck@v1.9.0"
 GO_LICENSES := "github.com/google/go-licenses/v2@v2.0.1"
 
@@ -21,10 +21,10 @@ build:
 ci-lint:
     #!/usr/bin/env bash
     set -euo pipefail
-    # The directories of this module's own packages: spec/ is another repository.
-    list="$(go list -f '{{{{.Dir}}' ./...)"
-    readarray -t dirs <<< "$list"
-    unformatted="$(gofmt -l "${dirs[@]}" | sort -u)"
+    # The Go files git tracks or would, outside testdata/: spec/ is a submodule, another
+    # repository's, and git lists none of its files.
+    unformatted="$(git ls-files -z --cached --others --exclude-standard -- '*.go' ':!:**/testdata/**' \
+        | xargs -0 -r gofmt -l)"
     if [ -n "$unformatted" ]; then
         echo "ci-lint: gofmt would rewrite these files; run gofmt -w on them:" >&2
         echo "$unformatted" >&2
@@ -40,8 +40,8 @@ ci-test:
 ci-vuln:
     go run {{ GOVULNCHECK }} ./...
 
-# Fail if a package this module is built from carries a license outside the list it is given:
-# ALLOWED_LICENSES, SPDX identifiers separated by commas, which .github's go.yml sets.
+# The list is ALLOWED_LICENSES, SPDX identifiers separated by commas, which .github's go.yml sets.
+# Fail if a package this module is built from carries a license outside that list.
 ci-licenses:
     #!/usr/bin/env bash
     set -euo pipefail

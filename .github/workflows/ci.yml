@@ -35,4 +35,4 @@ jobs:
   # merge this becomes the SHA of the first release of .github with go.yml.
   go:
     name: Go
-    uses: altnovatrail/.github/.github/workflows/go.yml@d154a312ccc625402018222086f7f8fe88d423ec # T15 .github, before its release
+    uses: altnovatrail/.github/.github/workflows/go.yml@b8607bcc969d3c9f7c2fe6d2b197f6f3d747c450 # T15 .github, before its release

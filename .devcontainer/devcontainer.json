@@ -46,10 +46,6 @@
     "customizations": {
         "vscode": {
             "settings": {
-                // gopls comes pinned from the image: the Go extension neither updates its tools
-                // nor looks for newer ones.
-                "go.toolsManagement.autoUpdate": false,
-                "go.toolsManagement.checkForUpdates": "off",
                 "files.eol": "\n",
                 "files.insertFinalNewline": true,
                 // Every commit made from Source Control carries Signed-off-by, as the DCO asks

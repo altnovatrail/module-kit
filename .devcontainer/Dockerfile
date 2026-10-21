@@ -90,8 +90,6 @@ ARG GH_VERSION=2.101.0
 ARG JUST_LSP_VERSION=0.10.0
 # Claude Code CLI. The VS Code extension in devcontainer.json must have the same version.
 ARG CLAUDE_CODE_VERSION=2.1.280
-# gopls, the language server the Go extension in devcontainer.json starts (R04).
-ARG GOPLS_VERSION=0.24.0
 # The sums, as above: gh_<version>_checksums.txt of the gh release, SHA256SUMS of just-lsp's.
 # The helper below is the toolchain stage's, written again rather than left in that image as a
 # script: the toolchain image is the one the checks run in, and nothing there needs it.
@@ -145,15 +143,6 @@ RUN echo "claude code ${CLAUDE_CODE_VERSION}" \
     && node "$(npm root -g)/@anthropic-ai/claude-code/install.cjs" \
     && claude --version \
     && npm cache clean --force
-
-# gopls is built from its module at an exact version, as canvas-api builds it (R46 canvas-api),
-# and the Go checksum database vouches for what that version pulls in; without it the Go
-# extension would fetch the newest gopls itself. The caches the build fills under root's home
-# are cleared in the same layer: nothing reads them again, since the container runs as vscode.
-RUN echo "gopls ${GOPLS_VERSION}" \
-    && GOBIN=/usr/local/bin go install "golang.org/x/tools/gopls@v${GOPLS_VERSION}" \
-    && gopls version \
-    && go clean -cache -modcache
 
 # The dirs the named volumes are mounted over are created here so the volumes inherit vscode
 # ownership — a dir Docker makes for a mount belongs to root, and VS Code Server could not write
