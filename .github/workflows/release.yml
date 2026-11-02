@@ -22,7 +22,7 @@ jobs:
       contents: write
       id-token: write
       actions: read
-    uses: altnovatrail/.github/.github/workflows/release.yml@11435dbe61d3d4885c9a8dd30686e8111e26cabb # v0.1.4
+    uses: altnovatrail/.github/.github/workflows/release.yml@f3addb7403d084c560c61481e217b93f8e7ee1f3 # v0.1.10
     with:
       paths: |
         .
