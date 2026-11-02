@@ -4,23 +4,28 @@
 # detected at RUN time via dpkg instead. A host that has Docker can build this, and that is the
 # whole requirement.
 #
-# Two stages. `toolchain` holds what it takes to check the schemas and documents and spec's Go
-# module, and is the stage the automated checks run inside. `devcontainer` adds what a person
-# needs on top of that and is the default stage, so building this file with no target gives the
-# full environment.
+# Two stages. `toolchain` holds what it takes to check the repository — its documents, and its
+# code where it has any — and is the stage the automated checks run inside. `devcontainer` adds
+# what a person needs on top of that and is the default stage, so building this file with no
+# target gives the full environment.
 
-# -- toolchain: checks the schemas and documents -----------------------------
+# -- toolchain: checks the repository ----------------------------------------
 
 FROM mcr.microsoft.com/devcontainers/base:3.0.10-noble@sha256:21e9e3275736cb3bc33a2904b279a2ab292c51fedd53c2963463627d4586c3e6 AS toolchain
 
 SHELL ["/bin/bash", "-euo", "pipefail", "-c"]
 
-# Node.js LTS: the JSON Schema validators and the document linters are npm packages.
+# Node.js LTS: the checks of spec's justfile — of the documents, of the licenses, of the files of
+# a release and, in spec, of the schemas — are npm packages, and a repository's TypeScript runs
+# on it too.
 ARG NODE_VERSION=24.21.0
 ARG JUST_VERSION=1.58.0
-# Go: spec's Go module, which code of the platform takes from a release, is vetted and tested
-# here, and its zip built as the Go module proxy will build it (R64 spec). It lives in /usr/local/go,
-# where the shared CodeQL workflow of .github looks for it in this stage.
+# Go: a repository's Go code is built, vetted and tested with it, and CodeQL reads that code from
+# a build with it, in /usr/local/go, where the shared CodeQL workflow of .github looks for Go in
+# this stage. In spec that code is its Go module, which code of the platform takes from a
+# release, and the Go tools in tools/, and spec's checks build the module's zip as the Go module
+# proxy will (R64 spec). Go comes with this file into the copy of every NovaTrail repository, whatever
+# its kind, and stays unused in one without Go code (R64 spec).
 ARG GO_VERSION=1.27.3
 # The sha256 of every archive, per architecture, as its publisher lists it: SHASUMS256.txt of
 # the Node release, SHA256SUMS of the just release, the sha256 go.dev/dl lists for Go. A sum
