@@ -20,7 +20,7 @@ A component of [NovaTrail](https://github.com/altnovatrail/spec/tree/v0.6.6), a 
 
 ## Status
 
-Detailing. The documents come first: the first epic of [RUN.md](RUN.md) decides what the component's card left open, and the code follows in the order RUN.md sets. The one code here so far is the skeleton of the CLI, `module-kit --version`: the author had it written ahead of the format, so that the shared Go checks of .github have code to be tried on (R04). The code of the format comes in the epic after this one, on the module format 0.2 that spec has defined in its `format/`.
+Detailing is done. The documents came first: the first epic of [RUN.md](RUN.md), now archived in [docs/plan/E1.md](docs/plan/E1.md), decided what the component's card left open, and the code follows in the order RUN.md sets. The one code here so far is the skeleton of the CLI, `module-kit --version`: the author had it written ahead of the format, so that the shared Go checks of .github have code to be tried on (R04). The code of the format comes in the next epic, E2 in RUN.md, on the module format 0.2 that spec has defined in its `format/`.
 
 ## Documents
 
