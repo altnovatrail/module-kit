@@ -4,12 +4,12 @@
 # detected at RUN time via dpkg instead. A host that has Docker can build this, and that is the
 # whole requirement.
 #
-# Two stages. `toolchain` holds what it takes to check the schemas, the documents and the Go
-# code, and is the stage the automated checks run inside. `devcontainer` adds what a person
+# Two stages. `toolchain` holds what it takes to check the schemas and documents and spec's Go
+# module, and is the stage the automated checks run inside. `devcontainer` adds what a person
 # needs on top of that and is the default stage, so building this file with no target gives the
 # full environment.
 
-# -- toolchain: checks the schemas, the documents and the Go code ------------
+# -- toolchain: checks the schemas and documents -----------------------------
 
 FROM mcr.microsoft.com/devcontainers/base:3.0.10-noble@sha256:21e9e3275736cb3bc33a2904b279a2ab292c51fedd53c2963463627d4586c3e6 AS toolchain
 
@@ -18,17 +18,18 @@ SHELL ["/bin/bash", "-euo", "pipefail", "-c"]
 # Node.js LTS: the JSON Schema validators and the document linters are npm packages.
 ARG NODE_VERSION=24.21.0
 ARG JUST_VERSION=1.58.0
-# Go: module-kit's code, its tests and the tools its checks run (R04). GOTOOLCHAIN=local below
-# keeps the go command on this version, rather than one it would fetch for a go.mod asking more.
+# Go: spec's Go module, which code of the platform takes from a release, is vetted and tested
+# here, and its zip built as the Go module proxy will build it (R64 spec). It lives in /usr/local/go,
+# where the shared CodeQL workflow of .github looks for it in this stage.
 ARG GO_VERSION=1.27.3
 # The sha256 of every archive, per architecture, as its publisher lists it: SHASUMS256.txt of
-# the Node release, SHA256SUMS of the just release. A sum written here keeps an archive from
-# being swapped once it has been read (R34), and is raised together with its version.
+# the Node release, SHA256SUMS of the just release, the sha256 go.dev/dl lists for Go. A sum
+# written here keeps an archive from being swapped once it has been read (R34 spec), and is raised
+# together with its version.
 ARG NODE_SHA256_AMD64=6e1db87ef58b8819e5d5402eff1536491b18edd8eb7bee5ef7897876e88dc5ff
 ARG NODE_SHA256_ARM64=724282c3b43aec998aa9527380465b45d229e021b58035f5f4f63095eabfe5d5
 ARG JUST_SHA256_AMD64=4a5cc2f53e6f0f8c59092a6cc38291eb729d46a7dd95d3ae582008881b84931d
 ARG JUST_SHA256_ARM64=748237128c4c40cbdabc65e841d05ceba13cc23a91eaba395495894c1d9764df
-# Go's, as the list at go.dev/dl gives them, for the same reason (R04).
 ARG GO_SHA256_AMD64=65efbc80fdc1fa2cd2631cad5b481777a68e8725f34e89f50fc6ac714e379b40
 ARG GO_SHA256_ARM64=a06e99309dbcbdca1a8ccd2282c3ee146e55930886e26b4f1193269587165f49
 
@@ -39,11 +40,9 @@ ARG GO_SHA256_ARM64=a06e99309dbcbdca1a8ccd2282c3ee146e55930886e26b4f119326958716
 RUN arch="$(dpkg --print-architecture)"; \
     case "$arch" in \
         amd64) node_arch=x64; gnu_arch=x86_64; \
-            node_sha256="$NODE_SHA256_AMD64"; just_sha256="$JUST_SHA256_AMD64"; \
-            go_sha256="$GO_SHA256_AMD64" ;; \
+            node_sha256="$NODE_SHA256_AMD64"; just_sha256="$JUST_SHA256_AMD64"; go_sha256="$GO_SHA256_AMD64" ;; \
         arm64) node_arch=arm64; gnu_arch=aarch64; \
-            node_sha256="$NODE_SHA256_ARM64"; just_sha256="$JUST_SHA256_ARM64"; \
-            go_sha256="$GO_SHA256_ARM64" ;; \
+            node_sha256="$NODE_SHA256_ARM64"; just_sha256="$JUST_SHA256_ARM64"; go_sha256="$GO_SHA256_ARM64" ;; \
         *) echo "unsupported architecture: $arch" >&2; exit 1 ;; \
     esac; \
     workdir="$(mktemp -d)"; \
@@ -70,10 +69,13 @@ RUN arch="$(dpkg --print-architecture)"; \
     fetch "https://go.dev/dl/go${GO_VERSION}.linux-${arch}.tar.gz" \
         "$workdir/go-${GO_VERSION}-${arch}.tar.gz" "$go_sha256"; \
     tar -C /usr/local -xzf "$workdir/go-${GO_VERSION}-${arch}.tar.gz"; \
+    /usr/local/go/bin/go version; \
     \
     rm -rf "$workdir"
 
-ENV PATH="/usr/local/go/bin:/usr/local/node/bin:/home/vscode/go/bin:/home/vscode/.local/bin:${PATH}" \
+# GOTOOLCHAIN=local: the Go above runs every go command, and none downloads another Go because a
+# go.mod asks for a newer one: a go.mod that does fails, which is the signal to raise GO_VERSION.
+ENV PATH="/usr/local/node/bin:/usr/local/go/bin:/home/vscode/.local/bin:${PATH}" \
     GOTOOLCHAIN=local
 
 # -- devcontainer: the toolchain, plus what a person works with --------------
