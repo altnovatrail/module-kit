@@ -1,6 +1,6 @@
 # module-kit — архитектура
 
-> Статус: каркас из заготовки `spec`, 2026-10-19; сверен с `spec` v0.2.11 2026-10-20 (R03), с v0.2.13 2026-10-21 (R05) и с v0.6.3 2026-11-02 (R08); пакет модуля — 2026-11-02 (R09), генератор — 2026-11-02 (R10); первый код — заготовка CLI, 2026-10-21 (R04); релизы — общим `release.yml` `.github`, с 2026-10-21 (R07).
+> Статус: каркас из заготовки `spec`, 2026-10-19; сверен с `spec` v0.2.11 2026-10-20 (R03), с v0.2.13 2026-10-21 (R05) и с v0.6.3 2026-11-02 (R08); пакет модуля — 2026-11-02 (R09), генератор — 2026-11-02 (R10), песочница Starlark — 2026-11-02 (R11); первый код — заготовка CLI, 2026-10-21 (R04); релизы — общим `release.yml` `.github`, с 2026-10-21 (R07).
 >
 > Что делает компонент, чего не делает и что о нём ещё предстоит решить. Это подробности его карточки — architecture 3.7 spec. Карточка остаётся сводкой: если подробности меняют то, что в ней сказано, она правится в `spec` тем же путём, что и вопросы в его реестры (RULES.md, Across repositories).
 >
@@ -36,7 +36,7 @@
   - условия проверки — не больше 1 000 000 шагов, а сработавший лимит или ошибка дают «без проверки» (R56 spec);
   - решатели шаблонов — не больше 100 000 000 шагов на все экземпляры шаблона (R61 spec).
 
-  Часы и одновременные запуски — раздел 2.3;
+  Часы, одновременные запуски и версия интерпретатора — раздел 3.4;
 - сверяет пакет по цепочке дайджестов от индекса, который закрепил pull request `api`: индекс → опись → части → файлы (R62 spec, R63 spec). Подписей библиотека не проверяет: подпись файла релиза проверяет рецепт `spec` `release-verify` там, где файл входит в NovaTrail (R77 spec; поправка 2026-11-01 к R17 spec);
 - даёт автору CLI: проверить модуль, собрать пакет, построить индекс. Индекс CLI строит внутри общего релиза `modules`, после номера и до публикации (architecture 3.7 spec; R63 spec).
 
@@ -90,30 +90,9 @@
 
 ### 2.3. Часы, одновременные запуски и память Starlark
 
-- **Суть:** сколько времени у вычисления условия проверки и у решателя шаблона, сколько их идёт сразу, кто держит часы и места, что значат сработавшие часы, сколько памяти у песочницы и нужен ли отдельный процесс. Решается здесь: шаги, диалект и место решателя решил формат, а часы и одновременные запуски он оставил `module-kit` (architecture 3.7 spec).
-- **Что решил формат:**
-  - условие проверки — выражение Starlark от целого `value`, не длиннее 1000 знаков и не больше 1 000 000 шагов в счёте go.starlark.net. Сработавший лимит, ошибка и часы `module-kit` дают «без проверки» (R56 spec; [текст формата](../spec/format/README.md), раздел 15);
-  - выражения шаблона лимита шагов не требуют: их шагов не больше, чем знаков. Сочетаний — не больше 10 000 на шаблон (R60 spec);
-  - решатель шаблона идёт только при проверке модуля, на каждом экземпляре по порядку. Программа — не длиннее 8192 знаков, бюджет — 100 000 000 шагов на все экземпляры шаблона вместе. Диалект — go.starlark.net с `Set`, `While`, `TopLevelControl` и `GlobalReassign`, без рекурсии и `load`, только с встроенными именами Starlark (R61 spec; [текст формата](../spec/format/README.md), раздел 24);
-  - ключ шаблона считается заранее и лежит в `instances` пакета, а сервер выражений не считает и решателей не запускает (R60 spec; R62 spec);
-  - смена этих лимитов и диалекта — новая версия формата (R44 spec).
-- **Что известно из standalone** (раздел 4):
-  - 25 000 000 шагов и 2 секунды на запуск, по одному запуску на vCPU (SPEC 6.6 standalone);
-  - исходник решателя — не больше 8 КБ; рекурсия выключена: рекурсивная функция Starlark идёт по стеку Go, а переполнение стека уронило бы весь экземпляр, а не один запрос;
-  - встроенные функции платят шаг за каждые 16 байт того, что строят, и не строят списков длиннее 1 000 000 элементов: интерпретатор считает шаги, но не память. Так шаги ограничивают и память, которую держат встроенные функции, — 381 МиБ на потолке шагов; среде Go отдана девять десятых памяти экземпляра (`GOMEMLIMIT`);
-  - запуск, который 3 секунды не находит свободного места, не начинается, а задача считается непроверенной;
-  - у памяти осталась известная дыра, и она шире одного оператора. Оператор `*` и повторное `xs = xs + xs` строят огромный список мимо счётчиков; литерал `{}` в цикле держит по 512 байт на каждые девять шагов, и экземпляр с 1 ГиБ памяти был убит именно так; методы самих значений — `x.extend(range(3000000))` — берут три миллиона элементов за девятнадцать шагов (SPEC 6.6 standalone; R53 standalone). Внутри одного вызова не видны и часы. Закрыло бы всё это только исполнение решателя в отдельном процессе с лимитом памяти, а v1 standalone на это не пошёл;
-  - цену в байтах, один запуск на vCPU и 1 ГиБ памяти на каждый vCPU решил R125 standalone. Отвергнуты там четыре места с часами как страховкой — вердикт зависел бы от нагрузки — и отдельный процесс сразу;
-  - лимит шагов калибровали по 450 эталонным решателям: худший потребовал 2 081 362 шага (R53 standalone); худший из 603 — 2 413 617 шагов;
-  - интерпретатор — `go.starlark.net`, закреплённый псевдоверсией коммита.
-- **Что осталось:**
-  - часы условия входят в вердикт: сработав, они дают «без проверки», а это зависит от машины. Вердикт же повторяется по сохранённому наблюдению — тем релизом `module-kit`, который его вынес (architecture 1 spec; R03 spec; R44 spec);
-  - часы решателя, который идёт только при проверке модуля — в CI `modules`, а с этапа 4 в `module-registry`: если они срабатывают раньше бюджета шагов, приём шаблона у границы бюджета зависит от машины;
-  - кто держит часы и считает одновременные запуски — `module-kit` или `api`: библиотека — вычисления без ввода-вывода (repositories 1 spec);
-  - память — о ней формат молчит. С этапа 4 модули публикуют и сторонние авторы, а `module-registry` построен на `module-kit` (R17 spec; architecture 3.13 spec): хватит ли лимитов внутри процесса или нужен отдельный процесс (О-9);
-  - опции диалекта у условия: R61 spec задаёт их решателю, а условию — нет. Это поведение вида проверки, то есть формат;
-  - версия go.starlark.net: счёт шагов от версии может меняться, а повтор вердикта держит версия `module-kit` в попытке (R44 spec).
-- **Варианты:** пока пусто.
+- **Суть:** сколько времени у вычисления условия проверки и у решателя шаблона, сколько их идёт сразу, кто держит часы и места, что значат сработавшие часы, сколько памяти у песочницы и нужен ли отдельный процесс. Шаги, диалект и место решателя решил формат, а часы и одновременные запуски он оставил `module-kit` (architecture 3.7 spec).
+- **Решено** (R11): go.starlark.net — той версии, которую назовёт формат, а сейчас последней. Часы — страховка `module-kit`: 1 с на условие и 60 с на решатель шаблона. Мест библиотека не держит, одновременность — у вызывающего, а диалект условия — тот же, что у решателя. Устройство — раздел 3.4.
+- **Отложено:** память стороннего Starlark. С этапа 4 условия в `api` и решатели в `module-registry` пишут и сторонние авторы (О-9), а go.starlark.net памяти не считает. Нужен процесс с лимитом памяти, и решать это `api` и `module-registry` — В12 в таблице 3 [RUN.md](../RUN.md), «в реестр spec». До тех пор — Д10 в таблице 4 [RUN.md](../RUN.md).
 - **Задача:** T03.
 
 ### 2.4. Правила semver для `diff`
@@ -148,7 +127,7 @@
 
 ## 3. Устройство
 
-Сюда переезжает то, что решено по разделу 2: из каких частей компонент состоит, его типы и данные, как он связан с другими репозиториями. Здесь — то, с чего начался код (R04), пакет модуля (R09) и генератор (R10).
+Сюда переезжает то, что решено по разделу 2: из каких частей компонент состоит, его типы и данные, как он связан с другими репозиториями. Здесь — то, с чего начался код (R04), пакет модуля (R09), генератор (R10) и песочница Starlark (R11).
 
 ### 3.1. Код, проверки и релизы
 
@@ -242,18 +221,51 @@
   - модульные тесты — каждый отказ и число целых, которое берёт каждая функция: `below(1)` и `between(a, a)` берут одно, `permutation(0)` и `permutation(1)` — ни одного;
   - сверка со стандартной библиотекой: поток, функции и слова места сравниваются с `math/rand/v2` и `hash/fnv`. Обычный тест идёт на каждом `go test` — на словах всех векторов, на границах 1, степенях двойки, 2^63 − 1, 2^63 + 1 и 2^64 − 1 и на нескольких тысячах входов от самого генератора с постоянным зерном. Fuzz-тест сверяет то же на любых входах, с перестановками до 1024 чисел, и те же входы лежат в его корпусе. Эталон живёт только в тестах, и тега сборки им не нужно (R10).
 
+### 3.4. Песочница Starlark
+
+Starlark формата — условия проверки, выражения шаблонов и решатели — `module-kit` исполняет в go.starlark.net, в процессе вызывающего (R11). Код пишет эпик кода.
+
+- **Лимиты:**
+
+  | Лимит | Что держит | Кто держит | Откуда число |
+  |---|---|---|---|
+  | условие — не длиннее 1000 знаков | размер выражения | проверка модуля, по схеме | формат (R56 spec) |
+  | условие — не больше 1 000 000 шагов | шаги одного вычисления в счёте закреплённой версии go.starlark.net | `Thread.SetMaxExecutionSteps`; сработал — «без проверки» | формат (R56 spec) |
+  | часы условия — 1 с | время вычисления, чьи шаги зовут тяжёлые встроенные функции | `module-kit`, константа релиза; сработали — «без проверки» | замер 2026-11-02: простое условие тратит на 1 000 000 шагов 6 мс (R11) |
+  | выражение шаблона — не длиннее 1000 знаков, шагов не больше, чем лексем; сочетаний — не больше 10 000 на шаблон | цена перебора экземпляров | проверка модуля: длина — по схеме, сочетания — правилом `task.template-instances` | формат (R60 spec) |
+  | решатель — не длиннее 8192 знаков | размер программы | проверка модуля, по схеме | формат (R61 spec) |
+  | решатель — не больше 100 000 000 шагов на шаблон | шаги верхнего уровня и всех вызовов `solve` в том же счёте | `Thread.SetMaxExecutionSteps` на одном потоке шаблона; сработал — нарушение `task.template-solver` | формат (R61 spec) |
+  | часы решателя — 60 с на шаблон | время программы, чьи шаги зовут тяжёлые встроенные функции | `module-kit`, константа релиза; сработали — нарушение `task.template-solver` | замер 2026-11-02: простой цикл тратит на 100 000 000 шагов 0,45 с (R11) |
+  | рекурсия выключена | стек Go от рекурсии функций Starlark: его переполнение роняет весь процесс | диалект, `Recursion: false`; go.starlark.net ловит и рекурсию через `lambda`. Встроенные функции на глубоко вложенных значениях она не держит — их держит, как и память, только отдельный процесс | формат: у решателя — R61 spec, у условия — В11 |
+  | одновременные запуски | CPU процесса и стенное время часов | вызывающий: `api` — не больше vCPU сразу, CLI — решатель на CPU | R11; у `api` — В13 |
+  | паника интерпретатора | процесс вызывающего | `module-kit`, `recover`: «без проверки» или нарушение `task.template-solver` | R11; #672 go.starlark.net |
+  | память | процесс вызывающего | до этапа 4 — никто: go.starlark.net её не считает | Д10; В12 |
+  | версия go.starlark.net | счёт шагов и поведение языка | формат называет её, `module-kit` закрепляет в `go.mod` | В10; пока — 4f4267fb140d (R11) |
+
+  Шаги считает go.starlark.net той версии, которую закрепил `module-kit`: с 2026-10-05 счётчик растёт на 10 за обратный переход или вызов, а раньше рос на 1 за инструкцию (раздел 4). Тот же модуль на тех же значениях делает те же шаги на любой машине, но не в другой версии интерпретатора: поэтому версию назовёт формат.
+- **Вызов.** Вычисление идёт синхронно, в потоке вызывающего, на своём `starlark.Thread` и с `context` вызывающего. Часы `module-kit` и отмена `context` зовут `Thread.Cancel` с разными причинами. Первые дают «без проверки» или нарушение правила, вторая — ошибку без вердикта. Отмену интерпретатор видит между инструкциями, а встроенную функцию не прерывает: `len(list(range(50000000)))` при часах 100 мс останавливается через 0,2 с после них, взяв 763 МиБ, а `str` списка глубиной 1 000 000 идёт больше 120 с на одном шаге (R11). Часы идут по стенному времени, поэтому вызывающий держит одновременных вычислений не больше, чем у него vCPU (В13). Мест и общего состояния у песочницы нет.
+- **Диалект** — один на весь Starlark формата, как в [тексте формата](../spec/format/README.md), раздел 24: `Set`, `While`, `TopLevelControl` и `GlobalReassign` включены, `Recursion` выключена, `load` запрещён. Условие — в нём же; пока формат этого не сказал, это В11.
+- **CLI** проверяет решатели шаблонов по одному на CPU (`GOMAXPROCS`), каждый на своём потоке Starlark, а итог выводит в порядке шаблонов. Шаги потока от соседей не зависят. Стенное время и память у решателей общие: тяжёлые встроенные функции нескольких шаблонов сразу дойдут до часов или до предела памяти раньше, чем по одному.
+- **Что известно из standalone** (раздел 4):
+  - 25 000 000 шагов и 2 с на запуск, по одному запуску на vCPU и 3 с ожидания места; лимит шагов калибровали по 450 эталонным решателям, и худший потребовал 2 081 362 шага (R53 standalone);
+  - его помощники платят шаг за каждые 16 байт и не строят списков длиннее 1 000 000 элементов: так шаги ограничивают и память помощников — 381 МиБ на потолке шагов, — а среде Go отдана девять десятых памяти экземпляра (`GOMEMLIMIT`);
+  - но дыра памяти шире одного оператора. Оператор `*` и повторное `xs = xs + xs` строят огромный список мимо счётчиков; литерал `{}` в цикле держит по 512 байт на каждые девять шагов, и экземпляр с 1 ГиБ памяти был убит именно так; методы самих значений — `x.extend(range(3000000))` — берут три миллиона элементов за девятнадцать шагов (SPEC 6.6 standalone; R53 standalone);
+  - отдельный процесс v1 standalone отложил, а четыре места с часами-страховкой отверг: «Verdicts depend on the load» (R125 standalone);
+  - самый тяжёлый из его решателей — 2 413 617 шагов на версии standalone и 2 725 355 на 4f4267fb140d (R11).
+- **Отложено:** память стороннего Starlark с этапа 4 — раздел 2.3.
+
 ## 4. Источники
 
 Внешний факт — условия поставщика, цена, закон, документация библиотеки — встаёт сюда с источником и датой прочтения (RULES.md, The bar).
 
-- **Песочница решателей standalone** (раздел 2.3) — [mathtrail/mathtrail-standalone, `SPEC.md`](https://github.com/mathtrail/mathtrail-standalone/blob/c6cbeb2/SPEC.md), раздел 6 «The Starlark solver», ветка `main`, коммит c6cbeb2, прочитано 2026-10-19:
+- **Песочница решателей standalone** (раздел 3.4) — [mathtrail/mathtrail-standalone, `SPEC.md`](https://github.com/mathtrail/mathtrail-standalone/blob/c6cbeb2/SPEC.md), раздел 6 «The Starlark solver», ветка `main`, коммит c6cbeb2, прочитано 2026-10-19:
   - 6.1: «the program is written by the same model that wrote the task»;
   - 6.4, рекурсия выключена: «A recursive Starlark function recurses on the Go stack, and a stack overflow in Go cannot be recovered: it would take the whole instance down, not the request»;
   - 6.5: «Every helper that builds a list is capped at 1,000,000 elements», «a step for every sixteen bytes»; «There is no random number generator, seeded or otherwise. A brute force that samples proves nothing about uniqueness, and a verdict that depends on a seed is a verdict nobody can reproduce from the task alone»;
   - 6.6, таблица «The limits»: Steps — 25,000,000; Wall clock — 2 seconds per run; Memory — «What the built-ins keep: 381 MiB at the ceiling above; nine tenths of the instance for the runtime»; Source size — 8 KB; Result — 5 letters; Concurrent runs — 1 per vCPU; Wait for a slot — «3 seconds per run», и запуск, который не дождался места, «does not start, and the task is told it was not checked and cost no attempt». О литерале: «`[{} for i in range(n)]` keeps 512 bytes for every nine steps — 2.6 million dictionaries at the ceiling, and an instance of 1 GiB was killed for its memory by them». О калибровке: «The bench measured the worst of the 450 at 2,081,362 steps, which is what moved the ceiling from 10,000,000 to 25,000,000» (R53 standalone) и «the worst of all 603 is 2,413,617 steps». О дыре памяти: «a solver written that way takes the instance down rather than the request» и «The fix, if the gap ever bites, is a solver in a process of its own with a memory limit on it — a change of shape rather than a setting, and not one v1 pays for».
-- **Дыра памяти шире, чем в SPEC** (раздел 2.3) — [`docs/decisions.md`](https://github.com/mathtrail/mathtrail-standalone/blob/c6cbeb2/docs/decisions.md) standalone, R53 standalone, коммит c6cbeb2, прочитано 2026-10-19: «the methods of the values themselves take a lazy range of any length in one step — `x.extend(range(3000000))` is nineteen steps», «so no cap on the helpers can close the gap, and only a limit on the memory of the process can»; о времени: «the clock is seen only between instructions» и «a process of its own would bound its time as well as its memory».
-- **Цена в байтах, места и память экземпляра** (раздел 2.3) — R125 standalone, тот же `docs/decisions.md`, коммит c6cbeb2, прочитано 2026-10-19: «an instance runs one solver for each vCPU, and it has 1 GiB, nine tenths of it told to the runtime»; отвергнуто: «Four slots with the clock as insurance. Verdicts depend on the load» и «The process of its own now. A change of shape, and the author's decision»; открыто: «One account handing in solvers that spend their whole clock, for requests nobody opened, keeps an instance's single slot busy» и «Such a hand-in spends no attempt, so the account pays nothing for it. That stays open».
-- **Интерпретатор Starlark standalone** (раздел 2.3) — [`go.mod`](https://github.com/mathtrail/mathtrail-standalone/blob/c6cbeb2/go.mod), коммит c6cbeb2, прочитано 2026-10-19: `go.starlark.net v0.0.0-20260908191801-89a6a09411d5`.
+- **Дыра памяти шире, чем в SPEC** (раздел 3.4) — [`docs/decisions.md`](https://github.com/mathtrail/mathtrail-standalone/blob/c6cbeb2/docs/decisions.md) standalone, R53 standalone, коммит c6cbeb2, прочитано 2026-10-19: «the methods of the values themselves take a lazy range of any length in one step — `x.extend(range(3000000))` is nineteen steps», «so no cap on the helpers can close the gap, and only a limit on the memory of the process can»; о времени: «the clock is seen only between instructions» и «a process of its own would bound its time as well as its memory».
+- **Цена в байтах, места и память экземпляра** (раздел 3.4) — R125 standalone, тот же `docs/decisions.md`, коммит c6cbeb2, прочитано 2026-10-19: «an instance runs one solver for each vCPU, and it has 1 GiB, nine tenths of it told to the runtime»; отвергнуто: «Four slots with the clock as insurance. Verdicts depend on the load» и «The process of its own now. A change of shape, and the author's decision»; открыто: «One account handing in solvers that spend their whole clock, for requests nobody opened, keeps an instance's single slot busy» и «Such a hand-in spends no attempt, so the account pays nothing for it. That stays open».
+- **Интерпретатор Starlark standalone** (раздел 3.4) — [`go.mod`](https://github.com/mathtrail/mathtrail-standalone/blob/c6cbeb2/go.mod), коммит c6cbeb2, прочитано 2026-10-19: `go.starlark.net v0.0.0-20260908191801-89a6a09411d5`.
 - **Случайность в коде standalone** (раздел 3.3) — поиск по `internal/` и `cmd/` того же коммита, 2026-10-19:
   - вне тестов `math/rand/v2` импортируют только `internal/store/drive/calls.go` и `internal/transport/mcp/afresh.go`, и оба вызова дают случайную длительность паузы (`time.Duration`); генератора задач от зерна там нет;
   - в тестах генераторы PCG получают зерно числами, без хеша: `rand.NewPCG(uint64(grade), uint64(child))` в `internal/domain/tutor/simulation_test.go`, `rand.NewPCG(7, 7)` в `pause_test.go`, `rand.NewPCG(d.Dice, 0)` в `property_test.go` и другие.
@@ -283,3 +295,10 @@
   - `src/hash/fnv/fnv.go`: «Package fnv implements FNV-1 and FNV-1a, non-cryptographic hash functions», `offset64 = 14695981039346656037` и `prime64 = 1099511628211`.
 - **Обещание Go о потоках** (R10) — блог Go, [«Evolving the Go Standard Library with math/rand/v2»](https://go.dev/blog/randv2), 1 мая 2024, прочитано 2026-11-02. О `math/rand`: «At that point, we decided Go 1 compatibility included the specific random outputs for a given seed and added a test». О `math/rand/v2` — после того, как `IntN` и родственные функции получили метод Лемира: «The concrete rand.Rand API is now locked in to that value stream, so we will not be able to take advantage of any optimizations yet to be discovered».
 - **Тулчейн главного модуля** (R10) — [Go Toolchains](https://go.dev/doc/toolchain), прочитано 2026-11-02: «The choice of Go toolchain being used depends on the GOTOOLCHAIN environment setting and the go and toolchain lines in the main module's go.mod file or the current workspace's go.work file» и «The go line for each module sets the language version the compiler enforces when compiling packages in that module».
+- **go.starlark.net** (R11) — [google/starlark-go](https://github.com/google/starlark-go), лицензия BSD-3-Clause (API GitHub), прочитано 2026-11-02:
+  - тегов версий нет. `https://proxy.golang.org/go.starlark.net/@latest` — `v0.0.0-20261021141710-4f4267fb140d`, коммит 4f4267fb140d от 2026-10-21; standalone закрепил `v0.0.0-20260908191801-89a6a09411d5` (`go.mod` standalone, коммит 89986bc);
+  - pull request #663 «starlark: check steps/cancellation only on back-edges», слит 2026-10-05 коммитом de228787c8fb: «We only need to increment the step counter and check for cancellation in loops (back edges) and calls. We increment the counter by a constant scaled by the number of instructions between such checks» и «Clients may need to adjust their SetMaxSteps parameter to taste». В `starlark/interp.go` на 4f4267fb140d — `const stepCost = 10 // empirical average number of instructions per back-edge or call`, а на 89a6a09411d5, строка 109, — `thread.Steps++` на каждой инструкции;
+  - `starlark/eval.go` на 4f4267fb140d. О `Cancel`: «There may be a delay before the interpreter observes the cancellation if the thread is currently in a call to a built-in function». О повторе списка и строки: «It's always possible to overeat in small bites but we'll try to stop someone swallowing the world in one gulp» и `const maxAlloc = 1 << 30`;
+  - `starlark/interp.go` на 4f4267fb140d о рекурсии. При выключенной: «We look for the same function code, not function value, otherwise the user could defeat the check by writing the Y combinator». При включённой — `if len(thread.stack) > 100_000`, с pull request #619 от 2025-10-27: «Exceeding this limit should not crash the Go program»;
+  - pull request #672, слит 2026-10-21: «calling one of them without an argument dereferenced a nil `Iterable` and panicked, e.g. `set([1]).difference()`».
+- **Замер песочницы** (R11) — 2026-11-02, Go 1.27.3, AMD Ryzen AI 9 365, 20 потоков. Тесты `TestEveryReferenceTaskProvesItsOwnAnswer` и `TestEverySolverTemplateProvesTheTaskItWasWrittenFor` standalone — клон на коммите 89986bc во временной папке — шли на его go.starlark.net и с `go mod edit -replace` на 4f4267fb140d. Свой стенд — в папке сессии, на обеих версиях. Цифры — R11.
