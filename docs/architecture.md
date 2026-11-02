@@ -1,6 +1,6 @@
 # module-kit — архитектура
 
-> Статус: каркас из заготовки `spec`, 2026-10-19; сверен с `spec` v0.2.11 2026-10-20 (R03), с v0.2.13 2026-10-21 (R05) и с v0.6.3 2026-11-02 (R08); пакет модуля — 2026-11-02 (R09); первый код — заготовка CLI, 2026-10-21 (R04); релизы — общим `release.yml` `.github`, с 2026-10-21 (R07).
+> Статус: каркас из заготовки `spec`, 2026-10-19; сверен с `spec` v0.2.11 2026-10-20 (R03), с v0.2.13 2026-10-21 (R05) и с v0.6.3 2026-11-02 (R08); пакет модуля — 2026-11-02 (R09), генератор — 2026-11-02 (R10); первый код — заготовка CLI, 2026-10-21 (R04); релизы — общим `release.yml` `.github`, с 2026-10-21 (R07).
 >
 > Что делает компонент, чего не делает и что о нём ещё предстоит решить. Это подробности его карточки — architecture 3.7 spec. Карточка остаётся сводкой: если подробности меняют то, что в ней сказано, она правится в `spec` тем же путём, что и вопросы в его реестры (RULES.md, Across repositories).
 >
@@ -27,7 +27,7 @@
 - заполняет шаблоны задач (concepts 9.3 spec; R60 spec):
   - перебирает сочетания параметров — не больше 10 000 на шаблон — и строит экземпляры;
   - ключ каждого экземпляра считает решатель ещё при проверке модуля (R61 spec);
-  - экземпляр попытки выбирает генератор от её зерна (R59 spec);
+  - экземпляр попытки выбирает генератор от её зерна (R59 spec; раздел 3.3);
 - строит открытый вид задачи — без ключа, решения и ловушек — по пометкам `x-open` в схемах формата: поле без пометки закрыто (architecture 1 spec; R05 spec; R45 spec). Открытые виды он строит на сервере из части пакета для сервера, и в пакет они не входят (R62 spec);
 - держит виды проверки и нормализацию: в формате v0 это `number`, `fraction`, `choice`, `predicate` и `rubric` (concepts 9.2 spec; R56 spec). Это код платформы, общий для всех модулей: модуль только выбирает вид и задаёт параметры (R02 spec);
 - выносит вердикт: сравнивает наблюдение с ключом или условием (architecture 1 spec; concepts 9.1 spec; R03 spec). Вердикт допускается, только если ключ или условие дал автор, решатель или взрослый, а при ключе, выведенном ИИ, вердикта нет (concepts 9.4 spec; R04 spec);
@@ -85,14 +85,7 @@
 ### 2.2. Генератор в CI
 
 - **Суть:** чем `module-kit` исполняет генератор и места случайности по R59 spec — стандартной библиотекой Go или своим кодом — и как его CI проходит векторы `format/vectors/random/` `spec`.
-- **Что известно:**
-  - генератор — PCG со 128 битами состояния, ровно `PCG` пакета `math/rand/v2` Go, с выходом DXSM. Функции поверх него — `integer`, `below`, `between`, `fraction` и `permutation` (R59 spec; [текст формата](../spec/format/README.md), раздел 22);
-  - место случайности — зерно и список имён. Его поток — генератор с двумя словами: FNV-1a 64 от зерна и имён через `|` и само зерно. Так новое место не сдвигает чисел прежних. Это схема стенда standalone, и его `seeded` — частный случай места (R59 spec; раздел 4);
-  - текст формата задаёт константы числами, чтобы ни одна реализация не зависела от библиотеки, а `spec` считает векторы сам, второй реализацией (R59 spec);
-  - экземпляр шаблона попытки выбирает одно число `below(count)` места `template`, ID задачи, `instance` (R60 spec);
-  - генератора кодом модуль Go `spec` не даёт, и как звать его функции, решает `module-kit` (R72 spec);
-  - тот же генератор берут `engine`, `sim` и виджеты (R27 spec; R59 spec). В песочнице решателей standalone генератора нет вовсе, а вывод зёрен по назначению был только в стенде `tools/learners` (раздел 4).
-- **Варианты:** пока пусто.
+- **Решено** (R10): генератор — свой код по константам [текста формата](../spec/format/README.md), раздел 22, с ошибкой на аргументе вне области, а `math/rand/v2` и `hash/fnv` — только эталон в тестах. Генератор лежит в `internal/`, а наружу идёт выбор экземпляра попытки. Устройство — раздел 3.3.
 - **Задача:** T02.
 
 ### 2.3. Часы, одновременные запуски и память Starlark
@@ -155,7 +148,7 @@
 
 ## 3. Устройство
 
-Сюда переезжает то, что решено по разделу 2: из каких частей компонент состоит, его типы и данные, как он связан с другими репозиториями. Здесь — то, с чего начался код (R04), и пакет модуля (R09).
+Сюда переезжает то, что решено по разделу 2: из каких частей компонент состоит, его типы и данные, как он связан с другими репозиториями. Здесь — то, с чего начался код (R04), пакет модуля (R09) и генератор (R10).
 
 ### 3.1. Код, проверки и релизы
 
@@ -223,11 +216,37 @@
   - модульные тесты таблицы экранирования и каждого отказа;
   - fuzz-тест, который сверяет функцию с `jsontext.Value.Canonicalize` на значениях, допустимых в формате. Он лежит в файле с `//go:build goexperiment.jsonv2`, и при `GOEXPERIMENT=nojsonv2` остальные тесты идут без него (R09).
 
+### 3.3. Генератор и места случайности
+
+Генератор и места случайности `module-kit` исполняет по [тексту формата](../spec/format/README.md), раздел 22 (R59 spec), своим кодом (R10). Код пишет эпик кода.
+
+- **Пакет** — `internal/random`: в API библиотеки он не входит, и другие модули Go его не импортируют. Генератор один на платформу по алгоритму, а не по коду: `engine`, `sim` и виджеты исполняют его сами и проходят те же векторы (R27 spec; R59 spec).
+- **Поток** — два слова состояния, старшее и младшее, взятые как есть. Шаг — `state · M + C mod 2^128` через `bits.Mul64` и `bits.Add64`, выход — DXSM, а константы — числами из текста формата. Общего состояния нет: поток живёт в одном вызове.
+- **Место случайности** — зерно, целое без знака в 64 бита, и список имён. Его поток начинают два слова: FNV-1a 64 от UTF-8 текста «зерно десятичными цифрами, затем `|` и имя — для каждого имени» и само зерно. Имён хотя бы одно, а имя — непустая строка из корректного UTF-8 без `|`; иначе место не строится, а возвращается ошибка. Так же, на `math/rand/v2` и `hash/fnv`, выводит поток `seeded` стенда standalone — место главного зерна с именами «эксперимент, единица, назначение», — а в рабочем коде standalone генератора от зерна нет (R59 spec; раздел 4).
+- **Функции** — пять, те, что проверяют векторы. Каждая берёт столько целых, сколько велит текст формата:
+
+  | Функция | Область | Как считает |
+  |---|---|---|
+  | `integer` | — | следующее целое потока |
+  | `below(b)` | b от 1 до 2^64 − 1 | степень двойки — маской; иначе метод Лемира: старшее слово произведения целого на b, с отбраковкой, пока младшее слово меньше (2^64 − b) mod b |
+  | `between(a, c)` | a ≤ c и c − a + 1 ≤ 2^63 − 1. Сначала проверяется a ≤ c, а затем, без переполнения, что `uint64(c) − uint64(a)` не больше 2^63 − 2 | a + `below(c − a + 1)` |
+  | `fraction` | — | младшие 53 бита следующего целого, делённые на 2^53 |
+  | `permutation(n)` | n от 0 до 2^31 − 1 | от 0, 1, …, n − 1 по порядку, а для i от n − 1 до 1 — обмен мест i и `below(i + 1)` |
+
+  На аргументе вне области функция возвращает ошибку и целых не берёт. Тасования списка нет: векторов у него нет, а `module-kit` ничего не тасует (R10).
+- **Экземпляр попытки** — одна функция API шаблонов: номер `below(count)` места зерна попытки с именами `template`, ID задачи и `instance`, при count от 1 до 10 000 (R60 spec; [текст формата](../spec/format/README.md), раздел 23). Других вызовов это место не делает, а других мест у модуля в формате v0 нет. ID задачи — строчные латинские буквы, цифры и `-` (`common.schema.json`), и имя места из него всегда допустимо. Зерно попытки берёт `api` из криптостойкого источника, а `module-kit` получает его числом. Ни зерно, ни слова места на устройство не уходят: по словам видно зерно ([текст формата](../spec/format/README.md), раздел 22).
+- **Чего в коде нет:** случайности не от зерна — ни `math/rand`, ни функций верхнего уровня `math/rand/v2`, ни `crypto/rand`. `math/rand/v2` и `hash/fnv` есть только в тестах.
+- **Тесты:**
+  - все векторы `format/vectors/random/` из `spec.Format` (R64 spec). Вектор читают читатель YAML и валидатор схем проверки модуля — по `random-vector.schema.json` — и тип `formatv0.RandomVector` (R72 spec), а числа-строки разбирает `strconv`. Если даны зерно и имена, выведенные слова сравниваются с `state`. Затем вызовы идут по порядку, и каждое значение сравнивается, `fraction` — как double. Тест падает, если векторов нет и если у вызова нет известного поля;
+  - место шаблона проверяют и векторы `format/vectors/templates/`: по каждому зерну они называют экземпляр;
+  - модульные тесты — каждый отказ и число целых, которое берёт каждая функция: `below(1)` и `between(a, a)` берут одно, `permutation(0)` и `permutation(1)` — ни одного;
+  - сверка со стандартной библиотекой: поток, функции и слова места сравниваются с `math/rand/v2` и `hash/fnv`. Обычный тест идёт на каждом `go test` — на словах всех векторов, на границах 1, степенях двойки, 2^63 − 1, 2^63 + 1 и 2^64 − 1 и на нескольких тысячах входов от самого генератора с постоянным зерном. Fuzz-тест сверяет то же на любых входах, с перестановками до 1024 чисел, и те же входы лежат в его корпусе. Эталон живёт только в тестах, и тега сборки им не нужно (R10).
+
 ## 4. Источники
 
 Внешний факт — условия поставщика, цена, закон, документация библиотеки — встаёт сюда с источником и датой прочтения (RULES.md, The bar).
 
-- **Песочница решателей standalone** (разделы 2.2 и 2.3) — [mathtrail/mathtrail-standalone, `SPEC.md`](https://github.com/mathtrail/mathtrail-standalone/blob/c6cbeb2/SPEC.md), раздел 6 «The Starlark solver», ветка `main`, коммит c6cbeb2, прочитано 2026-10-19:
+- **Песочница решателей standalone** (раздел 2.3) — [mathtrail/mathtrail-standalone, `SPEC.md`](https://github.com/mathtrail/mathtrail-standalone/blob/c6cbeb2/SPEC.md), раздел 6 «The Starlark solver», ветка `main`, коммит c6cbeb2, прочитано 2026-10-19:
   - 6.1: «the program is written by the same model that wrote the task»;
   - 6.4, рекурсия выключена: «A recursive Starlark function recurses on the Go stack, and a stack overflow in Go cannot be recovered: it would take the whole instance down, not the request»;
   - 6.5: «Every helper that builds a list is capped at 1,000,000 elements», «a step for every sixteen bytes»; «There is no random number generator, seeded or otherwise. A brute force that samples proves nothing about uniqueness, and a verdict that depends on a seed is a verdict nobody can reproduce from the task alone»;
@@ -235,10 +254,10 @@
 - **Дыра памяти шире, чем в SPEC** (раздел 2.3) — [`docs/decisions.md`](https://github.com/mathtrail/mathtrail-standalone/blob/c6cbeb2/docs/decisions.md) standalone, R53 standalone, коммит c6cbeb2, прочитано 2026-10-19: «the methods of the values themselves take a lazy range of any length in one step — `x.extend(range(3000000))` is nineteen steps», «so no cap on the helpers can close the gap, and only a limit on the memory of the process can»; о времени: «the clock is seen only between instructions» и «a process of its own would bound its time as well as its memory».
 - **Цена в байтах, места и память экземпляра** (раздел 2.3) — R125 standalone, тот же `docs/decisions.md`, коммит c6cbeb2, прочитано 2026-10-19: «an instance runs one solver for each vCPU, and it has 1 GiB, nine tenths of it told to the runtime»; отвергнуто: «Four slots with the clock as insurance. Verdicts depend on the load» и «The process of its own now. A change of shape, and the author's decision»; открыто: «One account handing in solvers that spend their whole clock, for requests nobody opened, keeps an instance's single slot busy» и «Such a hand-in spends no attempt, so the account pays nothing for it. That stays open».
 - **Интерпретатор Starlark standalone** (раздел 2.3) — [`go.mod`](https://github.com/mathtrail/mathtrail-standalone/blob/c6cbeb2/go.mod), коммит c6cbeb2, прочитано 2026-10-19: `go.starlark.net v0.0.0-20260908191801-89a6a09411d5`.
-- **Случайность в коде standalone** (раздел 2.2) — поиск по `internal/` и `cmd/` того же коммита, 2026-10-19:
+- **Случайность в коде standalone** (раздел 3.3) — поиск по `internal/` и `cmd/` того же коммита, 2026-10-19:
   - вне тестов `math/rand/v2` импортируют только `internal/store/drive/calls.go` и `internal/transport/mcp/afresh.go`, и оба вызова дают случайную длительность паузы (`time.Duration`); генератора задач от зерна там нет;
   - в тестах генераторы PCG получают зерно числами, без хеша: `rand.NewPCG(uint64(grade), uint64(child))` в `internal/domain/tutor/simulation_test.go`, `rand.NewPCG(7, 7)` в `pause_test.go`, `rand.NewPCG(d.Dice, 0)` в `property_test.go` и другие.
-- **Вывод зёрен в стенде standalone** (раздел 2.2) — [`tools/learners/child.go`](https://github.com/mathtrail/mathtrail-standalone/blob/c6cbeb2/tools/learners/child.go), коммит c6cbeb2, прочитано 2026-10-19: функция `seeded(unit, purpose string) *rand.Rand` с комментарием «seeded is the random stream of one unit of the experiment for one purpose»; она пишет в `fnv.New64a()` строку `"%d|%s|%s|%s"` из `masterSeed`, `experiment`, `unit` и `purpose` и возвращает `rand.New(rand.NewPCG(hash.Sum64(), masterSeed))` из `math/rand/v2`. Та же функция есть в `research/experiments/` того же коммита.
+- **Вывод зёрен в стенде standalone** (раздел 3.3) — [`tools/learners/child.go`](https://github.com/mathtrail/mathtrail-standalone/blob/c6cbeb2/tools/learners/child.go), коммит c6cbeb2, прочитано 2026-10-19: функция `seeded(unit, purpose string) *rand.Rand` с комментарием «seeded is the random stream of one unit of the experiment for one purpose»; она пишет в `fnv.New64a()` строку `"%d|%s|%s|%s"` из `masterSeed`, `experiment`, `unit` и `purpose` и возвращает `rand.New(rand.NewPCG(hash.Sum64(), masterSeed))` из `math/rand/v2`. Та же функция есть в `research/experiments/` того же коммита.
 - **Go 1.27.3** (R04) — список релизов go.dev, `https://go.dev/dl/?mode=json`, прочитано 2026-10-21: новейший стабильный релиз — `go1.27.3`; sha256 архива `go1.27.3.linux-amd64.tar.gz` — `65efbc80fdc1fa2cd2631cad5b481777a68e8725f34e89f50fc6ac714e379b40`, `go1.27.3.linux-arm64.tar.gz` — `a06e99309dbcbdca1a8ccd2282c3ee146e55930886e26b4f1193269587165f49`. Оба архива скачаны и сверены `sha256sum` 2026-10-21.
 - **`GOTOOLCHAIN=local`** (R04) — [Go Toolchains](https://go.dev/doc/toolchain), прочитано 2026-10-21: «When GOTOOLCHAIN is set to local, the go command always runs the bundled Go toolchain».
 - **Инструменты** (R04) — прокси модулей Go, `https://proxy.golang.org/<модуль>/@latest`, прочитано 2026-10-21: `golang.org/x/vuln` — v1.9.0 (2026-10-11), `github.com/google/go-licenses/v2` — v2.0.1 (2025-09-08). Лицензии — API GitHub, `repos/<владелец>/<репозиторий>/license`, 2026-10-21: golang/vuln — BSD-3-Clause, google/go-licenses — Apache-2.0.
@@ -257,3 +276,10 @@
 - **Библиотеки JCS для Go** (R09) — прокси модулей Go и API GitHub, прочитано 2026-11-02:
   - `github.com/gowebpki/jcs` — `@latest` v1.0.2 от 2026-09-21, лицензия Apache-2.0. В `go.mod` — `require github.com/stretchr/testify v1.12.1`. Issue #5 «RFC 8785: reversed surrogate pair becomes U+FFFD and invalid UTF-8 passes through» закрыт 2026-09-20. Число он читает как double: `jcs.go` на теге v1.0.2, строки 530 и 539, — `strconv.ParseFloat(value, 64)`, затем `NumberToJSON(ieeeF64)`;
   - `github.com/cyberphone/json-canonicalization` — тегов версий нет, `@latest` — псевдоверсия `v0.0.0-20261011152517-32a48195b9b2`. Лицензия по API GitHub — `NOASSERTION`, `go.mod` в репозитории нет. Issue #33 «Go import (as documented) broken» открыт с 2025-03-11.
+- **`math/rand/v2` и `hash/fnv` в Go 1.27.3** (R10) — исходники в `$(go env GOROOT)` стадии `toolchain`, прочитано 2026-11-02:
+  - `src/math/rand/v2/pcg.go`: `mulHi = 2549297995355413924`, `mulLo = 4865540595714422341`, `incHi = 6364136223846793005`, `incLo = 1442695040888963407` и выход DXSM с `cheapMul = 0xda942042e4dd58b5` — те же числа, что в [тексте формата](../spec/format/README.md), раздел 22;
+  - `src/math/rand/v2/rand.go`: у `Uint64N` — «It panics if n == 0», у `Int64N` — «It panics if n <= 0», у `Shuffle` — «Shuffle panics if n < 0». `Perm` о панике не говорит, но `Perm(-1)` падает раньше `Shuffle`, в `make([]int, n)`: «panic: runtime error: makeslice: len out of range», строка 235 (проба, 2026-11-02). На 32 битах `uint64n` идёт через `uint32n`, и комментарий к нему говорит: «On 32-bit systems, here we need to implement that same logic in 32-bit math, both to preserve the exact output sequence observed on 64-bit machines and to preserve the optimization that the unbiasing loop almost never runs». О неизменности потоков документация пакета не говорит: `go doc -all math/rand/v2` такой фразы не находит;
+  - `src/math/rand/v2/regress_test.go`: «Test that random number sequences generated by a specific seed do not change from version to version» и «Do NOT make changes to the golden outputs. If bugs need to be fixed in the underlying code, find ways to fix them that do not affect the outputs»;
+  - `src/hash/fnv/fnv.go`: «Package fnv implements FNV-1 and FNV-1a, non-cryptographic hash functions», `offset64 = 14695981039346656037` и `prime64 = 1099511628211`.
+- **Обещание Go о потоках** (R10) — блог Go, [«Evolving the Go Standard Library with math/rand/v2»](https://go.dev/blog/randv2), 1 мая 2024, прочитано 2026-11-02. О `math/rand`: «At that point, we decided Go 1 compatibility included the specific random outputs for a given seed and added a test». О `math/rand/v2` — после того, как `IntN` и родственные функции получили метод Лемира: «The concrete rand.Rand API is now locked in to that value stream, so we will not be able to take advantage of any optimizations yet to be discovered».
+- **Тулчейн главного модуля** (R10) — [Go Toolchains](https://go.dev/doc/toolchain), прочитано 2026-11-02: «The choice of Go toolchain being used depends on the GOTOOLCHAIN environment setting and the go and toolchain lines in the main module's go.mod file or the current workspace's go.work file» и «The go line for each module sets the language version the compiler enforces when compiling packages in that module».
