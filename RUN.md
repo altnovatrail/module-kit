@@ -613,6 +613,14 @@
   - T08 может сливать pull request Dependabot #13–#17 — В4;
   - Д7 — перечень `paths`, Д8 — покрытие в Codecov, Д9 — OpenSSF Best Practices;
   - В8, «в реестр spec», — комментарий Dockerfile `spec` о Go.
+- **Итог после мержа (2026-11-02):**
+  - pull request #18 слил исполнитель, по поручению автора, merge-коммитом 3f5a4c4;
+  - на 3f5a4c4 CI, CodeQL, Scorecard и Release кончились зелёными. Release — прогон 41388858911: правка Dockerfile входит в `paths`, и он выпустил v0.1.1 в 04:31:52 UTC. Релиз неизменяемый, Latest, на 3f5a4c4, в нём 18 файлов — девять из `release-files` и у каждого его `.sigstore.json` (`gh release view`, `gh release list`);
+  - SAN сертификата в bundle `SHA256SUMS.sigstore.json` — `https://github.com/altnovatrail/.github/.github/workflows/release.yml@11435dbe61d3d4885c9a8dd30686e8111e26cabb`, общий `release.yml` v0.1.4. В `SHA256SUMS` `LICENSE` и `LICENSE-go` — те же суммы, что у v0.1.0, а бинарники другие: в них вписана другая версия;
+  - `just -f spec/justfile release-verify module-kit v0.1.1 SHA256SUMS`, в папке сессии, отказал с кодом 1: «.github v0.1.4, 11435dbe61d3d4885c9a8dd30686e8111e26cabb, is older than v0.1.7: 0acbf75e5c8362b649924bf1abdae973ce71085e is not in its history». То же он ответил на `SHA256SUMS` v0.1.0. Так и предсказывал R08, по R77 spec;
+  - находки по этой задаче (правило 12): у SonarCloud анализ 3f5a4c4 — 0 находок, 0 мест безопасности на проверку, quality gate — OK. Открыты те же семь находок Scorecard из списка R33 spec, у CodeQL открытых нет (API GitHub и SonarCloud, 2026-11-02). Править нечего;
+  - к R08 — поправка: релиз вышел, и `release-verify` его отклоняет;
+  - остаётся Д4: Rebuild Container — мой шаг.
 
 #### T01. Сборка пакета по R62 spec и канонический текст
 

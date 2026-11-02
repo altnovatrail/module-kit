@@ -327,3 +327,5 @@
 - комментарий Dockerfile `spec` о Go говорит, что Go в стадии `toolchain` — для модуля Go `spec`, а здесь он собирает и проверяет код `module-kit`. Dockerfile — копия рецепта, и правка уходит туда — В8 в таблице 3 RUN.md, «в реестр spec».
 
 — RUN.md, T14, T01–T05, «Почему такой порядок», таблицы 3 и 4; CLAUDE.md; README.md; `.devcontainer/Dockerfile`; [architecture.md](architecture.md), статус, разделы 1, 2, 2.1–2.5 и 3.1.
+
+— *Поправка 2026-11-02:* мерж T14 — merge-коммит 3f5a4c4 — дал релиз v0.1.1, как сказано в следствии выше: прогон Release 41388858911, неизменяемый релиз на 3f5a4c4, подпись общего `release.yml` v0.1.4, 11435db. `just -f spec/justfile release-verify module-kit v0.1.1 SHA256SUMS` его отклоняет — «.github v0.1.4, 11435dbe61d3d4885c9a8dd30686e8111e26cabb, is older than v0.1.7», — как и v0.1.0. — RUN.md, T14, «Итог после мержа».
