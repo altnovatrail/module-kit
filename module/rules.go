@@ -34,7 +34,8 @@ var partRules = []string{
 	RuleSkillGraphRetiredIDs, RuleSkillGraphOwnAnchors, RuleTrapsKnownSkills, RuleTaskKnownTraps, RuleTaskKnownTechniques,
 	RuleTaskKnownSkills, RuleTaskSkillRoles, RuleTaskOwnAnchors, RuleTaskKnownBand, RuleTaskKnownPictures, RuleTaskAgeCategories,
 	RuleTaskZones, RuleTaskAssessability, RuleLessonKnownSkills, RuleLessonKnownTasks, RuleLessonTaskSkills,
-	RuleLessonKnownPictures, RuleLessonAreas, RuleLessonAgeCategories, RuleLessonOrder,
+	RuleLessonKnownPictures, RuleLessonAreas, RuleLessonAgeCategories, RuleLessonOrder, RuleTaskChoiceKey, RuleTaskChoiceOptions,
+	RuleTaskFractionKey, RuleTaskTrapValues,
 }
 
 // typed reads the value of a file of a part that passed its schema into the type of formatv0 that
@@ -116,6 +117,7 @@ func (c *checker) withinPart(p parts) {
 	for path, task := range p.tasks {
 		c.skillRoles(path, task)
 		c.zones(path, task)
+		c.checkRules(path, task)
 	}
 	for path, lesson := range p.lessons {
 		c.areas(path, lesson)
@@ -235,15 +237,10 @@ var verdictKinds = []formatv0.CheckKind{
 // checks gives the check of each answer slot of an item, with its place in the task: an answer slot
 // of a handwriting sheet, and a box of a workbook's line (format/README.md, section 14).
 func checks(item formatv0.Item, i int) (found []formatv0.Check, places [][]string) {
-	for j, slot := range item.AnswerSlots {
+	slots, slotPlaces := slotsOf(item, i)
+	for n, slot := range slots {
 		found = append(found, slot.Check)
-		places = append(places, []string{"items", strconv.Itoa(i), "answer_slots", strconv.Itoa(j), "check"})
-	}
-	for j, part := range item.Line {
-		if part.Check != nil {
-			found = append(found, *part.Check)
-			places = append(places, []string{"items", strconv.Itoa(i), "line", strconv.Itoa(j), "check"})
-		}
+		places = append(places, slices.Concat(slotPlaces[n], []string{"check"}))
 	}
 	return found, places
 }
