@@ -1,0 +1,8 @@
+github.com/altnovatrail/spec v0.9.2 h1:dyZKRgO5qd9ebmwL5eVfRTKV3FFkp9SI4qicI5mENBM=
+github.com/altnovatrail/spec v0.9.2/go.mod h1:/JG4n8d9/3wY4DZg8V7PLoB1Y48uPjAyIBqoH/rwxXE=
+github.com/altnovatrail/spec/contracts v0.9.2 h1:+YU4aH5yRqi9nXg5ADx8k9vNkYHLTwk3UNou6nDflFE=
+github.com/altnovatrail/spec/contracts v0.9.2/go.mod h1:omw6CYiQyGSNSQq+AlnKB6M18GNeWda+OPU1f2RyI8s=
+go.yaml.in/yaml/v4 v4.0.0-rc.9 h1:jW19j/SdSgzIhwAiRWwDpFxbm9dMYoo7oD7jWiQ7F3o=
+go.yaml.in/yaml/v4 v4.0.0-rc.9/go.mod h1:aZqd9kCMsGL7AuUv/m/PvWLdg5sjJsZ4oHDEnfPPfY0=
+google.golang.org/protobuf v1.36.12 h1:pJOKDDOyeXErUroCihFAd5LQuwXBSpVnKGrj5o/fwxc=
+google.golang.org/protobuf v1.36.12/go.mod h1:HTf+CrKn2C3g5S8VImy6tdcUvCska2kB7j23XfzDpco=
