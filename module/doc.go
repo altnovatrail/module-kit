@@ -6,5 +6,8 @@
 // and its place. The CLI's check and build call it, and module-registry from stage 4
 // (architecture 3.6).
 //
-// It holds no code yet: the epic of code brings it part by part (R16).
+// The epic of code brings it part by part (R16). It holds so far the folder of a module as an
+// fs.FS, by the layout of section 10 and the rules module.*; the format version of section 2 and
+// manifest.format-version; and the YAML rules of section 4 on each file of a part, by
+// internal/yaml (R22).
 package module
