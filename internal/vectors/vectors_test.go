@@ -2,6 +2,7 @@ package vectors
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -23,6 +24,7 @@ import (
 	"github.com/altnovatrail/module-kit/internal/schema"
 	"github.com/altnovatrail/module-kit/internal/yaml"
 	"github.com/altnovatrail/module-kit/module"
+	"github.com/altnovatrail/module-kit/verdict"
 )
 
 // A vector is one case of the examples or the test vectors: a file, or a folder, named by its path
@@ -328,6 +330,73 @@ func tiers(v vector) error {
 	return nil
 }
 
+// verdicts passes a case of verdicts: each reading of the item gets the verdict, the reason and the
+// trap that the vector gives each answer slot, and the item the verdict it gives (format/README.md,
+// section 15). The vector is read by its schema and its type of formatv0. A predicate runs in the
+// sandbox of Starlark, which comes with its own task.
+func verdicts(v vector) error {
+	var vv formatv0.VerdictVector
+	if _, err := readVector(v.fsys, v.path, "verdict-vector.schema.json", &vv); err != nil {
+		return err
+	}
+	slots := verdict.AnswerSlots(vv.Item)
+	if slices.ContainsFunc(slots, func(s verdict.AnswerSlot) bool { return s.Check.Kind == formatv0.CheckKindPredicate }) {
+		return errNoCode
+	}
+	for n, reading := range vv.Readings {
+		values := make([]*string, len(reading.AnswerSlots))
+		for i, slot := range reading.AnswerSlots {
+			values[i] = slot.Value
+		}
+		got, err := verdict.OfItem(context.Background(), vv.Item, values)
+		if err != nil {
+			return fmt.Errorf("reading %d: %w", n+1, err)
+		}
+		for i, want := range reading.AnswerSlots {
+			if g, w := slotReading(got.Slots[i]), slotReading(verdictOf(want)); g != w {
+				return fmt.Errorf("reading %d, answer slot %d, the value %s: %s, and the vector gives %s", n+1, i+1, quoted(want.Value), g, w)
+			}
+		}
+		if string(got.Verdict) != string(reading.Verdict) {
+			return fmt.Errorf("reading %d: the item is %s, and the vector gives %s", n+1, got.Verdict, reading.Verdict)
+		}
+	}
+	return nil
+}
+
+// verdictOf gives the verdict of an answer slot that a vector gives, as the library gives it.
+func verdictOf(s formatv0.SlotReading) verdict.SlotVerdict {
+	v := verdict.SlotVerdict{Verdict: verdict.Verdict(s.Verdict)}
+	if s.Reason != nil {
+		v.Reason = verdict.Reason(*s.Reason)
+	}
+	if s.Trap != nil {
+		v.Trap = &formatv0.TrapValue{Trap: *s.Trap}
+	}
+	return v
+}
+
+// slotReading writes the verdict of an answer slot as a vector holds it: the verdict, the reason and
+// the trap by its ID.
+func slotReading(v verdict.SlotVerdict) string {
+	text := string(v.Verdict)
+	if v.Reason != "" {
+		text += ", " + string(v.Reason)
+	}
+	if v.Trap != nil {
+		text += ", trap " + string(v.Trap.Trap)
+	}
+	return text
+}
+
+// quoted writes a value read: in quotes, or null when nothing was read.
+func quoted(value *string) string {
+	if value == nil {
+		return "null"
+	}
+	return fmt.Sprintf("%q", *value)
+}
+
 // runners passes a case of each kind: nil when module-kit gives what the case says, and an error
 // that says why not otherwise. A task of the epic of code puts the code it brings in place of
 // noCode, and takes the cases it passes out of testdata/skipped.txt (architecture 3.6; R20).
@@ -341,7 +410,7 @@ var runners = map[string]func(vector) error{
 	// The test vectors (format/README.md, section 9).
 	"rules":     rule,     // refused with the ID of the rule the case is filed under
 	"open-view": openView, // the open view of part.yaml is open-view.yaml
-	"verdicts":  noCode,   // each reading gets its verdicts, reasons and traps
+	"verdicts":  verdicts, // each reading gets its verdicts, reasons and traps
 	"leaks":     noCode,   // each text gives the keys and leak phrases it names
 	"random":    noCode,   // each draw gives its value
 	"templates": noCode,   // the count, and each seed's numbers and instance

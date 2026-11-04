@@ -3,7 +3,11 @@
 // that cannot be read and the trap of a wrong one (format/README.md, section 15). It also joins the
 // observations of two readers into one, answer slot by answer slot, and gives the verdict on the
 // joined observation (contracts/README.md, section 10; R86 spec). api calls it on a learner's
-// work, and tutor's eval runner on the truth of a sample's markup (R95 spec).
+// work, and tutor's eval runner on the truth of a sample's markup (R95 spec); the check of a
+// module reads by it the rules of a task that the check of an answer slot sees itself.
 //
-// It holds no code yet: the epic of code brings it (R16).
+// It holds so far the check kinds number, fraction and choice: OfItem and OfSlot give the verdict
+// on values as they are written, Same compares two values as a check does, and UnicodeVersion names
+// the version of Unicode that the normalization follows (R27). A rubric gives no verdict. The
+// predicate comes with the sandbox of Starlark, and the joining of two readings after it (R16).
 package verdict

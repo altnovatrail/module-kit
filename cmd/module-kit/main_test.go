@@ -3,6 +3,8 @@ package main
 import (
 	"bytes"
 	"testing"
+
+	"github.com/altnovatrail/module-kit/verdict"
 )
 
 func TestRun(t *testing.T) {
@@ -14,7 +16,9 @@ func TestRun(t *testing.T) {
 		wantStdout string
 		wantStderr string
 	}{
-		{"version", []string{"--version"}, 0, "module-kit dev\n", ""},
+		// --version prints unicode.Version, which the verdict's tests hold to verdict.UnicodeVersion
+		// (R27): the binary carries no code of golang.org/x/text yet.
+		{"version", []string{"--version"}, 0, "module-kit dev\nUnicode " + verdict.UnicodeVersion + "\n", ""},
 		{"no arguments", nil, 2, "", usage},
 		{"another flag", []string{"--help"}, 2, "", usage},
 		{"version and more", []string{"--version", "module.yaml"}, 2, "", usage},
