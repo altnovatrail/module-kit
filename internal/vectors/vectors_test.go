@@ -17,6 +17,7 @@ import (
 	"github.com/altnovatrail/spec/contracts"
 
 	"github.com/altnovatrail/module-kit/internal/yaml"
+	"github.com/altnovatrail/module-kit/module"
 )
 
 // A vector is one case of the examples or the test vectors: a file, or a folder, named by its path
@@ -42,28 +43,67 @@ func noCode(vector) error { return errNoCode }
 
 // rule passes a case of a format rule: refused with the ID of the rule its folder names and with no
 // other, since a case breaks its rule and nothing else (format/README.md, section 9). The reader
-// of YAML refuses by the rules yaml.* (R21); the rules of the parts wait for the tasks that bring
-// them.
+// of YAML refuses a case of a rule yaml.* (R21). The check of a module refuses a case laid out as a
+// module, and a case in a file is a file of the part its rule is of, which it checks on its own
+// (R22); a rule that the check does not hold yet refuses neither.
 func rule(v vector) error {
 	id := strings.Split(v.path, "/")[2]
-	if !strings.HasPrefix(id, "yaml.") {
-		return errNoCode
-	}
-	data, err := fs.ReadFile(v.fsys, v.path)
+	rules, refusal, err := refuse(v, id)
 	if err != nil {
 		return err
 	}
-	_, err = yaml.Read(data)
-	var refusal *yaml.Refusal
-	if !errors.As(err, &refusal) {
-		return fmt.Errorf("not refused by %s: %v", id, err)
+	if len(rules) == 0 {
+		return fmt.Errorf("not refused by %s", id)
 	}
-	for _, b := range refusal.Breaches {
-		if b.Rule != id {
-			return fmt.Errorf("refused by more than %s:\n%v", id, err)
+	for _, r := range rules {
+		if r != id {
+			return fmt.Errorf("refused by more than %s:\n%s", id, refusal)
 		}
 	}
 	return nil
+}
+
+// refuse reads or checks a case of a rule, and gives the rule of each breach that refuses it, with
+// "" for a file that is not YAML, and the refusal as text.
+func refuse(v vector, id string) (rules []string, refusal string, err error) {
+	info, err := fs.Stat(v.fsys, v.path)
+	if err != nil {
+		return nil, "", err
+	}
+	if info.IsDir() {
+		folder, err := fs.Sub(v.fsys, v.path)
+		if err != nil {
+			return nil, "", err
+		}
+		report, err := module.Check(folder)
+		return reportRules(report), report.String(), err
+	}
+	data, err := fs.ReadFile(v.fsys, v.path)
+	if err != nil {
+		return nil, "", err
+	}
+	part, _, _ := strings.Cut(id, ".")
+	if part != "yaml" {
+		report, err := module.CheckFile(part, data)
+		return reportRules(report), report.String(), err
+	}
+	_, err = yaml.Read(data)
+	var read *yaml.Refusal
+	if !errors.As(err, &read) {
+		return nil, "", err
+	}
+	for _, b := range read.Breaches {
+		rules = append(rules, b.Rule)
+	}
+	return rules, read.Error(), nil
+}
+
+func reportRules(report module.Report) []string {
+	rules := make([]string, len(report.Breaches))
+	for i, b := range report.Breaches {
+		rules[i] = b.Rule
+	}
+	return rules
 }
 
 // runners passes a case of each kind: nil when module-kit gives what the case says, and an error
