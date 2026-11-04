@@ -2,11 +2,14 @@ package vectors
 
 import (
 	"errors"
+	"io/fs"
 	"maps"
 	"slices"
 	"strings"
 	"testing"
 	"testing/fstest"
+
+	"github.com/altnovatrail/spec"
 )
 
 // files makes a file system of empty files at the names given.
@@ -225,6 +228,75 @@ func TestOutcome(t *testing.T) {
 		failure, skip := outcome(test.skipped, test.err)
 		if failure != test.failure || skip != test.skip {
 			t.Errorf("skipped %v, %v: %q, %v", test.skipped, test.err, failure, skip)
+		}
+	}
+}
+
+// The first line of an invalid example names a keyword at a JSON Pointer in URI fragment form, and
+// the place it names is the pointer the fragment encodes.
+func TestExpectedError(t *testing.T) {
+	for _, c := range []struct {
+		line, keyword, location, refused string
+	}{
+		{"# error: required at #", "required", "", ""},
+		{"# error: type at #/difficulty", "type", "/difficulty", ""},
+		{"# error: type at #/difficulty\r", "type", "/difficulty", ""},
+		{"# error: enum at #/modules/example~1smallest/0.1.0/withdrawn", "enum", "/modules/example~1smallest/0.1.0/withdrawn", ""},
+		{"# error: pattern at #/x%20y/%C3%A9", "pattern", "/x y/é", ""},
+		{"# error: required at", "", "", "names no error"},
+		{"# error: required at difficulty", "", "", "names no error"},
+		{"# error: required at # and more", "", "", "names no error"},
+		{"# error: required at #difficulty", "", "", "encodes no JSON Pointer"},
+		{"# error: required at #/%zz", "", "", "invalid URL escape"},
+		{"id: a", "", "", "names no error"},
+	} {
+		keyword, location, err := expectedError([]byte(c.line + "\nid: a\n"))
+		switch {
+		case c.refused == "" && (err != nil || keyword != c.keyword || location != c.location):
+			t.Errorf("%q: %q at %q, %v; want %q at %q", c.line, keyword, location, err, c.keyword, c.location)
+		case c.refused != "" && (err == nil || !strings.Contains(err.Error(), c.refused)):
+			t.Errorf("%q: %v, want %q", c.line, err, c.refused)
+		}
+	}
+	if _, err := decodePlace("/difficulty"); err == nil {
+		t.Error("a place with no # is read")
+	}
+}
+
+// An example fails its runner when it is refused though valid, when it passes though invalid, when
+// it breaks more than its schema, and when it gives another error than its first line names.
+func TestExampleRunners(t *testing.T) {
+	manifest, err := fs.ReadFile(spec.Format, "examples/manifest/valid/olympiad-math.yaml")
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, c := range []struct {
+		path, data string
+		run        func(vector) error
+		refused    string
+	}{
+		{"examples/manifest/valid/a.yaml", "id: x\n", validExample, "a valid example is refused"},
+		{"examples/inventory/valid/a.yaml", "id: x\n", validExample, "a valid example is refused"},
+		{"examples/manifest/invalid/a.yaml", "# error: required at #\n" + string(manifest), invalidExample, "passes its schema"},
+		{"examples/manifest/invalid/a.yaml", "# error: required at #\nid: &a x\n", invalidExample, "breaks more than its schema"},
+		{"examples/inventory/invalid/a.yaml", "# error: required at #\nid: &a x\n", invalidExample, "breaks more than its schema"},
+		{"examples/manifest/invalid/a.yaml", "# error: type at #/id\nid: x\n", invalidExample, "gives no type at /id"},
+		{"examples/manifest/invalid/a.yaml", "id: x\n", invalidExample, "names no error"},
+		{"examples/manifest/invalid/a.yaml", "# error: required at #\n" + "id: x\n", invalidExample, ""},
+		{"examples/module/valid/a", "", moduleExample, "an example of a whole module is refused"},
+	} {
+		fsys := fstest.MapFS{c.path: {Data: []byte(c.data)}}
+		if strings.HasPrefix(c.path, "examples/module/") {
+			fsys = fstest.MapFS{c.path + "/manifest.yaml": {Data: []byte("id: x\n")}}
+		}
+		err := c.run(vector{name: c.path, fsys: fsys, path: c.path})
+		if c.refused == "" && err != nil || c.refused != "" && (err == nil || !strings.Contains(err.Error(), c.refused)) {
+			t.Errorf("%s %q: %v, want %q", c.path, c.data, err, c.refused)
+		}
+	}
+	for _, run := range []func(vector) error{validExample, invalidExample, moduleExample} {
+		if run(vector{fsys: fstest.MapFS{}, path: "examples/task/valid/none.yaml"}) == nil {
+			t.Error("a case that is not there passes")
 		}
 	}
 }

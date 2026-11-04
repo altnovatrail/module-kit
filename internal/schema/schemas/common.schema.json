@@ -1,0 +1,289 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://altnovatrail.github.io/spec/format/0.3/common.schema.json",
+  "title": "Common definitions",
+  "description": "The definitions that the parts of a module share: the format version, IDs and versions, languages, the license, age categories, school grades, subjects, the paths of media files and pictures, texts, the parts of a text that the learner reads, a canvas, and a rectangle of the handwriting sheet.",
+  "$defs": {
+    "module_format_version": {
+      "type": "string",
+      "pattern": "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)$",
+      "description": "A version of the module format, MAJOR.MINOR, written as a string: \"0.3\"."
+    },
+    "module_id": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9]*(-[a-z0-9]+)*/[a-z][a-z0-9]*(-[a-z0-9]+)*$",
+      "maxLength": 128,
+      "not": {
+        "pattern": "(^|/)(con|prn|aux|nul|com[1-9]|lpt[1-9])(/|$)"
+      },
+      "description": "The ID of a module, <publisher>/<name>, each a name in kebab-case that begins with a letter: novatrail/olympiad-math. The publisher owns the namespace its modules' names are in. Neither name is one that Windows reserves for a device, such as con or lpt1, since an ID may name a folder."
+    },
+    "module_version": {
+      "type": "string",
+      "pattern": "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)$",
+      "description": "The version of a module in Semantic Versioning 2.0.0, X.Y.Z, with no pre-release and no build metadata, written as a string: \"1.2.0\"."
+    },
+    "local_id": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9]*(-[a-z0-9]+)*$",
+      "maxLength": 64,
+      "not": {
+        "pattern": "^(con|prn|aux|nul|com[1-9]|lpt[1-9])$"
+      },
+      "description": "The local ID of a skill, task, trap, technique or lesson: unique among the module's entries of its kind, in kebab-case, beginning with a letter, at most 64 characters, and not a name that Windows reserves for a device, since a local ID may name a file: counting-gaps."
+    },
+    "skill_id": {
+      "$ref": "#/$defs/local_id",
+      "description": "The local ID of a skill."
+    },
+    "task_id": {
+      "$ref": "#/$defs/local_id",
+      "description": "The local ID of a task."
+    },
+    "trap_id": {
+      "$ref": "#/$defs/local_id",
+      "description": "The local ID of a trap."
+    },
+    "technique_id": {
+      "$ref": "#/$defs/local_id",
+      "description": "The local ID of a technique."
+    },
+    "lesson_id": {
+      "$ref": "#/$defs/local_id",
+      "description": "The local ID of a lesson."
+    },
+    "band_id": {
+      "$ref": "#/$defs/local_id",
+      "description": "The ID of a band of the module's difficulty scale, of the form of a local ID and unique among its bands. A band is no entry of the module, and no full ID names it."
+    },
+    "language_tag": {
+      "type": "string",
+      "pattern": "^[a-z]{2,3}(-[A-Z][a-z]{3})?(-([A-Z]{2}|[0-9]{3}))?$",
+      "description": "A language as a BCP 47 tag (RFC 5646) of a language subtag, an optional script and an optional region, each in the letter case of the registry: en, zh-Hans, pt-BR, es-419. Written in quotes when it is no, which YAML 1.1 reads as false."
+    },
+    "license": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9.-]+$",
+      "description": "A license as an identifier of the SPDX License List, such as Apache-2.0 or CC-BY-SA-4.0: letters, digits, . and -."
+    },
+    "age_category": {
+      "enum": [
+        "under_13",
+        "from_13_to_consent",
+        "from_consent_to_18",
+        "adult"
+      ],
+      "description": "An age category: under 13; from 13 to the age of digital consent in the learner's country; from that age to 18; 18 and over."
+    },
+    "grade": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 12,
+      "description": "A school grade, from 1 to 12, as the module's author counts them: the platform does not map the grades of one country to another's."
+    },
+    "subject": {
+      "enum": [
+        "mathematics",
+        "physics",
+        "writing"
+      ],
+      "description": "The code of a subject: what a module teaches."
+    },
+    "media_path": {
+      "type": "string",
+      "pattern": "^([a-z][a-z0-9]*(-[a-z0-9]+)*/)*[a-z][a-z0-9]*(-[a-z0-9]+)*\\.(png|jpg|webp|mp3)$",
+      "maxLength": 128,
+      "not": {
+        "pattern": "(^|/)(con|prn|aux|nul|com[1-9]|lpt[1-9])(/|\\.)"
+      },
+      "description": "The path of a media file from the module's media/ folder: names in kebab-case that begin with a letter, joined by /, and the extension of the file's format — .png, .jpg, .webp or .mp3. No name is one that Windows reserves for a device. pictures/ladder.png."
+    },
+    "picture_path": {
+      "$ref": "#/$defs/media_path",
+      "pattern": "\\.(png|jpg|webp)$",
+      "description": "The path of a picture from the module's media/ folder: a media path whose extension is .png, .jpg or .webp."
+    },
+    "text": {
+      "type": "string",
+      "minLength": 1,
+      "description": "A text of the module for people to read, in its explanation language. Not empty."
+    },
+    "statement_part": {
+      "type": "object",
+      "properties": {
+        "text": {
+          "$ref": "#/$defs/text",
+          "description": "A paragraph, as plain text.",
+          "x-open": true
+        },
+        "picture": {
+          "$ref": "#/$defs/picture_path",
+          "description": "A picture, by its path from media/.",
+          "x-open": true
+        },
+        "alt": {
+          "type": "string",
+          "description": "What the picture shows, in words: a screen reader reads it, and it stands in the picture's place until the picture comes. Empty for a picture that only decorates.",
+          "x-open": true
+        },
+        "width": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991,
+          "description": "The width the picture is shown at, in CSS px; narrower when the text it stands in is.",
+          "x-open": true
+        },
+        "height": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991,
+          "description": "The height the picture is shown at, in CSS px, in proportion to its width.",
+          "x-open": true
+        }
+      },
+      "if": {
+        "required": [
+          "picture"
+        ]
+      },
+      "then": {
+        "required": [
+          "alt",
+          "width",
+          "height"
+        ],
+        "not": {
+          "required": [
+            "text"
+          ]
+        }
+      },
+      "else": {
+        "required": [
+          "text"
+        ],
+        "not": {
+          "anyOf": [
+            {
+              "required": [
+                "alt"
+              ]
+            },
+            {
+              "required": [
+                "width"
+              ]
+            },
+            {
+              "required": [
+                "height"
+              ]
+            }
+          ]
+        }
+      },
+      "description": "A part of a text that the learner reads — a statement, a solution or an explanation: a paragraph, or a picture with what it shows and its size."
+    },
+    "canvas": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "enum": [
+            "handwriting_sheet",
+            "workbook"
+          ],
+          "description": "The canvas kind: a handwriting sheet, a free sheet of 1000 × 1400 units; or a workbook, lines of items with boxes for the answers.",
+          "x-open": true
+        },
+        "grid": {
+          "enum": [
+            "squares",
+            "lines",
+            "dots"
+          ],
+          "default": "squares",
+          "description": "The grid of a handwriting sheet: squares, lines or dots; squares unless given.",
+          "x-open": true
+        },
+        "grid_step": {
+          "type": "integer",
+          "minimum": 20,
+          "maximum": 500,
+          "default": 50,
+          "description": "The step of the grid of a handwriting sheet, in its units: 50 unless given.",
+          "x-open": true
+        }
+      },
+      "required": [
+        "kind"
+      ],
+      "if": {
+        "properties": {
+          "kind": {
+            "const": "workbook"
+          }
+        },
+        "required": [
+          "kind"
+        ]
+      },
+      "then": {
+        "not": {
+          "anyOf": [
+            {
+              "required": [
+                "grid"
+              ]
+            },
+            {
+              "required": [
+                "grid_step"
+              ]
+            }
+          ]
+        }
+      },
+      "description": "A canvas: its kind, and the grid of a handwriting sheet."
+    },
+    "sheet_rectangle": {
+      "type": "object",
+      "properties": {
+        "left": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 999,
+          "description": "How far the rectangle begins from the left edge of the sheet, in its units.",
+          "x-open": true
+        },
+        "top": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1399,
+          "description": "How far the rectangle begins from the top edge of the sheet, in its units.",
+          "x-open": true
+        },
+        "width": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1000,
+          "description": "The width of the rectangle, in units of the sheet.",
+          "x-open": true
+        },
+        "height": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1400,
+          "description": "The height of the rectangle, in units of the sheet.",
+          "x-open": true
+        }
+      },
+      "required": [
+        "left",
+        "top",
+        "width",
+        "height"
+      ],
+      "description": "A rectangle of the handwriting sheet, in its units of 1000 × 1400 from the top left corner."
+    }
+  }
+}

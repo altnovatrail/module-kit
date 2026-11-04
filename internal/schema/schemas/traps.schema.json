@@ -1,0 +1,49 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://altnovatrail.github.io/spec/format/0.3/traps.schema.json",
+  "title": "Trap catalog",
+  "description": "The trap catalog of a module, traps.yaml at the root of its folder: the typical mistakes that the module's tasks catch, each under its local ID, with what the mistake is, the skills it belongs to and what to advise on it. A task names only a trap of the catalog, so that a wrong answer becomes a diagnosis that can be counted. Every field is closed, since a trap tells what mistake a task expects.",
+  "type": "object",
+  "properties": {
+    "traps": {
+      "type": "object",
+      "propertyNames": {
+        "$ref": "common.schema.json#/$defs/trap_id"
+      },
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "description": {
+            "$ref": "common.schema.json#/$defs/text",
+            "description": "What the mistake is, in the module's explanation language: AI reads it to suggest the trap from the learner's work, and the learner's progress names the mistakes that repeat by it."
+          },
+          "skills": {
+            "type": "array",
+            "items": {
+              "$ref": "common.schema.json#/$defs/skill_id"
+            },
+            "minItems": 1,
+            "uniqueItems": true,
+            "description": "The skills of the module that the mistake belongs to, by local ID. A trap that belongs to no skill leaves this field out."
+          },
+          "trap_advice": {
+            "$ref": "common.schema.json#/$defs/text",
+            "description": "What to advise the adult or the learner on this mistake, in the module's explanation language: the learner's progress gives it beside a trap that repeats, and it is the fallback text of the first two rungs after a wrong value of the trap that has no text of its own."
+          }
+        },
+        "required": [
+          "description",
+          "trap_advice"
+        ],
+        "unevaluatedProperties": false,
+        "description": "A trap of the module, under its local ID."
+      },
+      "minProperties": 1,
+      "description": "The module's traps, each under its local ID. Their order carries no meaning."
+    }
+  },
+  "required": [
+    "traps"
+  ],
+  "unevaluatedProperties": false
+}

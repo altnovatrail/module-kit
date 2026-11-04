@@ -1,0 +1,181 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://altnovatrail.github.io/spec/format/0.3/random-vector.schema.json",
+  "title": "Vector of the generator",
+  "description": "A test vector of the generator (section 22 of the format text): the start of a stream — two words, and the seed and names of the place of randomness whose stream it is — and the functions called on the stream, in order, each with its arguments and the value it gives.",
+  "type": "object",
+  "properties": {
+    "seed": {
+      "$ref": "#/$defs/unsigned",
+      "description": "The seed of the place of randomness whose stream this is. With it come its names, and the state is the one they derive."
+    },
+    "names": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^[^|]+$"
+      },
+      "minItems": 1,
+      "description": "The names of the place of randomness, in order: each a string that is not empty and holds no |."
+    },
+    "state": {
+      "type": "object",
+      "properties": {
+        "high": {
+          "$ref": "#/$defs/unsigned",
+          "description": "The high word of the state that starts the stream."
+        },
+        "low": {
+          "$ref": "#/$defs/unsigned",
+          "description": "The low word of the state that starts the stream."
+        }
+      },
+      "required": [
+        "high",
+        "low"
+      ],
+      "unevaluatedProperties": false,
+      "description": "The two words that start the stream, as the generator takes them: those that the seed and the names derive, when they are given."
+    },
+    "draws": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/draw",
+        "unevaluatedProperties": false
+      },
+      "minItems": 1,
+      "description": "The functions called on the stream, in order, each with its arguments and the value it gives."
+    }
+  },
+  "required": [
+    "state",
+    "draws"
+  ],
+  "dependentRequired": {
+    "seed": [
+      "names"
+    ],
+    "names": [
+      "seed"
+    ]
+  },
+  "unevaluatedProperties": false,
+  "$defs": {
+    "unsigned": {
+      "type": "string",
+      "pattern": "^(0|[1-9][0-9]{0,19})$",
+      "description": "An unsigned integer of 64 bits, from 0 to 18446744073709551615, in decimal digits with no leading zero: a YAML number holds an integer of 53 bits at most."
+    },
+    "signed": {
+      "type": "string",
+      "pattern": "^(0|-?[1-9][0-9]{0,18})$",
+      "description": "A signed integer of 64 bits, from -9223372036854775808 to 9223372036854775807, in decimal digits with no leading zero."
+    },
+    "draw": {
+      "type": "object",
+      "properties": {
+        "integer": {
+          "type": "object",
+          "properties": {
+            "value": {
+              "$ref": "#/$defs/unsigned",
+              "description": "The integer."
+            }
+          },
+          "required": [
+            "value"
+          ],
+          "unevaluatedProperties": false,
+          "description": "The next integer of the stream."
+        },
+        "below": {
+          "type": "object",
+          "properties": {
+            "bound": {
+              "$ref": "#/$defs/unsigned",
+              "description": "The bound, from 1."
+            },
+            "value": {
+              "$ref": "#/$defs/unsigned",
+              "description": "The integer, from 0 to the bound less one."
+            }
+          },
+          "required": [
+            "bound",
+            "value"
+          ],
+          "unevaluatedProperties": false,
+          "description": "An integer below a bound."
+        },
+        "between": {
+          "type": "object",
+          "properties": {
+            "from": {
+              "$ref": "#/$defs/signed",
+              "description": "The least integer it may give."
+            },
+            "to": {
+              "$ref": "#/$defs/signed",
+              "description": "The greatest integer it may give."
+            },
+            "value": {
+              "$ref": "#/$defs/signed",
+              "description": "The integer."
+            }
+          },
+          "required": [
+            "from",
+            "to",
+            "value"
+          ],
+          "unevaluatedProperties": false,
+          "description": "An integer between two, both included."
+        },
+        "fraction": {
+          "type": "object",
+          "properties": {
+            "value": {
+              "type": "number",
+              "minimum": 0,
+              "exclusiveMaximum": 1,
+              "description": "The number: a multiple of 2^-53, which a double holds exactly and which a reader compares as a double."
+            }
+          },
+          "required": [
+            "value"
+          ],
+          "unevaluatedProperties": false,
+          "description": "A number from 0 up to 1, never 1."
+        },
+        "permutation": {
+          "type": "object",
+          "properties": {
+            "count": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 2147483647,
+              "description": "How many integers it orders."
+            },
+            "value": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "description": "The integers from 0 to the count less one, in the order it gives."
+            }
+          },
+          "required": [
+            "count",
+            "value"
+          ],
+          "unevaluatedProperties": false,
+          "description": "An order of the integers from 0 up to a count."
+        }
+      },
+      "minProperties": 1,
+      "maxProperties": 1,
+      "description": "A function called on the stream, by its one field, with its arguments and the value it gives."
+    }
+  }
+}

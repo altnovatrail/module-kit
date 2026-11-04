@@ -146,9 +146,9 @@ func (c *checker) listFolder(folder string) error {
 	return nil
 }
 
-// readManifest checks module.manifest, and reads the manifest as the first file of a part. stop is
-// true when the manifest names a format version that the library does not read: its breach is then
-// the report's only one.
+// readManifest checks module.manifest, and reads the manifest as the first file of a part: the
+// format version it names, then the schema of a manifest. stop is true when the manifest names a
+// format version that the library does not read: its breach is then the report's only one.
 func (c *checker) readManifest() (stop bool, err error) {
 	if !slices.Contains(c.files, manifestPath) {
 		c.add(RuleManifest, moduleFolder, 0, 0, "", "the folder holds no file "+manifestPath)
@@ -158,16 +158,20 @@ func (c *checker) readManifest() (stop bool, err error) {
 	if err != nil {
 		return false, err
 	}
-	if b, other := otherVersion(manifestPath, partManifest, c.part(manifestPath, partManifest, data)); other {
+	value, read := c.read(manifestPath, data)
+	if b, other := otherVersion(manifestPath, partManifest, value); other {
 		c.breaches = []Breach{b}
 		return true, nil
+	}
+	if read && c.conform(manifestPath, partManifest, value) {
+		c.parts[manifestPath] = value
 	}
 	return false, nil
 }
 
 // place checks that each file stands at a path of the layout (module.layout), reads each file of a
-// part but the manifest by the YAML rules, and checks the id that a file at <id> holds
-// (module.file-ids).
+// part but the manifest by the YAML rules and against the schema of its part, and checks the id
+// that a file at <id> holds (module.file-ids) when both accept the file.
 func (c *checker) place() error {
 	for _, file := range c.files {
 		r, id, ok := rowOf(file)
@@ -182,17 +186,18 @@ func (c *checker) place() error {
 		if err != nil {
 			return err
 		}
-		value := c.part(file, r.part, data)
-		if id != "" {
+		c.part(file, r.part, data)
+		if value, passed := c.parts[file]; passed && id != "" {
 			c.fileID(file, id, value)
 		}
 	}
 	return nil
 }
 
-// fileID checks module.file-ids on the value of a file at <id>. An id that is no string, or none, is
-// the schema's to refuse, as the form of a local ID is: the rule says only what the schema cannot,
-// that the id is the file's name (format/README.md, section 7).
+// fileID checks module.file-ids on the value of a file at <id> that its schema accepts, so that the
+// id is a string of the form of a local ID: the rule says only what the schema cannot, that the id
+// is the file's name (format/README.md, section 7). A file that the schema refuses breaks it and
+// nothing more (R23).
 func (c *checker) fileID(file, name string, value any) {
 	entry, _ := value.(map[string]any)
 	if id, ok := entry["id"].(string); ok && id != name {

@@ -1,0 +1,98 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://altnovatrail.github.io/spec/format/0.3/inventory.schema.json",
+  "title": "Inventory",
+  "description": "The inventory of a module's package, inventory.json (section 25 of the format text): the module's format version, ID and version, and the digest and size of each of the package's two parts — the server part, which is the canonical view, and the device part, which a listing of its files names. The digest of the package is the digest of its inventory.",
+  "type": "object",
+  "properties": {
+    "module_format_version": {
+      "$ref": "common.schema.json#/$defs/module_format_version",
+      "description": "The format version that the module's manifest names, by which the package is read. It stands at the root of the inventory in every version of the format, so that a reader finds it before it knows how to read the rest."
+    },
+    "id": {
+      "$ref": "common.schema.json#/$defs/module_id",
+      "description": "The module's ID, as its manifest names it."
+    },
+    "version": {
+      "$ref": "common.schema.json#/$defs/module_version",
+      "description": "The module's version, as its manifest names it."
+    },
+    "server_part": {
+      "$ref": "#/$defs/descriptor",
+      "unevaluatedProperties": false,
+      "description": "The server part, server.json: the canonical text of the canonical view."
+    },
+    "device_part": {
+      "$ref": "#/$defs/descriptor",
+      "unevaluatedProperties": false,
+      "description": "The device part, by its listing, device.json: the canonical text of the listing of its files."
+    }
+  },
+  "required": [
+    "module_format_version",
+    "id",
+    "version",
+    "server_part",
+    "device_part"
+  ],
+  "unevaluatedProperties": false,
+  "$defs": {
+    "digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$",
+      "description": "A digest: sha256: and the SHA-256 of the bytes, in 64 lowercase hexadecimal digits."
+    },
+    "descriptor": {
+      "type": "object",
+      "properties": {
+        "digest": {
+          "$ref": "#/$defs/digest",
+          "description": "The digest of the bytes."
+        },
+        "size": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991,
+          "description": "How many bytes there are."
+        }
+      },
+      "required": [
+        "digest",
+        "size"
+      ],
+      "description": "What names bytes of a package: their digest and their size."
+    },
+    "device_listing": {
+      "type": "object",
+      "properties": {
+        "license": {
+          "$ref": "#/$defs/descriptor",
+          "unevaluatedProperties": false,
+          "description": "LICENSE, the text of the module's license."
+        },
+        "notice": {
+          "$ref": "#/$defs/descriptor",
+          "unevaluatedProperties": false,
+          "description": "NOTICE, the notices of the licenses, when the module has one."
+        },
+        "media": {
+          "type": "object",
+          "propertyNames": {
+            "$ref": "common.schema.json#/$defs/media_path"
+          },
+          "additionalProperties": {
+            "$ref": "#/$defs/descriptor",
+            "unevaluatedProperties": false,
+            "description": "A media file, by its path from media/."
+          },
+          "minProperties": 1,
+          "description": "The files of media/, when the module has any, each by its path from media/."
+        }
+      },
+      "required": [
+        "license"
+      ],
+      "description": "The listing of a package's device part, device.json: every file of it, each named by its digest and size."
+    }
+  }
+}

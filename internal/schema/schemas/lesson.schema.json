@@ -1,0 +1,241 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://altnovatrail.github.io/spec/format/0.3/lesson.schema.json",
+  "title": "Lesson",
+  "description": "A lesson of a module: a sequence that its author made — explanations, worked examples and tasks, in order — and the skills of the module that it teaches. The skill graph orders the lessons.",
+  "type": "object",
+  "properties": {
+    "id": {
+      "$ref": "common.schema.json#/$defs/lesson_id",
+      "description": "The lesson's local ID: the name of its file, without .yaml.",
+      "x-open": true
+    },
+    "title": {
+      "$ref": "common.schema.json#/$defs/text",
+      "description": "What the lesson is called, in the module's explanation language. The learner sees it before every task of the lesson, and the leak check searches it for their keys.",
+      "x-open": true
+    },
+    "skills": {
+      "type": "array",
+      "items": {
+        "$ref": "common.schema.json#/$defs/skill_id"
+      },
+      "minItems": 1,
+      "uniqueItems": true,
+      "description": "The skills of the module, by local ID, that the lesson teaches. Every task of the lesson trains one of them as a primary skill."
+    },
+    "age_categories": {
+      "type": "array",
+      "items": {
+        "$ref": "common.schema.json#/$defs/age_category"
+      },
+      "minItems": 1,
+      "uniqueItems": true,
+      "description": "The age categories that the lesson suits, when they are fewer than the module's: the platform gives the lesson only to a learner whom the lesson and each of its tasks suit."
+    },
+    "segments": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/segment",
+        "unevaluatedProperties": false
+      },
+      "minItems": 1,
+      "uniqueItems": true,
+      "description": "The segments of the lesson, in the author's order: explanations, worked examples and tasks. No two are the same.",
+      "x-open": true
+    }
+  },
+  "required": [
+    "id",
+    "title",
+    "skills",
+    "segments"
+  ],
+  "unevaluatedProperties": false,
+  "$defs": {
+    "segment": {
+      "type": "object",
+      "properties": {
+        "explanation": {
+          "type": "array",
+          "items": {
+            "$ref": "common.schema.json#/$defs/statement_part",
+            "unevaluatedProperties": false
+          },
+          "minItems": 1,
+          "description": "An explanation: paragraphs and pictures that the learner reads, in order, in the module's explanation language.",
+          "x-open": true
+        },
+        "worked_example": {
+          "$ref": "#/$defs/worked_example",
+          "unevaluatedProperties": false,
+          "description": "A worked example: an example solved before the learner's eyes, on a handwriting sheet.",
+          "x-open": true
+        },
+        "task": {
+          "$ref": "common.schema.json#/$defs/task_id",
+          "description": "A task of the module, by its local ID. The next segment begins when the task ends.",
+          "x-open": true
+        }
+      },
+      "minProperties": 1,
+      "maxProperties": 1,
+      "description": "A segment of a lesson: an explanation, a worked example or a task, by its one field."
+    },
+    "worked_example": {
+      "type": "object",
+      "properties": {
+        "statement": {
+          "type": "array",
+          "items": {
+            "$ref": "common.schema.json#/$defs/statement_part",
+            "unevaluatedProperties": false
+          },
+          "minItems": 1,
+          "description": "What the example asks: paragraphs and pictures in order, as a task's statement.",
+          "x-open": true
+        },
+        "canvas": {
+          "$ref": "common.schema.json#/$defs/canvas",
+          "properties": {
+            "kind": {
+              "const": "handwriting_sheet",
+              "description": "A worked example is shown on a handwriting sheet."
+            }
+          },
+          "unevaluatedProperties": false,
+          "description": "The sheet that the author's demo is shown on: a handwriting sheet and its grid. The learner does not write on it.",
+          "x-open": true
+        },
+        "demo": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/demo_part",
+            "unevaluatedProperties": false
+          },
+          "minItems": 1,
+          "description": "The author's demo: the parts of how the example is solved, in order, which the learner opens one at a time and may hide.",
+          "x-open": true
+        }
+      },
+      "required": [
+        "statement",
+        "canvas",
+        "demo"
+      ],
+      "description": "A worked example of a lesson: no task, with no answer slots and no key."
+    },
+    "demo_part": {
+      "type": "object",
+      "properties": {
+        "text": {
+          "$ref": "common.schema.json#/$defs/text",
+          "description": "A paragraph of the demo, as plain text.",
+          "x-open": true
+        },
+        "picture": {
+          "$ref": "common.schema.json#/$defs/picture_path",
+          "description": "A picture of the demo, by its path from media/.",
+          "x-open": true
+        },
+        "alt": {
+          "type": "string",
+          "description": "What the picture shows, in words: a screen reader reads it, and it stands in the picture's place until the picture comes. Empty for a picture that only decorates.",
+          "x-open": true
+        },
+        "width": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991,
+          "description": "The width that a picture beside the sheet is shown at, in CSS px.",
+          "x-open": true
+        },
+        "height": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991,
+          "description": "The height that a picture beside the sheet is shown at, in CSS px, in proportion to its width.",
+          "x-open": true
+        },
+        "area": {
+          "$ref": "common.schema.json#/$defs/sheet_rectangle",
+          "unevaluatedProperties": false,
+          "description": "The area of the sheet that a picture on the sheet is shown in, at its size, on the canvas layer of the author's demo.",
+          "x-open": true
+        }
+      },
+      "if": {
+        "required": [
+          "picture"
+        ]
+      },
+      "then": {
+        "required": [
+          "alt"
+        ],
+        "not": {
+          "required": [
+            "text"
+          ]
+        },
+        "if": {
+          "required": [
+            "area"
+          ]
+        },
+        "then": {
+          "not": {
+            "anyOf": [
+              {
+                "required": [
+                  "width"
+                ]
+              },
+              {
+                "required": [
+                  "height"
+                ]
+              }
+            ]
+          }
+        },
+        "else": {
+          "required": [
+            "width",
+            "height"
+          ]
+        }
+      },
+      "else": {
+        "required": [
+          "text"
+        ],
+        "not": {
+          "anyOf": [
+            {
+              "required": [
+                "alt"
+              ]
+            },
+            {
+              "required": [
+                "width"
+              ]
+            },
+            {
+              "required": [
+                "height"
+              ]
+            },
+            {
+              "required": [
+                "area"
+              ]
+            }
+          ]
+        }
+      },
+      "description": "A part of the author's demo: a paragraph; a picture beside the sheet, with what it shows and its size; or a picture on the sheet, with what it shows and its area."
+    }
+  }
+}

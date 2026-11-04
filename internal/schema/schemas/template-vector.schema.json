@@ -1,0 +1,103 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://altnovatrail.github.io/spec/format/0.3/template-vector.schema.json",
+  "title": "Template vector",
+  "description": "A test vector of templates (sections 23 and 24 of the format text): a template, the number of its instances, the names that its solver gets, when it has one, and attempts, each with its seed, the numbers of the instance that the seed picks, and that instance. An implementation counts the instances, picks the instance of each seed, runs the solver on it, replaces the placeholders, and gets exactly these.",
+  "type": "object",
+  "properties": {
+    "task": {
+      "$ref": "task.schema.json",
+      "unevaluatedProperties": false,
+      "required": [
+        "template"
+      ],
+      "description": "The template: a task with a template, which breaks no rule of a task."
+    },
+    "count": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 10000,
+      "description": "The number of the template's instances: the combinations of its parameters for which its constraint holds."
+    },
+    "inputs": {
+      "type": "array",
+      "items": {
+        "$ref": "task.schema.json#/$defs/template_name",
+        "description": "The name of a parameter or a derived number that solve gets."
+      },
+      "uniqueItems": true,
+      "description": "The names of the numbers that solve gets on each instance, in any order: the parameters and the derived numbers whose placeholders stand in the open fields of the template. A vector has them when its template has a solver, and only then, and they may be none."
+    },
+    "attempts": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/attempt",
+        "unevaluatedProperties": false
+      },
+      "minItems": 1,
+      "description": "Attempts on the template, each by its seed, with the instance that the seed picks."
+    }
+  },
+  "required": [
+    "task",
+    "count",
+    "attempts"
+  ],
+  "unevaluatedProperties": false,
+  "if": {
+    "properties": {
+      "task": {
+        "properties": {
+          "template": {
+            "required": [
+              "solver"
+            ]
+          }
+        }
+      }
+    }
+  },
+  "then": {
+    "required": [
+      "inputs"
+    ]
+  },
+  "else": {
+    "not": {
+      "required": [
+        "inputs"
+      ]
+    }
+  },
+  "$defs": {
+    "attempt": {
+      "type": "object",
+      "properties": {
+        "seed": {
+          "$ref": "random-vector.schema.json#/$defs/unsigned",
+          "description": "The seed of the attempt, whose place of randomness with the names template, the task's ID and instance picks the instance."
+        },
+        "numbers": {
+          "$ref": "canonical-view.schema.json#/$defs/numbers",
+          "description": "The numbers of the instance: every parameter, every derived number and every result of the solver of the template, by its name."
+        },
+        "instance": {
+          "$ref": "task.schema.json",
+          "unevaluatedProperties": false,
+          "not": {
+            "required": [
+              "template"
+            ]
+          },
+          "description": "The instance that the seed picks: the template with its numbers, the solver's results among them, in the place of its placeholders, and without its template."
+        }
+      },
+      "required": [
+        "seed",
+        "numbers",
+        "instance"
+      ],
+      "description": "An attempt on the template: its seed, and the instance that the seed picks."
+    }
+  }
+}

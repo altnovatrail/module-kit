@@ -1,0 +1,57 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://altnovatrail.github.io/spec/format/0.3/index-vector.schema.json",
+  "title": "Index vector",
+  "description": "A release of modules that a test vector of the module index gives, index.yaml beside the modules/ it releases (sections 9 and 26 of the format text): the index of the release before it, the release's tag and its withdrawals, and either the index that the release builds or the rule of the index by which the build is refused. An implementation builds the package of each module and the index, and gets exactly these, whatever the order of keys.",
+  "type": "object",
+  "properties": {
+    "previous": {
+      "$ref": "module-index.schema.json",
+      "unevaluatedProperties": false,
+      "description": "The index of the release before this one. The first release of modules has none, and leaves this field out."
+    },
+    "release": {
+      "$ref": "module-index.schema.json#/$defs/release",
+      "description": "The tag of this release, which a new entry names."
+    },
+    "withdrawals": {
+      "$ref": "module-index.schema.json#/$defs/withdrawals",
+      "description": "The versions that the release withdraws from publication, by module ID and version. A release that withdraws none leaves this field out."
+    },
+    "index": {
+      "$ref": "module-index.schema.json",
+      "unevaluatedProperties": false,
+      "description": "The index that the release builds, when it builds one."
+    },
+    "refusal": {
+      "enum": [
+        "module-index.entries-kept",
+        "module-index.one-package",
+        "module-index.known-withdrawals",
+        "module-index.version-above"
+      ],
+      "description": "The rule of the index by which the build is refused, when it is: the case breaks that rule and no other."
+    }
+  },
+  "required": [
+    "release"
+  ],
+  "if": {
+    "required": [
+      "refusal"
+    ]
+  },
+  "then": {
+    "not": {
+      "required": [
+        "index"
+      ]
+    }
+  },
+  "else": {
+    "required": [
+      "index"
+    ]
+  },
+  "unevaluatedProperties": false
+}

@@ -1,0 +1,115 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://altnovatrail.github.io/spec/format/0.3/module-index.schema.json",
+  "title": "Module index",
+  "description": "The module index, module-index.json, a file of each release of modules (section 26 of the format text): every published version of every module, each by the digest of its package, with the release whose files hold it, the anchor skills it teaches and, when it has been withdrawn from publication, why. A release builds it from the index of the release before it, and the release workflow of .github signs it. Its members and those of an entry keep their places and meanings in every version of the format, so that the index carries the entries of every version; a reader of another version reads them by their places, not by this schema.",
+  "type": "object",
+  "properties": {
+    "module_format_version": {
+      "$ref": "common.schema.json#/$defs/module_format_version",
+      "description": "The format version by which the index was built. It stands at the root of the index in every version of the format, as it does in a manifest and an inventory."
+    },
+    "modules": {
+      "type": "object",
+      "propertyNames": {
+        "$ref": "common.schema.json#/$defs/module_id"
+      },
+      "additionalProperties": {
+        "type": "object",
+        "propertyNames": {
+          "$ref": "common.schema.json#/$defs/module_version"
+        },
+        "additionalProperties": {
+          "$ref": "#/$defs/entry",
+          "unevaluatedProperties": false,
+          "description": "The entry of one version of the module."
+        },
+        "minProperties": 1,
+        "description": "The published versions of one module, each under its version, X.Y.Z."
+      },
+      "minProperties": 1,
+      "description": "Every module that a release of modules has published, under its ID."
+    }
+  },
+  "required": [
+    "module_format_version",
+    "modules"
+  ],
+  "unevaluatedProperties": false,
+  "$defs": {
+    "entry": {
+      "type": "object",
+      "properties": {
+        "module_format_version": {
+          "$ref": "common.schema.json#/$defs/module_format_version",
+          "description": "The format version that the package's inventory names, by which the package is read. It stands in every entry in every version of the format, so that a reader finds it before it reads the package."
+        },
+        "package_digest": {
+          "$ref": "inventory.schema.json#/$defs/digest",
+          "description": "The digest of the version's package: the digest of the canonical text of its inventory (section 25)."
+        },
+        "release": {
+          "$ref": "#/$defs/release",
+          "description": "The tag of the release of modules whose files hold the package: the release that first published it."
+        },
+        "teaches": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/anchor_skill_id"
+          },
+          "minItems": 1,
+          "uniqueItems": true,
+          "description": "The anchor skills that the skills of the version's skill graph teach, each once, in the order of the code units of their IDs. A version whose skills teach none leaves this field out."
+        },
+        "withdrawn": {
+          "$ref": "#/$defs/withdrawal_reason",
+          "description": "When a release has withdrawn the version from publication, the reason of the withdrawal. It stays in every later index, with the same reason."
+        }
+      },
+      "required": [
+        "module_format_version",
+        "package_digest",
+        "release"
+      ],
+      "description": "What the index says of one published version of a module."
+    },
+    "release": {
+      "type": "string",
+      "pattern": "^v(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)$",
+      "description": "The tag of a release of modules, vX.Y.Z, as every NovaTrail repository numbers its releases."
+    },
+    "anchor_skill_id": {
+      "type": "string",
+      "pattern": "^core\\.[a-z][a-z0-9]*(-[a-z0-9]+)*$",
+      "description": "The ID of an anchor skill, core.<name>, in the form of the shared taxonomy's IDs. The index takes the form and not the vocabulary itself, so that an entry stays valid after a later version of the format removes the anchor skill it names."
+    },
+    "withdrawal_reason": {
+      "enum": [
+        "wrong_key",
+        "answer_leak",
+        "unsuitable_content"
+      ],
+      "description": "Why a version was withdrawn: wrong_key, a key or a predicate of it gives wrong verdicts; answer_leak, a text that the learner sees gives an answer away; unsuitable_content, it holds content that does not suit the learners it may reach. A reader takes a version as withdrawn whatever the reason, also one that a later version of the format adds."
+    },
+    "withdrawals": {
+      "type": "object",
+      "propertyNames": {
+        "$ref": "common.schema.json#/$defs/module_id"
+      },
+      "additionalProperties": {
+        "type": "object",
+        "propertyNames": {
+          "$ref": "common.schema.json#/$defs/module_version"
+        },
+        "additionalProperties": {
+          "$ref": "#/$defs/withdrawal_reason",
+          "description": "The reason for which the release withdraws the version."
+        },
+        "minProperties": 1,
+        "description": "The versions of one module that the release withdraws, each under its version, X.Y.Z."
+      },
+      "minProperties": 1,
+      "description": "The withdrawals of a release of modules, which the build of its index marks (section 26 of the format text): under each module's ID, under each version it withdraws, the reason of the withdrawal. modules keeps them in a file of its own, and a test vector of the index in its member withdrawals. A release that withdraws none has no withdrawals, rather than an empty object."
+    }
+  }
+}

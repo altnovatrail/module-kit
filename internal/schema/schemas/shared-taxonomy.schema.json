@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://altnovatrail.github.io/spec/format/0.3/shared-taxonomy.schema.json",
+  "title": "Shared taxonomy",
+  "description": "The vocabulary of anchor skills: the skills that belong to no module and that modules name to build on one another. Its instance is the ID of an anchor skill, core.<name>: a skill of a module names one among its prerequisites or in teaches, and a manifest in its dependencies. It describes no part of a module, and it refuses an ID that names no anchor skill. Each anchor skill is a branch of oneOf, with its ID, its title and its description, all in English; the description is normative, since it is what the skill means.",
+  "type": "string",
+  "pattern": "^core\\.[a-z][a-z0-9]*(-[a-z0-9]+)*$",
+  "oneOf": [
+    {
+      "const": "core.multiplication-table",
+      "title": "Multiplication table",
+      "description": "Knows the product of any two whole numbers from 1 to 10, and divides such a product by either of them: 7 × 8 = 56 and 56 ÷ 8 = 7."
+    },
+    {
+      "const": "core.division-with-remainder",
+      "title": "Division with a remainder",
+      "description": "Divides a whole number by a whole number from 1 to 10 and gives the whole quotient and the remainder, which is less than the divisor: 47 ÷ 6 = 7, remainder 5."
+    },
+    {
+      "const": "core.fractions-of-a-whole",
+      "title": "Fractions of a whole",
+      "description": "Names a part of a whole split into equal parts as a fraction, such as 3/4 of a shape, and finds a fraction of a whole number, such as 2/3 of 12."
+    },
+    {
+      "const": "core.linear-equations",
+      "title": "Linear equations",
+      "description": "Solves an equation of the first degree in one unknown, such as 3x + 5 = 20, and checks the solution by putting it back into the equation."
+    }
+  ]
+}

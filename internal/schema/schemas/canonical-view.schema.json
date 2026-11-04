@@ -1,0 +1,122 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://altnovatrail.github.io/spec/format/0.3/canonical-view.schema.json",
+  "title": "Canonical view",
+  "description": "The canonical view of a module, the server part of its package (section 25 of the format text): each part of the module as its file gives it, a part that a module has many of as an object by local ID, the tier of each skill, and the numbers of every instance of each template. module-kit builds it from the module's folder by the format version that the manifest names, and so does spec's CI for the vectors of packages; sim reads it by these types. No field of it is open: the learner's app gets the open view of a part from the server, never the canonical view.",
+  "type": "object",
+  "properties": {
+    "manifest": {
+      "$ref": "manifest.schema.json",
+      "unevaluatedProperties": false,
+      "description": "The manifest, manifest.yaml. Its module_format_version names the version by which the whole view is read."
+    },
+    "skill_graph": {
+      "$ref": "skill-graph.schema.json",
+      "unevaluatedProperties": false,
+      "description": "The skill graph, skill-graph.yaml, when the module has one."
+    },
+    "skill_tiers": {
+      "$ref": "#/$defs/skill_tiers",
+      "description": "The tier of each skill of the skill graph, which section 12 computes from its prerequisites: there when the module has a skill graph, and only then."
+    },
+    "traps": {
+      "$ref": "traps.schema.json",
+      "unevaluatedProperties": false,
+      "description": "The trap catalog, traps.yaml, when the module has one."
+    },
+    "techniques": {
+      "$ref": "techniques.schema.json",
+      "unevaluatedProperties": false,
+      "description": "The technique catalog, techniques.yaml, when the module has one."
+    },
+    "solving_steps": {
+      "$ref": "solving-steps.schema.json",
+      "unevaluatedProperties": false,
+      "description": "The solving steps, solving-steps.yaml, when the module has them."
+    },
+    "tasks": {
+      "type": "object",
+      "propertyNames": {
+        "$ref": "common.schema.json#/$defs/task_id"
+      },
+      "additionalProperties": {
+        "$ref": "task.schema.json",
+        "unevaluatedProperties": false,
+        "description": "A task, tasks/<id>.yaml, under its local ID: a template as it is written, with its field template."
+      },
+      "minProperties": 1,
+      "description": "The tasks of the module, when it has any, each under its local ID."
+    },
+    "lessons": {
+      "type": "object",
+      "propertyNames": {
+        "$ref": "common.schema.json#/$defs/lesson_id"
+      },
+      "additionalProperties": {
+        "$ref": "lesson.schema.json",
+        "unevaluatedProperties": false,
+        "description": "A lesson, lessons/<id>.yaml, under its local ID."
+      },
+      "minProperties": 1,
+      "description": "The lessons of the module, when it has any, each under its local ID."
+    },
+    "instances": {
+      "type": "object",
+      "propertyNames": {
+        "$ref": "common.schema.json#/$defs/task_id"
+      },
+      "additionalProperties": {
+        "type": "array",
+        "items": {
+          "$ref": "#/$defs/numbers"
+        },
+        "minItems": 1,
+        "maxItems": 10000,
+        "description": "The numbers of each instance of the template of this ID, in the order of its instances (section 23): the instance of an attempt is number below(count) of them, where count is how many there are."
+      },
+      "minProperties": 1,
+      "description": "The instances of the templates among the tasks, when there is one, each template's under its local ID. The server picks the instance of an attempt among them and puts its numbers in the place of the template's placeholders, and so runs no Starlark when an attempt begins."
+    }
+  },
+  "required": [
+    "manifest"
+  ],
+  "dependentRequired": {
+    "skill_graph": [
+      "skill_tiers"
+    ],
+    "skill_tiers": [
+      "skill_graph"
+    ]
+  },
+  "unevaluatedProperties": false,
+  "$defs": {
+    "skill_tiers": {
+      "type": "object",
+      "propertyNames": {
+        "$ref": "common.schema.json#/$defs/skill_id"
+      },
+      "additionalProperties": {
+        "type": "integer",
+        "minimum": 1,
+        "maximum": 9007199254740991,
+        "description": "The tier of the skill: 1 when it has no prerequisite among the module's skills, and otherwise one above the highest tier of those prerequisites."
+      },
+      "description": "The tier of every skill of a skill graph, by the skill's local ID (section 12)."
+    },
+    "numbers": {
+      "type": "object",
+      "propertyNames": {
+        "$ref": "task.schema.json#/$defs/template_name"
+      },
+      "additionalProperties": {
+        "type": "integer",
+        "minimum": -9007199254740991,
+        "maximum": 9007199254740991,
+        "description": "The number of this parameter, derived number or result in the instance."
+      },
+      "minProperties": 1,
+      "description": "The numbers of an instance of a template: every parameter, every derived number and every result of the solver of the template, by its name (sections 23 and 24)."
+    }
+  }
+}

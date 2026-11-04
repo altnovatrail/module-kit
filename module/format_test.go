@@ -144,7 +144,7 @@ func TestFormsAreTheSchemas(t *testing.T) {
 
 // moduleFolders finds the folders of spec.Format laid out as a module (format/README.md, sections
 // 8 and 9), each with the rule it is a case of, or "" for a module that breaks no rule.
-func moduleFolders(t *testing.T) map[string]string {
+func moduleFolders(t testing.TB) map[string]string {
 	t.Helper()
 	folders := map[string]string{}
 	err := fs.WalkDir(spec.Format, ".", func(name string, entry fs.DirEntry, err error) error {
@@ -178,7 +178,7 @@ func moduleFolders(t *testing.T) map[string]string {
 // partFiles finds the files of spec.Format that are files of a part on their own: the examples of
 // the parts of the layout, the cases in a file of a part's rule and the parts of the vectors of the
 // open view. Each with its part, and the rule it is a case of, or "".
-func partFiles(t *testing.T) map[string][2]string {
+func partFiles(t testing.TB) map[string][2]string {
 	t.Helper()
 	files := map[string][2]string{}
 	err := fs.WalkDir(spec.Format, ".", func(name string, entry fs.DirEntry, err error) error {
@@ -206,10 +206,20 @@ func partFiles(t *testing.T) map[string][2]string {
 	return files
 }
 
-// Every module laid out in spec.Format and every file of a part breaks no rule that the check holds,
-// but the rule it is a case of: each of them breaks that rule and nothing else (format/README.md,
-// sections 8 and 9). That a case breaks its rule, the test of vectors checks.
+// Every module laid out in spec.Format and every file of a part breaks nothing that the check holds
+// but the rule it is a case of: each of them breaks that rule and nothing else, its files are valid
+// against their schemas, and a valid example and a module that is no case break nothing at all. An
+// invalid example breaks its schema alone (format/README.md, sections 8 and 9). That a case breaks
+// its rule, and an invalid example the keyword it names, the test of vectors checks.
 func TestChecksTheFormat(t *testing.T) {
+	// beside says whether a breach is other than the one its case may have: of its rule, or, for an
+	// invalid example, of its schema.
+	beside := func(b Breach, rule string, invalid bool) bool {
+		if invalid {
+			return b.Keyword == ""
+		}
+		return rule == "" || b.Rule != rule || b.Keyword != ""
+	}
 	folders := moduleFolders(t)
 	for _, name := range slices.Sorted(maps.Keys(folders)) {
 		folder, err := fs.Sub(spec.Format, name)
@@ -221,7 +231,7 @@ func TestChecksTheFormat(t *testing.T) {
 			t.Fatalf("%s: %v", name, err)
 		}
 		for _, b := range report.Breaches {
-			if b.Rule != folders[name] {
+			if beside(b, folders[name], false) {
 				t.Errorf("%s: %s", name, b)
 			}
 		}
@@ -236,10 +246,14 @@ func TestChecksTheFormat(t *testing.T) {
 		if err != nil {
 			t.Fatalf("%s: %v", name, err)
 		}
+		invalid := strings.HasPrefix(name, "examples/") && strings.Contains(name, "/invalid/")
 		for _, b := range report.Breaches {
-			if b.Rule != files[name][1] {
+			if beside(b, files[name][1], invalid) {
 				t.Errorf("%s: %s", name, b)
 			}
+		}
+		if invalid && len(report.Breaches) == 0 {
+			t.Errorf("%s: an invalid example breaks nothing", name)
 		}
 	}
 	t.Logf("%d modules and %d files of a part", len(folders), len(files))

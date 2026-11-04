@@ -1,0 +1,1133 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://altnovatrail.github.io/spec/format/0.3/task.schema.json",
+  "title": "Task",
+  "description": "A task of a module, tasks/<id>.yaml in its folder: its statement, its canvas, its items with their answer slots, each with the check that says what is right in it, the skills it trains, its band and difficulty, and, when they are fewer than the module's, the age categories it is for; and what helps the learner on the way: what the statement gives and asks, the techniques that help, the traps that AI may suggest, a simpler case for each item, the solution and the phrases that give the answer away. The ID, the statement, the canvas, the items, the givens and the unknown are open, since the learner's app shows them, but for the skills and the simpler case of an item and the check of each answer slot; those, the skills, the band, the difficulty, the age categories, the techniques, the traps, the solution, the leak phrases and the template are closed, since the server reads them. A task with a template is a template of tasks: each attempt gets one instance of it, with numbers in the place of its placeholders.",
+  "type": "object",
+  "properties": {
+    "id": {
+      "$ref": "common.schema.json#/$defs/task_id",
+      "description": "The task's local ID: the name of its file, without .yaml.",
+      "x-open": true
+    },
+    "statement": {
+      "type": "array",
+      "items": {
+        "$ref": "common.schema.json#/$defs/statement_part",
+        "unevaluatedProperties": false
+      },
+      "minItems": 1,
+      "description": "The statement of the task, what the learner reads: paragraphs and pictures in order, in the module's explanation language. Whether it stands above the canvas or on it is the canvas kind's to decide.",
+      "x-open": true
+    },
+    "canvas": {
+      "$ref": "common.schema.json#/$defs/canvas",
+      "unevaluatedProperties": false,
+      "description": "The canvas of the task, one for all its items: its kind and the kind's settings.",
+      "x-open": true
+    },
+    "items": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/item",
+        "unevaluatedProperties": false
+      },
+      "minItems": 1,
+      "description": "The items of the task, each named by its place, from 1. On a handwriting sheet an item has answer slots; on a workbook it is a line of text and boxes.",
+      "x-open": true
+    },
+    "givens": {
+      "type": "array",
+      "items": {
+        "$ref": "common.schema.json#/$defs/text"
+      },
+      "minItems": 1,
+      "uniqueItems": true,
+      "description": "What the statement gives, each a short text in the module's explanation language: the chips that the learner ticks at a solving step that gives them, and what a hint asked for gives before the first answer.",
+      "x-open": true
+    },
+    "unknown": {
+      "$ref": "common.schema.json#/$defs/text",
+      "description": "What the task asks to find, in the module's explanation language: the chip that the learner ticks beside the givens.",
+      "x-open": true
+    },
+    "skills": {
+      "$ref": "#/$defs/skills",
+      "unevaluatedProperties": false,
+      "description": "The skills that the task trains and needs, for each item that names none of its own."
+    },
+    "band": {
+      "$ref": "common.schema.json#/$defs/band_id",
+      "description": "The band of the module's difficulty scale that the task is in, by its ID in the manifest."
+    },
+    "difficulty": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 5,
+      "description": "How hard the task is within its band, from 1 to 5."
+    },
+    "age_categories": {
+      "type": "array",
+      "items": {
+        "$ref": "common.schema.json#/$defs/age_category"
+      },
+      "minItems": 1,
+      "uniqueItems": true,
+      "description": "The age categories that the task suits, when they are fewer than the module's: the platform gives the task only to learners in one of them. Without it, the task suits the module's audience."
+    },
+    "techniques": {
+      "type": "array",
+      "items": {
+        "$ref": "common.schema.json#/$defs/technique_id"
+      },
+      "minItems": 1,
+      "uniqueItems": true,
+      "description": "The techniques of the module's technique catalog that help in the task, by local ID. The server gives them at a solving step that gives them or on request: a technique's title tells how to solve the task."
+    },
+    "traps": {
+      "type": "array",
+      "items": {
+        "$ref": "common.schema.json#/$defs/trap_id"
+      },
+      "minItems": 1,
+      "uniqueItems": true,
+      "description": "The traps of the module's trap catalog that AI may suggest from the kind of mistake in the learner's work, by local ID. A trap that a wrong value shows is named in the check instead, among its trap values."
+    },
+    "solution": {
+      "type": "array",
+      "items": {
+        "$ref": "common.schema.json#/$defs/statement_part",
+        "unevaluatedProperties": false
+      },
+      "minItems": 1,
+      "description": "How the task is solved, in parts as the statement is: paragraphs and pictures. The learner sees it once the task is solved, and AI reads it to find the first mistake in the learner's work. A task with an item with a verdict has one."
+    },
+    "leak_phrases": {
+      "type": "array",
+      "items": {
+        "$ref": "common.schema.json#/$defs/text"
+      },
+      "minItems": 1,
+      "uniqueItems": true,
+      "description": "Phrases that give the answer away beyond the keys themselves, which the leak check searches for in every text that the learner sees before the task is solved: an answer in words, a key that its item shows already, the answer to a predicate."
+    },
+    "template": {
+      "$ref": "#/$defs/template",
+      "unevaluatedProperties": false,
+      "description": "What makes the task a template: its parameters, the numbers derived from them, the constraint on their combinations and its solver. Each attempt gets one instance of the template, picked by the seed of the attempt, and the learner's app never gets the template itself."
+    }
+  },
+  "required": [
+    "id",
+    "statement",
+    "canvas",
+    "items",
+    "skills",
+    "band",
+    "difficulty"
+  ],
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "canvas": {
+            "properties": {
+              "kind": {
+                "const": "workbook"
+              }
+            },
+            "required": [
+              "kind"
+            ]
+          }
+        },
+        "required": [
+          "canvas"
+        ]
+      },
+      "then": {
+        "properties": {
+          "items": {
+            "items": {
+              "required": [
+                "line"
+              ],
+              "not": {
+                "anyOf": [
+                  {
+                    "required": [
+                      "answer_slots"
+                    ]
+                  },
+                  {
+                    "required": [
+                      "text"
+                    ]
+                  }
+                ]
+              }
+            },
+            "description": "On a workbook, every item is a line, and has no answer slots or text beside it."
+          }
+        }
+      },
+      "else": {
+        "properties": {
+          "items": {
+            "items": {
+              "required": [
+                "answer_slots"
+              ],
+              "not": {
+                "required": [
+                  "line"
+                ]
+              }
+            },
+            "description": "On a handwriting sheet, every item has answer slots, and no line."
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "items": {
+            "contains": {
+              "properties": {
+                "answer_slots": {
+                  "contains": {
+                    "properties": {
+                      "binding": {
+                        "enum": [
+                          "anywhere",
+                          "sheet"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "binding"
+                    ]
+                  }
+                }
+              },
+              "required": [
+                "answer_slots"
+              ]
+            }
+          }
+        },
+        "required": [
+          "items"
+        ]
+      },
+      "then": {
+        "properties": {
+          "items": {
+            "maxItems": 1,
+            "description": "A task whose answer stands anywhere on the sheet, or is the whole sheet, has one item."
+          }
+        },
+        "not": {
+          "properties": {
+            "items": {
+              "contains": {
+                "properties": {
+                  "answer_slots": {
+                    "minItems": 2
+                  }
+                },
+                "required": [
+                  "answer_slots"
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "items": {
+            "contains": {
+              "anyOf": [
+                {
+                  "required": [
+                    "line"
+                  ]
+                },
+                {
+                  "properties": {
+                    "answer_slots": {
+                      "contains": {
+                        "properties": {
+                          "binding": {
+                            "not": {
+                              "const": "sheet"
+                            }
+                          }
+                        },
+                        "required": [
+                          "binding"
+                        ]
+                      }
+                    }
+                  },
+                  "required": [
+                    "answer_slots"
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        "required": [
+          "items"
+        ]
+      },
+      "then": {
+        "required": [
+          "solution"
+        ]
+      }
+    }
+  ],
+  "unevaluatedProperties": false,
+  "$defs": {
+    "trap_value": {
+      "type": "object",
+      "properties": {
+        "value": {
+          "type": "string",
+          "minLength": 1,
+          "description": "The wrong value, as the key is written: for a choice, one of its options other than the key."
+        },
+        "trap": {
+          "$ref": "common.schema.json#/$defs/trap_id",
+          "description": "The trap that this wrong value shows, by its local ID in the module's trap catalog."
+        },
+        "text": {
+          "$ref": "common.schema.json#/$defs/text",
+          "description": "What the learner reads after this wrong value: it names the mistake rather than retelling the solution. Without it, the trap's advice stands in."
+        }
+      },
+      "required": [
+        "value",
+        "trap"
+      ],
+      "description": "A wrong value that the author knows, with the trap it shows."
+    },
+    "item": {
+      "type": "object",
+      "properties": {
+        "text": {
+          "$ref": "common.schema.json#/$defs/text",
+          "description": "What the item asks, on a handwriting sheet, beside its answer slots: a) or a question.",
+          "x-open": true
+        },
+        "answer_slots": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/answer_slot",
+            "unevaluatedProperties": false
+          },
+          "minItems": 1,
+          "description": "The answer slots of an item on a handwriting sheet, each named by its place in the item, from 1.",
+          "x-open": true
+        },
+        "line": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/line_part",
+            "unevaluatedProperties": false
+          },
+          "minItems": 1,
+          "contains": {
+            "required": [
+              "binding"
+            ]
+          },
+          "description": "An item of a workbook: pieces of text and boxes in order, as 7 × [ ] = 56, and at least one box. Its boxes are its answer slots, each named by its place among them, from 1.",
+          "x-open": true
+        },
+        "skills": {
+          "$ref": "#/$defs/skills",
+          "unevaluatedProperties": false,
+          "description": "The skills that this item trains and needs, in place of the task's."
+        },
+        "simpler_case": {
+          "$ref": "common.schema.json#/$defs/text",
+          "description": "A similar case, simpler than the item, that the learner reads at the third rung of the hint ladder when the tutor's words do not come."
+        }
+      },
+      "description": "An item of the task: on a handwriting sheet, its answer slots and what it asks; on a workbook, a line of text and boxes."
+    },
+    "answer_slot": {
+      "type": "object",
+      "properties": {
+        "binding": {
+          "enum": [
+            "anywhere",
+            "sheet",
+            "zone",
+            "choice"
+          ],
+          "description": "Where and how the learner gives the answer on a handwriting sheet: anywhere on it, where AI finds the final answer; the whole sheet, a work as a whole, such as an essay; in a zone of it; or by choosing one of the options.",
+          "x-open": true
+        },
+        "check": {
+          "$ref": "#/$defs/check",
+          "unevaluatedProperties": false,
+          "description": "The check of the answer slot: what is right in it, and how the platform tells. Closed, the kind too: the learner's app does not get it."
+        }
+      },
+      "required": [
+        "binding",
+        "check"
+      ],
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "binding": {
+                "const": "anywhere"
+              }
+            },
+            "required": [
+              "binding"
+            ]
+          },
+          "then": {
+            "properties": {
+              "check": {
+                "$ref": "#/$defs/written_check",
+                "unevaluatedProperties": false,
+                "description": "The final answer that the learner writes anywhere on the sheet is checked as one written by hand."
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "binding": {
+                "const": "sheet"
+              }
+            },
+            "required": [
+              "binding"
+            ]
+          },
+          "then": {
+            "properties": {
+              "check": {
+                "$ref": "#/$defs/sheet_check",
+                "unevaluatedProperties": false,
+                "description": "The whole sheet, a work as a whole, is given feedback by a rubric."
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "binding": {
+                "const": "zone"
+              }
+            },
+            "required": [
+              "binding"
+            ]
+          },
+          "then": {
+            "properties": {
+              "zone": {
+                "$ref": "common.schema.json#/$defs/sheet_rectangle",
+                "unevaluatedProperties": false,
+                "description": "The zone of the sheet where the learner writes the answer.",
+                "x-open": true
+              },
+              "check": {
+                "$ref": "#/$defs/written_check",
+                "unevaluatedProperties": false,
+                "description": "The answer that the learner writes in the zone is checked as one written by hand."
+              }
+            },
+            "required": [
+              "zone"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "binding": {
+                "const": "choice"
+              }
+            },
+            "required": [
+              "binding"
+            ]
+          },
+          "then": {
+            "properties": {
+              "options": {
+                "type": "array",
+                "items": {
+                  "$ref": "common.schema.json#/$defs/text"
+                },
+                "minItems": 2,
+                "uniqueItems": true,
+                "description": "The options the learner chooses from, in the order they are shown.",
+                "x-open": true
+              },
+              "check": {
+                "$ref": "#/$defs/chosen_check",
+                "unevaluatedProperties": false,
+                "description": "The option that the learner taps is checked against the key, one of these options."
+              }
+            },
+            "required": [
+              "options"
+            ]
+          }
+        }
+      ],
+      "description": "An answer slot of an item on a handwriting sheet: its binding, the zone or the options that the binding needs, and its check."
+    },
+    "line_part": {
+      "type": "object",
+      "properties": {
+        "text": {
+          "$ref": "common.schema.json#/$defs/text",
+          "description": "A piece of the line's text.",
+          "x-open": true
+        },
+        "binding": {
+          "enum": [
+            "box"
+          ],
+          "description": "A box of the line, an answer slot where the learner writes the answer.",
+          "x-open": true
+        },
+        "check": {
+          "$ref": "#/$defs/written_check",
+          "unevaluatedProperties": false,
+          "description": "The check of the box: what is right in it, and how the platform tells, the answer being written by hand. Closed, the kind too: the learner's app does not get it."
+        }
+      },
+      "if": {
+        "required": [
+          "binding"
+        ]
+      },
+      "then": {
+        "required": [
+          "check"
+        ],
+        "not": {
+          "required": [
+            "text"
+          ]
+        }
+      },
+      "else": {
+        "required": [
+          "text"
+        ],
+        "not": {
+          "required": [
+            "check"
+          ]
+        }
+      },
+      "description": "A piece of a line: a piece of text, or a box with its check."
+    },
+    "check": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "enum": [
+            "number",
+            "fraction",
+            "choice",
+            "predicate",
+            "rubric"
+          ],
+          "description": "The check kind: a number, a fraction, a choice, a predicate on a whole number, or a rubric, which gives feedback and no verdict."
+        },
+        "key": {
+          "type": "string",
+          "minLength": 1,
+          "description": "The right answer, as a string: a number for number, a simple fraction for fraction, one of the options for choice."
+        },
+        "units": {
+          "type": "array",
+          "items": {
+            "$ref": "common.schema.json#/$defs/text"
+          },
+          "minItems": 1,
+          "uniqueItems": true,
+          "description": "Of a number: the words that may follow it in the answer, as rungs in 7 rungs."
+        },
+        "form": {
+          "enum": [
+            "any",
+            "reduced"
+          ],
+          "default": "any",
+          "description": "Of a fraction: any fraction of the key's value is right, or only one in lowest terms; any unless given."
+        },
+        "options": {
+          "type": "array",
+          "items": {
+            "$ref": "common.schema.json#/$defs/text"
+          },
+          "minItems": 2,
+          "uniqueItems": true,
+          "description": "Of a choice written by hand: the options the learner writes one of, such as the signs <, > and =."
+        },
+        "trap_values": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/trap_value",
+            "unevaluatedProperties": false
+          },
+          "minItems": 1,
+          "description": "Of a number, a fraction or a choice: the wrong values that the author knows, each with the trap it shows, compared with the value read as the key is."
+        },
+        "predicate": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1000,
+          "description": "Of a predicate: a Starlark expression on value, the whole number read, that is True for every right answer."
+        },
+        "criteria": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/criterion",
+            "unevaluatedProperties": false
+          },
+          "minItems": 1,
+          "description": "Of a rubric: what the work is given feedback by."
+        }
+      },
+      "required": [
+        "kind"
+      ],
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "const": "number"
+              }
+            },
+            "required": [
+              "kind"
+            ]
+          },
+          "then": {
+            "properties": {
+              "key": {
+                "pattern": "^((-?(0|[1-9][0-9]*)|\\{[a-z][a-z0-9_]*\\})(/([1-9][0-9]*|\\{[a-z][a-z0-9_]*\\}))?|-?(0|[1-9][0-9]*)\\.[0-9]+)$",
+                "maxLength": 16,
+                "description": "A number: an integer, a decimal with a point or a simple fraction, of 16 characters at most. In a template its integer, or the numerator and the denominator of its fraction, may each be a placeholder, such as {second} or {part}/{whole}, which every instance replaces with a number."
+              },
+              "trap_values": {
+                "items": {
+                  "$ref": "#/$defs/trap_value",
+                  "properties": {
+                    "value": {
+                      "pattern": "^((-?(0|[1-9][0-9]*)|\\{[a-z][a-z0-9_]*\\})(/([1-9][0-9]*|\\{[a-z][a-z0-9_]*\\}))?|-?(0|[1-9][0-9]*)\\.[0-9]+)$",
+                      "maxLength": 16,
+                      "description": "A wrong number, in the notation of the key, of 16 characters at most; in a template, with placeholders as the key may have them."
+                    }
+                  },
+                  "unevaluatedProperties": false
+                },
+                "description": "Of a number: the wrong values, each in the notation of the key."
+              }
+            },
+            "required": [
+              "key"
+            ],
+            "not": {
+              "anyOf": [
+                {
+                  "required": [
+                    "form"
+                  ]
+                },
+                {
+                  "required": [
+                    "options"
+                  ]
+                },
+                {
+                  "required": [
+                    "predicate"
+                  ]
+                },
+                {
+                  "required": [
+                    "criteria"
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "const": "fraction"
+              }
+            },
+            "required": [
+              "kind"
+            ]
+          },
+          "then": {
+            "properties": {
+              "key": {
+                "pattern": "^(-?(0|[1-9][0-9]*)|\\{[a-z][a-z0-9_]*\\})/([1-9][0-9]*|\\{[a-z][a-z0-9_]*\\})$",
+                "maxLength": 16,
+                "description": "A simple fraction, of 16 characters at most. In a template its numerator and its denominator may each be a placeholder, such as {part}/{whole}, which every instance replaces with a number."
+              },
+              "trap_values": {
+                "items": {
+                  "$ref": "#/$defs/trap_value",
+                  "properties": {
+                    "value": {
+                      "pattern": "^(-?(0|[1-9][0-9]*)|\\{[a-z][a-z0-9_]*\\})/([1-9][0-9]*|\\{[a-z][a-z0-9_]*\\})$",
+                      "maxLength": 16,
+                      "description": "A wrong fraction, in the notation of the key, of 16 characters at most; in a template, with placeholders as the key may have them."
+                    }
+                  },
+                  "unevaluatedProperties": false
+                },
+                "description": "Of a fraction: the wrong values, each in the notation of the key."
+              }
+            },
+            "required": [
+              "key"
+            ],
+            "not": {
+              "anyOf": [
+                {
+                  "required": [
+                    "units"
+                  ]
+                },
+                {
+                  "required": [
+                    "options"
+                  ]
+                },
+                {
+                  "required": [
+                    "predicate"
+                  ]
+                },
+                {
+                  "required": [
+                    "criteria"
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "const": "choice"
+              }
+            },
+            "required": [
+              "kind"
+            ]
+          },
+          "then": {
+            "required": [
+              "key"
+            ],
+            "not": {
+              "anyOf": [
+                {
+                  "required": [
+                    "units"
+                  ]
+                },
+                {
+                  "required": [
+                    "form"
+                  ]
+                },
+                {
+                  "required": [
+                    "predicate"
+                  ]
+                },
+                {
+                  "required": [
+                    "criteria"
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "const": "predicate"
+              }
+            },
+            "required": [
+              "kind"
+            ]
+          },
+          "then": {
+            "required": [
+              "predicate"
+            ],
+            "not": {
+              "anyOf": [
+                {
+                  "required": [
+                    "key"
+                  ]
+                },
+                {
+                  "required": [
+                    "units"
+                  ]
+                },
+                {
+                  "required": [
+                    "form"
+                  ]
+                },
+                {
+                  "required": [
+                    "options"
+                  ]
+                },
+                {
+                  "required": [
+                    "criteria"
+                  ]
+                },
+                {
+                  "required": [
+                    "trap_values"
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "const": "rubric"
+              }
+            },
+            "required": [
+              "kind"
+            ]
+          },
+          "then": {
+            "required": [
+              "criteria"
+            ],
+            "not": {
+              "anyOf": [
+                {
+                  "required": [
+                    "key"
+                  ]
+                },
+                {
+                  "required": [
+                    "units"
+                  ]
+                },
+                {
+                  "required": [
+                    "form"
+                  ]
+                },
+                {
+                  "required": [
+                    "options"
+                  ]
+                },
+                {
+                  "required": [
+                    "predicate"
+                  ]
+                },
+                {
+                  "required": [
+                    "trap_values"
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "description": "The check of an answer slot: its kind and the kind's parameters. Section 15 of the format text says how each kind reads the value and gives its verdict."
+    },
+    "written_check": {
+      "$ref": "#/$defs/check",
+      "properties": {
+        "kind": {
+          "enum": [
+            "number",
+            "fraction",
+            "choice",
+            "predicate"
+          ],
+          "description": "The kind of the check of an answer written by hand: any kind but the rubric."
+        }
+      },
+      "if": {
+        "properties": {
+          "kind": {
+            "const": "choice"
+          }
+        },
+        "required": [
+          "kind"
+        ]
+      },
+      "then": {
+        "required": [
+          "options"
+        ]
+      },
+      "description": "The check of an answer written by hand, in a box, in a zone or anywhere on the sheet: a choice among them holds its own options."
+    },
+    "chosen_check": {
+      "$ref": "#/$defs/check",
+      "properties": {
+        "kind": {
+          "const": "choice",
+          "description": "The option the learner taps is checked as a choice."
+        }
+      },
+      "not": {
+        "required": [
+          "options"
+        ]
+      },
+      "description": "The check of a choice by tapping: its options are the answer slot's, and the check holds none."
+    },
+    "sheet_check": {
+      "$ref": "#/$defs/check",
+      "properties": {
+        "kind": {
+          "const": "rubric",
+          "description": "A work as a whole is given feedback by a rubric."
+        }
+      },
+      "description": "The check of the whole sheet: a rubric."
+    },
+    "criterion": {
+      "type": "object",
+      "properties": {
+        "text": {
+          "$ref": "common.schema.json#/$defs/text",
+          "description": "The criterion, in the module's explanation language."
+        }
+      },
+      "required": [
+        "text"
+      ],
+      "description": "A criterion of a rubric: one thing the work is given feedback by."
+    },
+    "skills": {
+      "type": "object",
+      "properties": {
+        "primary": {
+          "type": "array",
+          "items": {
+            "$ref": "common.schema.json#/$defs/skill_id"
+          },
+          "minItems": 1,
+          "uniqueItems": true,
+          "description": "The skills of the module, by local ID, that are trained: a wrong answer is evidence against them."
+        },
+        "supporting": {
+          "type": "array",
+          "items": {
+            "anyOf": [
+              {
+                "$ref": "common.schema.json#/$defs/skill_id"
+              },
+              {
+                "$ref": "shared-taxonomy.schema.json"
+              }
+            ]
+          },
+          "minItems": 1,
+          "uniqueItems": true,
+          "description": "The skills that the answer needs and that a wrong answer does not count against: skills of the module by local ID, or anchor skills of the shared taxonomy by their IDs."
+        }
+      },
+      "required": [
+        "primary"
+      ],
+      "description": "The primary and supporting skills of a task or an item."
+    },
+    "template": {
+      "type": "object",
+      "properties": {
+        "parameters": {
+          "type": "object",
+          "propertyNames": {
+            "$ref": "#/$defs/template_name"
+          },
+          "additionalProperties": {
+            "$ref": "#/$defs/domain",
+            "unevaluatedProperties": false,
+            "description": "The parameter's domain: the integers that it takes."
+          },
+          "minProperties": 1,
+          "description": "The parameters of the template, each by its name with its domain. Their combinations are counted through in the order of their names, the first changing slowest."
+        },
+        "derived": {
+          "type": "object",
+          "propertyNames": {
+            "$ref": "#/$defs/template_name"
+          },
+          "additionalProperties": {
+            "$ref": "#/$defs/template_expression",
+            "description": "The expression that computes the derived number: an int expression that names only parameters."
+          },
+          "minProperties": 1,
+          "description": "The derived numbers of the template, each by its name with the expression that computes it from the parameters, such as legs: \"2 * chickens + 4 * rabbits\"."
+        },
+        "constraint": {
+          "$ref": "#/$defs/template_expression",
+          "description": "A bool expression of the parameters and the derived numbers that holds for the combinations that give an instance. Without it, every combination gives one."
+        },
+        "solver": {
+          "$ref": "#/$defs/solver",
+          "unevaluatedProperties": false,
+          "description": "The solver of the template: a program of Starlark that finds, by search, numbers of each instance that no expression gives, such as its key. Its results are named as the parameters and the derived numbers are, and stand in placeholders too."
+        }
+      },
+      "required": [
+        "parameters"
+      ],
+      "description": "A template of tasks: parameters with their domains, the numbers derived from them, the constraint that picks the combinations that are its instances, and the solver that finds what no expression gives."
+    },
+    "solver": {
+      "type": "object",
+      "properties": {
+        "program": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 8192,
+          "description": "The program of Starlark, at most 8192 characters long, that defines solve(numbers): given the numbers that the open fields of an instance show, it returns a dict of the results, each a name with its int."
+        },
+        "results": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/template_name",
+            "description": "The name of a result, which solve returns and a placeholder names."
+          },
+          "minItems": 1,
+          "uniqueItems": true,
+          "description": "The names of the results that solve returns for every instance, exactly these. A result stands only in a key or a trap value of a number or a fraction, in the solution and in a leak phrase."
+        }
+      },
+      "required": [
+        "program",
+        "results"
+      ],
+      "description": "A program of Starlark that finds numbers of each instance of a template by search, as the solvers of mathtrail-standalone do, and the names of the numbers that it finds."
+    },
+    "domain": {
+      "type": "object",
+      "properties": {
+        "from": {
+          "type": "integer",
+          "minimum": -9007199254740991,
+          "maximum": 9007199254740991,
+          "description": "The least integer that the parameter takes."
+        },
+        "to": {
+          "type": "integer",
+          "minimum": -9007199254740991,
+          "maximum": 9007199254740991,
+          "description": "The greatest integer that the parameter takes. A domain whose to is below its from is empty, and its template has no instance."
+        }
+      },
+      "required": [
+        "from",
+        "to"
+      ],
+      "description": "The integers that a parameter takes, from from to to, both included."
+    },
+    "template_name": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_]*$",
+      "maxLength": 14,
+      "not": {
+        "enum": [
+          "and",
+          "break",
+          "continue",
+          "def",
+          "elif",
+          "else",
+          "for",
+          "if",
+          "in",
+          "lambda",
+          "load",
+          "not",
+          "or",
+          "pass",
+          "return",
+          "as",
+          "assert",
+          "async",
+          "await",
+          "class",
+          "del",
+          "except",
+          "finally",
+          "from",
+          "global",
+          "import",
+          "is",
+          "nonlocal",
+          "raise",
+          "try",
+          "while",
+          "with",
+          "yield"
+        ]
+      },
+      "description": "The name of a parameter or a derived number: lowercase letters, digits and _, beginning with a letter, at most 14 characters long so that {name} fits a key, and no keyword or reserved word of Starlark."
+    },
+    "template_expression": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 1000,
+      "description": "An expression of the narrow subset of Starlark of section 23 of the format text: integers and names, + - * // %, comparisons, and, or and not."
+    }
+  }
+}

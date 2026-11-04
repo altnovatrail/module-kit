@@ -1,0 +1,49 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://altnovatrail.github.io/spec/format/0.3/version-vector.schema.json",
+  "title": "Version vector",
+  "description": "What a test vector of versions of a module gives, version.yaml beside the new version in module/ and the published versions in published/ (sections 9 and 27 of the format text): either the part of the version that the comparison of the new version with the newest published version finds, or the rule of versions by which the new version is refused. An implementation compares the new version with every published version and gets exactly this.",
+  "type": "object",
+  "properties": {
+    "version_part": {
+      "enum": [
+        "major",
+        "minor",
+        "patch",
+        "none"
+      ],
+      "description": "The lowest part of its version that the new version raises, which the comparison finds, when the new version is not refused: none when nothing but the version changed, or when the new version is the newest published one as it was."
+    },
+    "refusal": {
+      "enum": [
+        "module-version.above",
+        "module-version.step",
+        "module-version.retired-complete",
+        "module-version.retired-kept",
+        "module-version.retired-known",
+        "module-version.ids-kept",
+        "module-version.languages-kept",
+        "module-version.bands-kept"
+      ],
+      "description": "The rule of versions by which the new version is refused, when it is: the case breaks that rule and no other."
+    }
+  },
+  "if": {
+    "required": [
+      "refusal"
+    ]
+  },
+  "then": {
+    "not": {
+      "required": [
+        "version_part"
+      ]
+    }
+  },
+  "else": {
+    "required": [
+      "version_part"
+    ]
+  },
+  "unevaluatedProperties": false
+}

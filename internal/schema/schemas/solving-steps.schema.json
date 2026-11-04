@@ -1,0 +1,85 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://altnovatrail.github.io/spec/format/0.3/solving-steps.schema.json",
+  "title": "Solving steps",
+  "description": "The solving steps of a module, solving-steps.yaml at the root of its folder: the frame through which the tutor leads a learner within a task, step by step, each with its title, what of the task it gives and when it ends. Every task of the module goes through the same steps. Every field is open, since the learner's app leads the steps itself.",
+  "type": "object",
+  "properties": {
+    "steps": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/step",
+        "unevaluatedProperties": false
+      },
+      "minItems": 1,
+      "description": "The steps, in order, each named by its place, from 1.",
+      "x-open": true
+    }
+  },
+  "required": [
+    "steps"
+  ],
+  "unevaluatedProperties": false,
+  "$defs": {
+    "step": {
+      "type": "object",
+      "properties": {
+        "title": {
+          "$ref": "common.schema.json#/$defs/text",
+          "description": "What the learner does in the step, in the module's explanation language.",
+          "x-open": true
+        },
+        "gives": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "givens",
+              "techniques"
+            ]
+          },
+          "minItems": 1,
+          "uniqueItems": true,
+          "description": "What of the task the step gives the learner: givens, the task's givens and unknown, which the learner ticks; techniques, the task's techniques, which the server gives when the step begins. A step that gives neither leaves this field out.",
+          "x-open": true
+        },
+        "exit_condition": {
+          "enum": [
+            "givens_ticked",
+            "answer_slots_filled",
+            "none"
+          ],
+          "description": "When the step ends, by an event on the learner's device and with no key: givens_ticked, once the learner has ticked every given and the unknown; answer_slots_filled, once every answer slot of the task holds something of the learner's; none, when the learner moves on.",
+          "x-open": true
+        }
+      },
+      "required": [
+        "title",
+        "exit_condition"
+      ],
+      "if": {
+        "properties": {
+          "exit_condition": {
+            "const": "givens_ticked"
+          }
+        },
+        "required": [
+          "exit_condition"
+        ]
+      },
+      "then": {
+        "properties": {
+          "gives": {
+            "contains": {
+              "const": "givens"
+            },
+            "description": "A step that ends once the givens are ticked gives them."
+          }
+        },
+        "required": [
+          "gives"
+        ]
+      },
+      "description": "A solving step: what the learner does in it, what of the task it gives, and when it ends."
+    }
+  }
+}

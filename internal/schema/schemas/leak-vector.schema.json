@@ -1,0 +1,57 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://altnovatrail.github.io/spec/format/0.3/leak-vector.schema.json",
+  "title": "Leak vector",
+  "description": "A test vector of the leak check, vectors/leaks/<case>.yaml: a task, and texts that the learner might see, each with every key and leak phrase of the task that the leak check finds in it (section 20 of the format text). It describes no part of a module.",
+  "type": "object",
+  "properties": {
+    "task": {
+      "$ref": "task.schema.json",
+      "unevaluatedProperties": false,
+      "description": "The task whose keys and leak phrases the leak check searches for. It is no template: a template is searched through its instances, which the vectors of templates pin.",
+      "not": {
+        "required": [
+          "template"
+        ]
+      }
+    },
+    "texts": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/searched_text",
+        "unevaluatedProperties": false
+      },
+      "minItems": 1,
+      "description": "The texts searched, each a case of the vector."
+    }
+  },
+  "required": [
+    "task",
+    "texts"
+  ],
+  "unevaluatedProperties": false,
+  "$defs": {
+    "searched_text": {
+      "type": "object",
+      "properties": {
+        "text": {
+          "type": "string",
+          "description": "A text that the learner might see, as it is written."
+        },
+        "leaks": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "uniqueItems": true,
+          "description": "Every key and leak phrase of the task that the leak check finds in the text, as the task writes them, in any order: empty when it finds none."
+        }
+      },
+      "required": [
+        "text",
+        "leaks"
+      ],
+      "description": "A text searched, and what the leak check finds in it."
+    }
+  }
+}

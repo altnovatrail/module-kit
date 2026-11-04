@@ -29,6 +29,7 @@ jobs:
         :(exclude)*_test.go
         go.mod
         go.sum
+        internal/schema/schemas/*.schema.json
         justfile
         LICENSE
         .devcontainer/Dockerfile
