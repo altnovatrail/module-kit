@@ -1,6 +1,6 @@
 # module-kit — архитектура
 
-> Статус: каркас из заготовки `spec`, 2026-10-19; сверен с `spec` v0.2.11 2026-10-20 (R03), с v0.2.13 2026-10-21 (R05), с v0.6.3 2026-11-02 (R08), с v0.6.5 (R12) и с v0.6.6 (R14) в тот же день, с v0.9.2 и форматом 0.3 2026-11-04 (R17); пакет модуля — 2026-11-02 (R09), генератор — 2026-11-02 (R10), песочница Starlark — 2026-11-02 (R11), сравнение версий — 2026-11-02 (R13), команда открытых видов и эпик кода — 2026-11-02 (R15, R16); первый код — заготовка CLI, 2026-10-21 (R04); релизы — общим `release.yml` `.github`, с 2026-10-21 (R07).
+> Статус: каркас из заготовки `spec`, 2026-10-19; сверен с `spec` v0.2.11 2026-10-20 (R03), с v0.2.13 2026-10-21 (R05), с v0.6.3 2026-11-02 (R08), с v0.6.5 (R12) и с v0.6.6 (R14) в тот же день, с v0.9.2 и форматом 0.3 2026-11-04 (R17); пакет модуля — 2026-11-02 (R09), генератор — 2026-11-02 (R10), песочница Starlark — 2026-11-02 (R11), сравнение версий — 2026-11-02 (R13), команда открытых видов и эпик кода — 2026-11-02 (R15, R16); первый код — заготовка CLI, 2026-10-21 (R04); релизы — общим `release.yml` `.github`, с 2026-10-21 (R07); CI под код формата — покрытие в Codecov, перечень `paths` и gopls, 2026-11-04 (R18, R19).
 >
 > Что делает компонент, чего не делает и что о нём ещё предстоит решить. Это подробности его карточки — architecture 3.7 spec. Карточка остаётся сводкой: если подробности меняют то, что в ней сказано, она правится в `spec` тем же путём, что и вопросы в его реестры (RULES.md, Across repositories).
 >
@@ -67,7 +67,7 @@
   - Находки CodeQL, Scorecard и SonarCloud закрываются перед новой задачей (правило 12 [RUN.md](../RUN.md)), а общие для всех репозиториев причины тех, что остаются открытыми, записаны в R33 spec.
   - Проверки Go пришли с заготовкой CLI (R04): рецепты у них свои, а запускает их обёртка Go — общий `go.yml` `.github`, который на ней и проверен (R16 .github). Go CodeQL читает с T12: общий `codeql.yml` `.github` v0.1.3 собирает его с Go из стадии `toolchain` (R06). Обёртка TypeScript проверяется на первом коде на TypeScript, у `canvas` (repositories 6 spec; architecture 3.11 spec).
   - Релиз выпускает общий `release.yml` `.github`, а файлы для него собирает свой рецепт `release-files` (R07; раздел 3.1).
-  - Код приходит со своими тестами, а когда покрытие пойдёт в Codecov, мерж будет ждать `codecov/patch` (RULES.md, How we work; R48 spec) — Д8 в таблице 4 [RUN.md](../RUN.md), задача T18;
+  - Код приходит со своими тестами. С T18 покрытие тестов уходит в Codecov, а мерж ждёт `codecov/patch` — не меньше 90 % изменённых строк, — как только автор поставит её в ruleset `main` (RULES.md, How we work; R48 spec; R18; раздел 3.1);
 - этап 1, вместе с `modules`: формат модуля сразу проверяется на трёх модулях двух предметов (repositories 6 spec; R08 spec; R41 spec; product 11 spec). Работу по порядку repositories 6 spec ведёт сквозной план — COORDINATION.md `spec`. У `module-kit` там закрыты строки 3.1 и 3.2 — переход на линию 0.6 и детализация, — а открыта 3.3, эпик кода, E2 (R76 spec).
 
 ## 2. Решить при детализации
@@ -121,25 +121,27 @@
 
 ## 3. Устройство
 
-Сюда переезжает то, что решено по разделу 2: из каких частей компонент состоит, его типы и данные, как он связан с другими репозиториями. Здесь — то, с чего начался код (R04), пакет модуля (R09), генератор (R10), песочница Starlark (R11), сравнение версий (R13), а ещё библиотека и CLI целиком (R15, R16).
+Сюда переезжает то, что решено по разделу 2: из каких частей компонент состоит, его типы и данные, как он связан с другими репозиториями. Здесь — то, с чего начался код (R04) и CI под код формата (R18, R19), пакет модуля (R09), генератор (R10), песочница Starlark (R11), сравнение версий (R13), а ещё библиотека и CLI целиком (R15, R16).
 
 ### 3.1. Код, проверки и релизы
 
-- **Модуль** — `github.com/altnovatrail/module-kit`. В `go.mod` — `go 1.27.0`, нижняя граница для тех, кто его импортирует. Сам Go 1.27.3 стоит в стадии `toolchain` devcontainer, где `GOTOOLCHAIN=local`: это Go самого `spec`, и контейнер `module-kit` от контейнера `spec` не отличается (R04; R08).
+- **Модуль** — `github.com/altnovatrail/module-kit`. В `go.mod` — `go 1.27.0`, нижняя граница для тех, кто его импортирует. Сам Go 1.27.3 стоит в стадии `toolchain` devcontainer, где `GOTOOLCHAIN=local`: это Go самого `spec` (R04; R08).
+- **Контейнер** отличается от контейнера `spec` одним — gopls в стадии `devcontainer`. Это v0.24.0 из своего lock-файла, `.devcontainer/gopls/`: `go.mod` называет gopls инструментом, `go.sum` держит хеши модулей сборки, а Dockerfile ставит его `go install -mod=readonly tool` и сверяет версию с `GOPLS_VERSION`. Расширение Go своих инструментов не ставит. gopls поднимают `go get -tool` в той папке вместе с `GOPLS_VERSION`, а `ci-lint` сверяет одно с другим: CI этой стадии не собирает. Версий в lock-файле Dependabot не поднимает, но его alerts и security updates этот `go.mod` читают. Переходя на новый тег `spec`, `.devcontainer/` берут из рецепта и снова вносят эти строки (R19).
 - **CLI** — `cmd/module-kit`. Пока он отвечает только на `--version`; остальные команды придут с кодом формата 0.3, эпиком E2 (раздел 3.6).
 - **Проверки** — рецепты `justfile`. Общий `go.yml` `.github` запускает их по одному в job, в стадии `toolchain` (R16 .github):
 
   | Рецепт | Что делает | Проверка в ruleset |
   |---|---|---|
-  | `ci-lint` | gofmt по файлам `.go` модуля, без `testdata/` и `spec/`, и `go vet` | «Go / lint» |
-  | `ci-test` | `go test -race -count=1 ./...` | «Go / test» |
+  | `ci-lint` | gofmt по файлам `.go` модуля, без `testdata/` и `spec/`, `go vet` и сверка `GOPLS_VERSION` в Dockerfile с версией gopls в `.devcontainer/gopls/go.mod` (R19) | «Go / lint» |
+  | `ci-test` | `go test -race -count=1 -covermode=atomic -coverprofile=coverage/go.out ./...`: тесты и профиль покрытия | «Go / test» |
   | `ci-vuln` | govulncheck v1.9.0 — известные уязвимости в коде, до которого модуль доходит | «Go / vuln» |
   | `ci-licenses` | go-licenses v2.0.1 — лицензии пакетов, из которых собирается модуль, по списку `ALLOWED_LICENSES` из `go.yml` | «Go / licenses» |
 
-  Инструменты идут через `go run` по точной версии модуля, и их поднимают руками (R04). Go поднимается переходом на тег `spec`, где его поднял `spec` (R08). Своих исключений лицензий нет.
-- **CodeQL** читает и Go: общий `codeql.yml` `.github` v0.1.3 со входом `languages: go` собирает код с Go из стадии `toolchain`, а проверка — «CodeQL / analyze (go)» (R06).
+  Инструменты идут через `go run` по точной версии модуля, и их поднимают руками (R04). Go поднимается переходом на тег `spec`, где его поднял `spec` (R08). Своих исключений лицензий нет. Job «Go» в `ci.yml` зовёт общий `go.yml` v0.1.15 и даёт ему `contents: read` и `id-token: write` (R18).
+- **Покрытие** — профиль `ci-test`, `coverage/go.out`: по каждому пакету модуля, и пакет без тестов в нём с нулями, а `.gitignore` держит `coverage/`. Job `coverage` общего `go.yml` — единственный с `id-token: write` — шлёт профиль в Codecov по OIDC, без секрета. Его проверка «Go / coverage» мерж не держит. Держит его `codecov/patch` от Codecov по `.github/codecov.yml`, тексту шаблона architecture 3.3 .github: изменённые строки покрыты не меньше чем на 90 %, а `codecov/project` только сообщает. В ruleset `main` её ставит автор, после первого pull request Dependabot с загрузкой (R18; R48 spec). Значок покрытия — в README.
+- **CodeQL** читает и Go: общий `codeql.yml` `.github` v0.1.10 со входом `languages: go` собирает код с Go из стадии `toolchain`, а проверка — «CodeQL / analyze (go)» (R06).
 - **Релиз** — `.github/workflows/release.yml` зовёт общий `release.yml` `.github` v0.1.10 по SHA, после зелёного CI на `main` или по кнопке (R07; R18 .github):
-  - номер — следующий патч линии `RELEASE_LINE` `0.1`, первый — v0.1.0; считают его рецепты релиза `spec`. Релиз выходит, только если с прошлого изменилось что-то из `paths` — всё, кроме `docs/`, файлов `*.md`, `.github/` и подмодуля `spec`. Его дают код и тесты, `go.mod`, `justfile`, `LICENSE` и весь `.devcontainer/`, даже если бинарник от правки не меняется; не дают — документы, CI, в том числе смена `RELEASE_LINE`, и тег `spec` (R07). С перечнем Д7 `release.yml` войдёт в `paths`, и смена `RELEASE_LINE` даст релиз: так выходит v0.2.0, первый релиз линии 0.2 (R16). Перечень вместо исключений, по шаблону architecture 3.3 .github, — Д7 в таблице 4 [RUN.md](../RUN.md);
+  - номер — следующий патч линии `RELEASE_LINE` `0.1`, первый — v0.1.0; считают его рецепты релиза `spec`. Релиз выходит, только если с прошлого изменилось что-то из `paths`. Это перечень того, из чего собран выпуск, — вида `go` из шаблона architecture 3.3 .github: `*.go` без `*_test.go`, `go.mod`, `go.sum`, `justfile`, `LICENSE`, `.devcontainer/Dockerfile` и сам `release.yml` (R18). Смена `RELEASE_LINE` даёт релиз: так выходит v0.2.0, первый релиз линии 0.2 (R16). Тесты, `devcontainer.json`, `.gitignore`, `.claude/`, документы, остальной CI и тег `spec` релиза не дают. Файл, который код встроит через `//go:embed`, и код в `testdata/` задача, которая их принесёт, сама добавит в перечень или исключит из него;
   - файлы собирает рецепт `release-files <версия>` — в стадии `toolchain` выпускаемого коммита, из его дерева без git и подмодулей, в `dist/`, которую он создаёт с нуля:
 
     | Файл | Что это |
@@ -151,8 +153,8 @@
 
     Сборка воспроизводима: окружение Go вызывающего в неё не попадает, и из дерева `git archive` и из рабочей копии она даёт те же суммы. CLI, поставленный `go install` по тегу, берёт версию из сведений о сборке;
   - каждый файл общий workflow подписывает cosign без ключей, кладёт рядом его `.sigstore.json`, сверяет подписи до публикации, а после — `gh release verify` и `verify-asset`. Релизы неизменяемые, а теги `v*` держит ruleset 25559103 — условие проверки подписи (R77 spec);
-  - подпись проверяет рецепт `spec` `release-verify`. Он пускает только подпись общего `release.yml` на релизе `.github` не ниже v0.1.7, поэтому релизы на v0.1.4 — v0.1.0–v0.1.3 — отклоняет. С T08 закрепление — v0.1.10, его поднял Dependabot. Подпись v0.1.10 правило пускает, но сборки и подписи на нём ещё не было: что `release-verify` пустит такой релиз, проверит первый релиз после T08 (R77 spec; R07; R08).
-- **Чего ещё нет:** gopls в образе — Д5, покрытия в Codecov — Д8, проекта OpenSSF Best Practices — Д9 в таблице 4 [RUN.md](../RUN.md).
+  - подпись проверяет рецепт `spec` `release-verify`. Он пускает только подпись общего `release.yml` на релизе `.github` не ниже v0.1.7, поэтому релизы на v0.1.4 — v0.1.0–v0.1.3 — отклоняет. С T08 закрепление — v0.1.10, его поднял Dependabot. Первый релиз на нём, v0.1.4, правило пускает: T18 сверила `release-verify` все девять его файлов (R77 spec; R07; R18).
+- **Чего ещё нет:** проекта OpenSSF Best Practices — Д9 в таблице 4 [RUN.md](../RUN.md).
 
 ### 3.2. Пакет модуля
 
@@ -400,3 +402,5 @@ Starlark формата — условия проверки, выражения 
   - `elm bump` — [`terminal/src/Main.hs`](https://github.com/elm/compiler/blob/1c278bf/terminal/src/Main.hs) elm/compiler, коммит 1c278bf: «so there cannot be MAJOR changes hiding in PATCH releases in Elm!»; правило — [`builder/src/Deps/Diff.hs`](https://github.com/elm/compiler/blob/1c278bf/builder/src/Deps/Diff.hs), строки 308–312: `addMag = if null added then M.PATCH else M.MINOR`, `removeMag = if null removed then M.PATCH else M.MAJOR` и наибольшее из частей. Удаление — мажорная, добавление — минорная, и Elm требует ровно найденную версию;
   - версия данных — рецепт Frictionless Data Package Version, [specs.frictionlessdata.io/patterns](https://specs.frictionlessdata.io/patterns/): мажорная — «Combine, split, delete or change the meaning of data that is referenced by another data resource», патч — «Correct errors in existing data». Часть здесь объявляет автор, а инструмента нет;
   - [Conventional Commits 1.0.0](https://www.conventionalcommits.org/en/v1.0.0/): «fix: a commit of the type fix patches a bug in your codebase (this correlates with PATCH in Semantic Versioning)». Часть объявляет автор — типом коммита, — а содержимого инструмент не смотрит.
+- **Покрытие и перечень `paths`** (R18) — [docs/architecture.md `.github`](https://github.com/altnovatrail/.github/blob/89d3ceee0b9977b3334488a4133d084d76474e0d/docs/architecture.md), раздел 3.3 — «Покрытие», job «Go» и перечень вида `go`, — и [`go.yml`](https://github.com/altnovatrail/.github/blob/89d3ceee0b9977b3334488a4133d084d76474e0d/.github/workflows/go.yml), релиз `.github` v0.1.15, коммит 89d3cee, прочитано 2026-11-04. Из общих workflow между v0.1.10 и v0.1.15 менялись только `go.yml`, `release.yml` и `typescript.yml` (`gh api repos/altnovatrail/.github/compare/v0.1.10...v0.1.15`, 2026-11-04).
+- **gopls из lock-файла** (R19) — R12 tutor и его [`.devcontainer/Dockerfile`](https://github.com/altnovatrail/tutor/blob/be607e56f87bf94a93b1d318f9cd578a3e3c221e/.devcontainer/Dockerfile) и `.devcontainer/gopls/`, `main` be607e5, прочитано 2026-11-04. Находок docker:S8545 у `tutor` нет (API SonarCloud, `api/issues/search?componentKeys=altnovatrail_tutor&rules=docker:S8545`, 2026-11-04). Его Scorecard Pinned-Dependencies отмечает в Dockerfile только `npmCommand not pinned by hash` (API GitHub, `code-scanning/alerts`, 2026-11-04). gopls v0.24.0 от 2026-10-14 — последний релиз (`https://proxy.golang.org/golang.org/x/tools/gopls/@latest`, прочитано 2026-11-04); лицензия golang/tools — BSD-3-Clause (API GitHub, `repos/golang/tools/license`, 2026-11-04).

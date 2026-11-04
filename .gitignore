@@ -2,3 +2,5 @@
 /bin/
 # What release-files writes, for .github's shared release to sign and publish.
 /dist/
+# What ci-test writes, for .github's shared go.yml to send to Codecov.
+/coverage/
