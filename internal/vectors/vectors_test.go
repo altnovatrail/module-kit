@@ -2,6 +2,7 @@ package vectors
 
 import (
 	"bytes"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io/fs"
@@ -9,6 +10,7 @@ import (
 	"net/url"
 	"os"
 	"path"
+	"reflect"
 	"regexp"
 	"slices"
 	"strings"
@@ -268,6 +270,46 @@ func moduleExample(v vector) error {
 	return nil
 }
 
+// openView passes a case of the open view: the open view of part.yaml is what open-view.yaml holds,
+// whatever the order of keys (format/README.md, section 9). It compares twice. The walk of the
+// schemas gives a JSON value, which is compared with open-view.yaml as read, as spec's format-check
+// compares them: so a field left out is told from one at its zero value. And the function of the
+// part, which takes part.yaml read by its type of formatv0, gives the type of formatv0/open, which
+// is compared with open-view.yaml read strictly by that type: so the open view the library gives is
+// the one the vector holds, in the type that holds it.
+func openView(v vector) error {
+	name := strings.Split(v.path, "/")[2]
+	kind := partTypes[name]
+	part := kind.value()
+	value, err := readVector(v.fsys, path.Join(v.path, "part.yaml"), name+".schema.json", part)
+	if err != nil {
+		return err
+	}
+	want := kind.view()
+	expected, err := readOpenView(v.fsys, path.Join(v.path, "open-view.yaml"), want)
+	if err != nil {
+		return err
+	}
+	if walked := schema.Open(name+".schema.json", value); !reflect.DeepEqual(walked, expected) {
+		return differ("the walk of the schemas gives", walked, expected)
+	}
+	got, err := kind.open(part)
+	if err != nil {
+		return err
+	}
+	if !reflect.DeepEqual(got, want) {
+		return differ("the open view of part.yaml is", got, want)
+	}
+	return nil
+}
+
+// differ says that an open view is not the one open-view.yaml holds, writing both out.
+func differ(what string, got, want any) error {
+	gotText, _ := json.MarshalIndent(got, "", "  ")
+	wantText, _ := json.MarshalIndent(want, "", "  ")
+	return fmt.Errorf("%s\n%s\nand open-view.yaml holds\n%s", what, gotText, wantText)
+}
+
 // runners passes a case of each kind: nil when module-kit gives what the case says, and an error
 // that says why not otherwise. A task of the epic of code puts the code it brings in place of
 // noCode, and takes the cases it passes out of testdata/skipped.txt (architecture 3.6; R20).
@@ -279,16 +321,16 @@ var runners = map[string]func(vector) error{
 	"examples/invalid": invalidExample,
 	"examples/module":  moduleExample,
 	// The test vectors (format/README.md, section 9).
-	"rules":     rule,   // refused with the ID of the rule the case is filed under
-	"open-view": noCode, // the open view of part.yaml is open-view.yaml
-	"verdicts":  noCode, // each reading gets its verdicts, reasons and traps
-	"leaks":     noCode, // each text gives the keys and leak phrases it names
-	"random":    noCode, // each draw gives its value
-	"templates": noCode, // the count, and each seed's numbers and instance
-	"tiers":     noCode, // the tier of each skill
-	"packages":  noCode, // the package of module/ is package.yaml
-	"indexes":   noCode, // the index the release builds, or the rule that refuses it
-	"versions":  noCode, // the part of the version found, or the rule that refuses it
+	"rules":     rule,     // refused with the ID of the rule the case is filed under
+	"open-view": openView, // the open view of part.yaml is open-view.yaml
+	"verdicts":  noCode,   // each reading gets its verdicts, reasons and traps
+	"leaks":     noCode,   // each text gives the keys and leak phrases it names
+	"random":    noCode,   // each draw gives its value
+	"templates": noCode,   // the count, and each seed's numbers and instance
+	"tiers":     noCode,   // the tier of each skill
+	"packages":  noCode,   // the package of module/ is package.yaml
+	"indexes":   noCode,   // the index the release builds, or the rule that refuses it
+	"versions":  noCode,   // the part of the version found, or the rule that refuses it
 	// The joining of two readings and the verdict on the observation (contracts/README.md,
 	// section 10).
 	"observation/v1": noCode,

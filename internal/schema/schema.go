@@ -84,12 +84,15 @@ var format = sync.OnceValue(func() *set { return newSet(files) })
 
 // A set is every schema of schemas/ in a file system, added to one compiler by its $id, and what
 // is compiled of them so far, by location. A schema once compiled is read without a lock, and the
-// compiler, which is not safe from many goroutines, is held by mu.
+// compiler, which is not safe from many goroutines, is held by mu. The open view walks the schemas
+// as they are written, docs, and reads the keys of patternProperties as patterns, compiled once.
 type set struct {
 	compiler *jsonschema.Compiler
 	ids      map[string]string // the $id of each schema, by the name of its file
+	docs     map[string]any    // each schema as JSON, by the name of its file
 	mu       sync.Mutex
 	schemas  sync.Map // *jsonschema.Schema by location
+	patterns sync.Map // *regexp.Regexp by the key of patternProperties
 }
 
 // newSet adds every schema of schemas/ in fsys to a compiler. A reference between schemas resolves
@@ -97,7 +100,7 @@ type set struct {
 // by its own $id, which ends in the name of its file, and the compiler loads nothing else: its
 // loader reads only file: URLs, and no schema of the format has one.
 func newSet(fsys fs.FS) *set {
-	s := &set{compiler: jsonschema.NewCompiler(), ids: map[string]string{}}
+	s := &set{compiler: jsonschema.NewCompiler(), ids: map[string]string{}, docs: map[string]any{}}
 	s.compiler.RegisterVocabulary(propertyNames)
 	s.compiler.AssertVocabs()
 	for _, name := range names(fsys) {
@@ -118,6 +121,7 @@ func newSet(fsys fs.FS) *set {
 			panic(fmt.Sprintf("schema: %s: %v", name, err))
 		}
 		s.ids[name] = id
+		s.docs[name] = doc
 	}
 	return s
 }
