@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"unicode"
 	"unicode/utf8"
 )
 
@@ -194,13 +195,14 @@ func (r *reader) standIns(text string) string {
 }
 
 // escapedCharacters gives every character the text writes with an escape \x, \u or \U, wherever
-// it stands: more than the strings in double quotes hold is no harm here.
+// it stands: more than the strings in double quotes hold is no harm here. An escape above
+// U+10FFFF names no character, so it is no stand-in either.
 func escapedCharacters(text string) []rune {
 	var found []rune
 	for at := strings.IndexByte(text, '\\'); at >= 0 && at+1 < len(text); {
 		width := escapeWidth(rune(text[at+1]))
 		if width > 0 && at+2+width <= len(text) {
-			if c, err := strconv.ParseUint(text[at+2:at+2+width], 16, 32); err == nil {
+			if c, err := strconv.ParseUint(text[at+2:at+2+width], 16, 32); err == nil && c <= unicode.MaxRune {
 				found = append(found, rune(c))
 			}
 		}

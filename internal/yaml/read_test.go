@@ -250,10 +250,10 @@ func TestParseErrorOfAnotherKind(t *testing.T) {
 	}
 }
 
-// Every character the text writes with an escape is found, and a backslash at the end is no
-// escape.
+// Every character the text writes with an escape is found, an escape above U+10FFFF is none, and a
+// backslash at the end is no escape.
 func TestEscapedCharacters(t *testing.T) {
-	got := escapedCharacters(`a \x41 \u00e9 \U0001F600 \uZZZZ \\u0042 \u12`)
+	got := escapedCharacters(`a \x41 \u00e9 \U0001F600 \uZZZZ \\u0042 \UFFFFFFFF \U00110000 \u12`)
 	want := []rune{'A', 'é', '😀', 'B'}
 	if !slices.Equal(got, want) {
 		t.Errorf("%q, not %q", got, want)
