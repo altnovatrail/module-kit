@@ -6,8 +6,9 @@
 // work, and tutor's eval runner on the truth of a sample's markup (R95 spec); the check of a
 // module reads by it the rules of a task that the check of an answer slot sees itself.
 //
-// It holds so far the check kinds number, fraction and choice: OfItem and OfSlot give the verdict
-// on values as they are written, Same compares two values as a check does, and UnicodeVersion names
-// the version of Unicode that the normalization follows (R27). A rubric gives no verdict. The
-// predicate comes with the sandbox of Starlark, and the joining of two readings after it (R16).
+// It holds so far the check kinds: OfItem and OfSlot give the verdict on values as they are
+// written, Same compares two values as a check does, and UnicodeVersion names the version of
+// Unicode that the normalization follows (R27). A predicate runs in the sandbox of Starlark, and
+// CheckPredicate holds the rule of its expression (R28). A rubric gives no verdict. The joining of
+// two readings comes with its own task (R16).
 package verdict

@@ -14,10 +14,11 @@ import (
 
 // The rules of a task that the check of an answer slot sees itself (format/README.md, section 15).
 const (
-	RuleTaskChoiceKey     = "task.choice-key"
-	RuleTaskChoiceOptions = "task.choice-options"
-	RuleTaskFractionKey   = "task.fraction-key"
-	RuleTaskTrapValues    = "task.trap-values"
+	RuleTaskChoiceKey           = "task.choice-key"
+	RuleTaskChoiceOptions       = "task.choice-options"
+	RuleTaskFractionKey         = "task.fraction-key"
+	RuleTaskTrapValues          = "task.trap-values"
+	RuleTaskPredicateExpression = "task.predicate-expression"
 )
 
 // slotsOf gives the answer slots of an item as their checks read them, in the order of
@@ -48,9 +49,9 @@ type slotBreach struct {
 }
 
 // checkRules checks the rules of a task that the check of each answer slot sees itself:
-// task.choice-key, task.choice-options, task.fraction-key and task.trap-values. A template is
-// checked through its instances, and a placeholder outside a template breaks task.placeholders, so
-// neither is read here (format/README.md, section 23).
+// task.choice-key, task.choice-options, task.fraction-key, task.trap-values and
+// task.predicate-expression. A template is checked through its instances, and a placeholder outside
+// a template breaks task.placeholders, so neither is read here (format/README.md, section 23).
 func (c *checker) checkRules(path string, task formatv0.Task) {
 	if task.Template != nil {
 		return
@@ -76,13 +77,20 @@ func holdsPlaceholder(slot verdict.AnswerSlot) bool {
 }
 
 // slotRules gives the breaches of the rules that the check of an answer slot sees itself, by the
-// verdicts that the check gives (format/README.md, section 15). It reads one answer slot of a task,
-// or of an instance of a template, which is checked as a task.
+// verdicts that the check gives, and a predicate by verdict.CheckPredicate (format/README.md,
+// section 15). It reads one answer slot of a task, or of an instance of a template, which is checked
+// as a task.
 func slotRules(slot verdict.AnswerSlot) []slotBreach {
 	var found []slotBreach
 	check := slot.Check
 	if check.Kind == formatv0.CheckKindChoice {
 		found = append(found, choiceRules(slot)...)
+	}
+	if check.Kind == formatv0.CheckKindPredicate {
+		if err := verdict.CheckPredicate(*check.Predicate); err != nil {
+			found = append(found, slotBreach{RuleTaskPredicateExpression, []string{"check", "predicate"},
+				fmt.Sprintf("the predicate is no expression of the dialect on value and the built-in names alone: %v", err)})
+		}
 	}
 	if check.Kind == formatv0.CheckKindFraction && check.Form != nil && *check.Form == formatv0.CheckFormReduced &&
 		verdictOf(slot, *check.Key).Verdict != verdict.Correct {

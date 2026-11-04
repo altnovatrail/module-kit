@@ -42,12 +42,6 @@ func FuzzOfSlot(f *testing.F) {
 			return
 		}
 		kind := slot.Check.Kind
-		if kind == formatv0.CheckKindPredicate {
-			if err != nil && err.Error() != "verdict: "+errNoSandbox.Error() {
-				t.Fatalf("a predicate gives %v", err)
-			}
-			return
-		}
 		if err != nil {
 			t.Fatalf("%s: %v", kind, err)
 		}
@@ -59,6 +53,10 @@ func FuzzOfSlot(f *testing.F) {
 		case Unreadable:
 			if got.Reason != Blank && got.Reason != Notation {
 				t.Fatalf("unreadable with the reason %q", got.Reason)
+			}
+		case Unchecked:
+			if kind != formatv0.CheckKindPredicate || got.Reason != "" || got.Trap != nil {
+				t.Fatalf("%s gives %q", kind, short(got))
 			}
 		default:
 			t.Fatalf("the verdict %q", got.Verdict)
@@ -79,7 +77,7 @@ func FuzzOfSlot(f *testing.F) {
 			if same != (got.Verdict != Unreadable) {
 				t.Fatalf("Same of the value with itself is %t, and the verdict %q", same, short(got))
 			}
-			if got.Verdict == Correct && !Same(slot, *slot.Check.Key, value) {
+			if got.Verdict == Correct && kind != formatv0.CheckKindPredicate && !Same(slot, *slot.Check.Key, value) {
 				t.Fatal("a right value that the check compares unequal to the key")
 			}
 		}
