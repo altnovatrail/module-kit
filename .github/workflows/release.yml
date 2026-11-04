@@ -25,8 +25,11 @@ jobs:
     uses: altnovatrail/.github/.github/workflows/release.yml@f3addb7403d084c560c61481e217b93f8e7ee1f3 # v0.1.10
     with:
       paths: |
-        .
-        :(exclude)docs/**
-        :(exclude)*.md
-        :(exclude).github/**
-        :(exclude)spec
+        *.go
+        :(exclude)*_test.go
+        go.mod
+        go.sum
+        justfile
+        LICENSE
+        .devcontainer/Dockerfile
+        .github/workflows/release.yml

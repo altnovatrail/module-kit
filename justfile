@@ -54,7 +54,8 @@ release-files version:
     cp "$(go env GOROOT)/LICENSE" dist/LICENSE-go
     (cd dist && sha256sum -- module-kit_* LICENSE LICENSE-go > SHA256SUMS)
 
-# Fail on code gofmt would rewrite, and on what go vet reports.
+# Fail on code gofmt would rewrite, on what go vet reports, and on a gopls lock file that names
+# another version than GOPLS_VERSION in the Dockerfile.
 ci-lint:
     #!/usr/bin/env bash
     set -euo pipefail
@@ -68,10 +69,26 @@ ci-lint:
         exit 1
     fi
     go vet ./...
+    # gopls comes into the devcontainer image from its lock file, .devcontainer/gopls/, and the
+    # image's build stops when the gopls it built does not name GOPLS_VERSION (R19). CI never
+    # builds that stage, so the two are held to each other here: a pull request that raises one
+    # alone, or a move to a new tag of spec that drops the step from the Dockerfile, fails here.
+    lock="$(sed -n 's/^[[:space:]]*\(require[[:space:]]\{1,\}\)\{0,1\}golang\.org\/x\/tools\/gopls[[:space:]]\{1,\}v\([^[:space:]]\{1,\}\).*$/\2/p' \
+        .devcontainer/gopls/go.mod)"
+    arg="$(sed -n 's/^ARG GOPLS_VERSION=\(.*\)$/\1/p' .devcontainer/Dockerfile)"
+    if [ -z "$lock" ] || [ "$arg" != "$lock" ]; then
+        echo "ci-lint: .devcontainer/gopls/go.mod names gopls ${lock:-at no version} and" \
+            ".devcontainer/Dockerfile has GOPLS_VERSION ${arg:-unset}; raise them together (R19)" >&2
+        exit 1
+    fi
 
-# Run the tests, with the race detector.
+# The coverage goes into coverage/go.out, one Go profile, which the job coverage of .github's shared
+# go.yml sends to Codecov, as "Go / coverage" (R48 spec; R18). Go counts statements and leaves the
+# tests themselves out; a package that no test runs is in it too, its statements at zero.
+# Run the tests, with the race detector, and write their coverage.
 ci-test:
-    go test -race -count=1 ./...
+    mkdir -p coverage
+    go test -race -count=1 -covermode=atomic -coverprofile=coverage/go.out ./...
 
 # Fail on a known vulnerability in code this module reaches.
 ci-vuln:
