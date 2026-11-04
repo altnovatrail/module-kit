@@ -14,10 +14,11 @@ import (
 
 // The tasks of the examples that the cases of the rules of a check edit.
 var (
-	workbook = string(examplePart("task", "workbook-page").Data)
-	parity   = string(examplePart("task", "even-or-odd").Data)
-	pizza    = string(examplePart("task", "fraction-in-lowest-terms").Data)
-	sentence = string(examplePart("task", "best-first-sentence").Data)
+	workbook  = string(examplePart("task", "workbook-page").Data)
+	parity    = string(examplePart("task", "even-or-odd").Data)
+	pizza     = string(examplePart("task", "fraction-in-lowest-terms").Data)
+	sentence  = string(examplePart("task", "best-first-sentence").Data)
+	divisible = string(examplePart("task", "divisible-by-3-and-4").Data)
 )
 
 // The cases hold each rule that the check of an answer slot sees itself at each place it is broken,
@@ -53,6 +54,13 @@ var slotRuleCases = []struct {
 	{"a trap value of a choice that is none of the options", replaced(parity, "- value: even", "- value: seven"),
 		[]string{"#/items/0/answer_slots/0/check/trap_values/0/value task.trap-values"}},
 	{"a placeholder outside a template is another rule's", replaced(workbook, `key: "8"`, `key: "{b}"`, `- value: "9"`, `- value: "{b}"`), nil},
+	{"a predicate as it is", divisible, nil},
+	{"a predicate on names that it binds itself", replaced(divisible, `predicate: "1 <= value and value <= 50 and value % 3 == 0 and value % 4 == 0"`,
+		`predicate: "value in [12 * n for n in range(1, 5)]"`), nil},
+	{"a predicate that is no expression", replaced(divisible, `predicate: "1 <= value and value <= 50 and value % 3 == 0 and value % 4 == 0"`, `predicate: "value = 12"`),
+		[]string{"#/items/0/answer_slots/0/check/predicate task.predicate-expression"}},
+	{"a predicate that names what it may not", replaced(divisible, `predicate: "1 <= value and value <= 50 and value % 3 == 0 and value % 4 == 0"`, `predicate: "number % 12 == 0"`),
+		[]string{"#/items/0/answer_slots/0/check/predicate task.predicate-expression"}},
 	{"a template is read through its instances", string(examplePart("task", "fraction-template").Data), nil},
 }
 
@@ -110,6 +118,8 @@ func TestCheckRuleMessages(t *testing.T) {
 		"task.trap-values: the trap value EVEN is none of the options as written",
 		"task.trap-values: the trap value Odd gets correct from the check, not not_yet: a trap value is a wrong value",
 		"task.trap-values: the trap value seven gets unreadable (notation) from the check, not not_yet: a trap value is a wrong value",
+		"task.predicate-expression: the predicate is no expression of the dialect on value and the built-in names alone: 1:8: got '=' after expression, want EOF",
+		"task.predicate-expression: the predicate is no expression of the dialect on value and the built-in names alone: 1:1: undefined: number",
 	} {
 		if !messages[want] {
 			t.Errorf("no breach says %q; they say\n%s", want, strings.Join(slices.Sorted(maps.Keys(messages)), "\n"))

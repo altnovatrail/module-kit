@@ -67,8 +67,6 @@ format/vectors/rules/task.placeholders/lone-brace.yaml
 format/vectors/rules/task.placeholders/placeholder-key-outside-a-template.yaml
 format/vectors/rules/task.placeholders/result-in-the-statement.yaml
 format/vectors/rules/task.placeholders/unknown-placeholder.yaml
-format/vectors/rules/task.predicate-expression/not-an-expression.yaml
-format/vectors/rules/task.predicate-expression/unknown-name.yaml
 format/vectors/rules/task.template-expressions/chained-comparison.yaml
 format/vectors/rules/task.template-expressions/constraint-of-an-int.yaml
 format/vectors/rules/task.template-expressions/derived-of-a-derived.yaml
@@ -102,10 +100,6 @@ format/vectors/templates/number-thought-of.yaml
 format/vectors/templates/one-instance.yaml
 format/vectors/templates/order-of-names.yaml
 format/vectors/templates/within-the-budget.yaml
-format/vectors/verdicts/predicate/divisible-by-3-and-4.yaml
-format/vectors/verdicts/predicate/division-by-zero.yaml
-format/vectors/verdicts/predicate/steps-below-the-limit.yaml
-format/vectors/verdicts/predicate/steps-reach-the-limit.yaml
 format/vectors/versions/after-a-withdrawn-version
 format/vectors/versions/age-categories-narrower
 format/vectors/versions/age-categories-wider

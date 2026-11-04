@@ -333,15 +333,11 @@ func tiers(v vector) error {
 // verdicts passes a case of verdicts: each reading of the item gets the verdict, the reason and the
 // trap that the vector gives each answer slot, and the item the verdict it gives (format/README.md,
 // section 15). The vector is read by its schema and its type of formatv0. A predicate runs in the
-// sandbox of Starlark, which comes with its own task.
+// sandbox of Starlark, with the limits of a predicate (R28).
 func verdicts(v vector) error {
 	var vv formatv0.VerdictVector
 	if _, err := readVector(v.fsys, v.path, "verdict-vector.schema.json", &vv); err != nil {
 		return err
-	}
-	slots := verdict.AnswerSlots(vv.Item)
-	if slices.ContainsFunc(slots, func(s verdict.AnswerSlot) bool { return s.Check.Kind == formatv0.CheckKindPredicate }) {
-		return errNoCode
 	}
 	for n, reading := range vv.Readings {
 		values := make([]*string, len(reading.AnswerSlots))

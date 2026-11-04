@@ -8,7 +8,10 @@ import (
 	"unicode/utf8"
 
 	"github.com/altnovatrail/spec/types/formatv0"
+	"go.starlark.net/starlark"
 	"golang.org/x/text/unicode/norm"
+
+	"github.com/altnovatrail/module-kit/internal/sandbox"
 )
 
 // Verdict is the verdict of an answer slot or of an item, as the format writes it
@@ -49,9 +52,9 @@ var ErrNoVerdict = errors.New("a rubric gives no verdict")
 // the placeholder with a number (format/README.md, section 23).
 var ErrPlaceholder = errors.New("the check holds the placeholder of a template, which an instance replaces with a number")
 
-// errNoSandbox is what a predicate gives on a value in its notation until the sandbox of Starlark
-// comes (RUN.md, T27).
-var errNoSandbox = errors.New("a predicate runs in the sandbox of Starlark, which module-kit has no code for yet")
+// valueName is the one name that a predicate is written on, the whole number read
+// (format/README.md, section 15).
+const valueName = "value"
 
 // AnswerSlot is an answer slot of an item as its check reads it: its binding as the format writes
 // it — anywhere, sheet, zone, choice or box (format/README.md, section 14) — its check, and, when it
@@ -106,7 +109,7 @@ type ItemVerdict struct {
 // order of AnswerSlots: a value as it is written, or nil when nothing was read (format/README.md,
 // section 15). An error gives no verdict: ctx is done, the item has no answer slots, the values are
 // not one for each answer slot, or OfSlot gives one for an answer slot — ErrNoVerdict for an item
-// that a rubric checks.
+// that a rubric checks, and the error of ctx when it stops a predicate as it runs.
 func OfItem(ctx context.Context, item formatv0.Item, values []*string) (ItemVerdict, error) {
 	if err := ctx.Err(); err != nil {
 		return ItemVerdict{}, fmt.Errorf("verdict: %w", err)
@@ -120,7 +123,7 @@ func OfItem(ctx context.Context, item formatv0.Item, values []*string) (ItemVerd
 	}
 	verdicts := make([]SlotVerdict, len(slots))
 	for i, slot := range slots {
-		v, err := slot.verdict(values[i])
+		v, err := slot.verdict(ctx, values[i])
 		if err != nil {
 			return ItemVerdict{}, fmt.Errorf("verdict: answer slot %d: %w", i+1, err)
 		}
@@ -132,21 +135,26 @@ func OfItem(ctx context.Context, item formatv0.Item, values []*string) (ItemVerd
 // OfSlot gives the verdict of an answer slot on the value read in it: the value as it is written, or
 // nil when nothing was read (format/README.md, section 15). The value and the trap values are
 // normalized as the check kind normalizes them, and the key is read as it is written, in the kind's
-// notation.
+// notation. A predicate on a value in its notation runs in the sandbox of Starlark, with the limits
+// of a predicate and ctx (format/README.md, section 15; R11): True is correct and False not_yet,
+// and an error, a result that is not a bool, the limit of steps, module-kit's clock and a panic of
+// the interpreter are unchecked.
 //
-// An error gives no verdict: ctx is done; the value is not UTF-8; the check is one that the format
-// does not take — its kind is none of the five, a number, a fraction or a choice has no key, the key
-// of a number or a fraction is not in its notation, it or a trap value holds the placeholder of a
-// template, ErrPlaceholder, or a choice has no options; the check is a rubric, ErrNoVerdict; or it is
-// a predicate and the value is in its notation, which the sandbox decides. A check that breaks a rule
-// of the format that the check sees itself — a key that is none of the options, two options alike, a
-// key of a fraction in lowest terms that can be reduced, a trap value that is not wrong — still gives
-// its verdict, so that the check of a module reads those rules by it.
+// An error gives no verdict: ctx is done before the verdict, or stops a predicate as it runs — a
+// predicate that its limit of steps, the clock or a panic stopped first, or that ended, gives its
+// verdict; the value is not UTF-8; the check is one that the format does not take — its kind is
+// none of the five, a number, a fraction or a choice has no key, the key of a number or a fraction
+// is not in its notation, it or a trap value holds the placeholder of a template, ErrPlaceholder, a
+// choice has no options, or a predicate no expression; or the check is a rubric, ErrNoVerdict. A
+// check that breaks a rule of the format that the check sees itself — a key that is none of the
+// options, two options alike, a key of a fraction in lowest terms that can be reduced, a trap value
+// that is not wrong, a predicate that is no expression of the dialect — still gives its verdict, so
+// that the check of a module reads those rules by it.
 func OfSlot(ctx context.Context, slot AnswerSlot, value *string) (SlotVerdict, error) {
 	if err := ctx.Err(); err != nil {
 		return SlotVerdict{}, fmt.Errorf("verdict: %w", err)
 	}
-	v, err := slot.verdict(value)
+	v, err := slot.verdict(ctx, value)
 	if err != nil {
 		return SlotVerdict{}, fmt.Errorf("verdict: %w", err)
 	}
@@ -189,7 +197,7 @@ func comparedBy(c formatv0.Check, units []string, text string) (string, bool) {
 
 // verdict gives the verdict of the answer slot on a value, as OfSlot does, with an error that names
 // no package.
-func (s AnswerSlot) verdict(value *string) (SlotVerdict, error) {
+func (s AnswerSlot) verdict(ctx context.Context, value *string) (SlotVerdict, error) {
 	c := s.Check
 	if value != nil && !utf8.ValidString(*value) {
 		return SlotVerdict{}, errors.New("the value read is not UTF-8")
@@ -200,24 +208,55 @@ func (s AnswerSlot) verdict(value *string) (SlotVerdict, error) {
 	case formatv0.CheckKindChoice:
 		return s.choiceVerdict(value)
 	case formatv0.CheckKindPredicate:
-		if c.Predicate == nil {
-			return SlotVerdict{}, errors.New("the predicate check has no predicate")
-		}
-		if value == nil {
-			return SlotVerdict{Verdict: Unreadable, Reason: Blank}, nil
-		}
-		text := numberText(*value, nil)
-		if text == "" {
-			return SlotVerdict{Verdict: Unreadable, Reason: Blank}, nil
-		}
-		if _, ok := notation(text, c.Kind); !ok {
-			return SlotVerdict{Verdict: Unreadable, Reason: Notation}, nil
-		}
-		return SlotVerdict{}, errNoSandbox
+		return s.predicateVerdict(ctx, sandbox.Predicate, value)
 	case formatv0.CheckKindRubric:
 		return SlotVerdict{}, ErrNoVerdict
 	}
 	return SlotVerdict{}, fmt.Errorf("the check kind %q is none of the format's", c.Kind)
+}
+
+// predicateVerdict gives the verdict of a predicate: blank, out of the notation — an integer alone
+// is in it —, or what the expression gives on the integer read, a Starlark int bound to value, in
+// the sandbox with the limits and ctx. True is correct and False not_yet; an error, a result that is
+// not a bool, the limit of steps, the clock and a panic are unchecked, and ctx done is an error
+// (format/README.md, section 15; R11).
+func (s AnswerSlot) predicateVerdict(ctx context.Context, limits sandbox.Limits, value *string) (SlotVerdict, error) {
+	c := s.Check
+	if c.Predicate == nil {
+		return SlotVerdict{}, errors.New("the predicate check has no predicate")
+	}
+	if value == nil {
+		return SlotVerdict{Verdict: Unreadable, Reason: Blank}, nil
+	}
+	text := numberText(*value, nil)
+	if text == "" {
+		return SlotVerdict{Verdict: Unreadable, Reason: Blank}, nil
+	}
+	read, ok := notation(text, c.Kind)
+	if !ok {
+		return SlotVerdict{Verdict: Unreadable, Reason: Notation}, nil
+	}
+	result, err := sandbox.Eval(ctx, limits, *c.Predicate, starlark.StringDict{valueName: starlark.MakeBigInt(read.value.Num())})
+	switch {
+	case errors.Is(err, context.Canceled), errors.Is(err, context.DeadlineExceeded):
+		return SlotVerdict{}, err
+	case err != nil:
+		return SlotVerdict{Verdict: Unchecked}, nil
+	case result == starlark.True:
+		return SlotVerdict{Verdict: Correct}, nil
+	case result == starlark.False:
+		return SlotVerdict{Verdict: NotYet}, nil
+	}
+	return SlotVerdict{Verdict: Unchecked}, nil
+}
+
+// CheckPredicate says whether the expression of a predicate is one of the dialect of all the
+// Starlark of the format, which names nothing but value, the names that it binds itself and the
+// built-in names of the dialect: the rule task.predicate-expression (format/README.md, sections 15
+// and 24). The error says why not, at the line and the column where go.starlark.net finds it. A
+// predicate that is not gives unchecked on every value in its notation.
+func CheckPredicate(expression string) error {
+	return sandbox.CheckExpr(expression, valueName)
 }
 
 // numberVerdict gives the verdict of a number or a fraction: blank, out of the notation, a value

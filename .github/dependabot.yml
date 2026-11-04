@@ -31,6 +31,10 @@ updates:
     # spec's Go modules move together with the spec submodule, to its tag, in a task of its own, and
     # ci-lint holds them to it (R64 in spec; R20 in docs/decisions.md): a tag of spec comes out with
     # every change to its documents, so Dependabot does not raise them.
+    # go.starlark.net is part of the format: its version counts the steps of the format's limits, and
+    # raising it is a new version of the format, so it moves with a tag of spec whose format names
+    # another (R88 in spec; R11 and R28 in docs/decisions.md).
     ignore:
       - dependency-name: github.com/altnovatrail/spec
       - dependency-name: github.com/altnovatrail/spec/contracts
+      - dependency-name: go.starlark.net

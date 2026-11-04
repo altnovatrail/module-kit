@@ -3,13 +3,17 @@ package verdict
 import (
 	"context"
 	"errors"
+	"fmt"
 	"slices"
 	"strings"
 	"testing"
+	"time"
 	"unicode"
 
 	"github.com/altnovatrail/spec/types/formatv0"
 	"golang.org/x/text/unicode/norm"
+
+	"github.com/altnovatrail/module-kit/internal/sandbox"
 )
 
 // The answer slots of the cases: a check written by hand in a box, or a choice tapped.
@@ -33,10 +37,16 @@ func tapped(key string, options ...string) AnswerSlot {
 	return AnswerSlot{Binding: string(formatv0.AnswerSlotBindingChoice), Check: formatv0.Check{Kind: formatv0.CheckKindChoice, Key: &key}, Options: texts(options)}
 }
 
-func predicate() AnswerSlot {
-	expression := "value % 3 == 0"
+func predicate(expression string) AnswerSlot {
 	return box(formatv0.Check{Kind: formatv0.CheckKindPredicate, Predicate: &expression})
 }
+
+// The predicates of the cases: one of the format's text, and one whose count of steps reaches the
+// limit of a predicate on any value, that of the vector steps-reach-the-limit.yaml.
+const (
+	divisibleBy3 = "value % 3 == 0"
+	tooManySteps = "value in [n * n for n in range(99998)]"
+)
 
 func rubric() AnswerSlot {
 	return AnswerSlot{Binding: string(formatv0.AnswerSlotBindingSheet), Check: formatv0.Check{Kind: formatv0.CheckKindRubric, Criteria: []formatv0.Criterion{{Text: "Clear."}}}}
@@ -172,11 +182,27 @@ var slotCases = []struct {
 	{"a choice tapped", tapped("Yes, it was.", "No.", "Yes, it was."), ptr("Yes, it was."), "correct"},
 	{"another option tapped", tapped("Yes, it was.", "No.", "Yes, it was."), ptr("No."), "not_yet"},
 	{"a key that no option is still gets its verdict", byHand("≤", "<", ">", "="), ptr("≤"), "correct"},
-	// A predicate before the sandbox.
-	{"nothing read in a predicate", predicate(), nil, "unreadable blank"},
-	{"a predicate's value blank once normalized", predicate(), ptr("="), "unreadable blank"},
-	{"a decimal for a predicate", predicate(), ptr("1.5"), "unreadable notation"},
-	{"a fraction for a predicate", predicate(), ptr("1/2"), "unreadable notation"},
+	// A predicate.
+	{"a predicate that holds", predicate(divisibleBy3), ptr("12"), "correct"},
+	{"a predicate that does not hold", predicate(divisibleBy3), ptr("13"), "not_yet"},
+	{"a predicate on a value normalized", predicate(divisibleBy3), ptr("= ９."), "correct"},
+	{"a predicate on a negative integer, by floored division", predicate("value % 12 == 0 and value < 0"), ptr("-24"), "correct"},
+	{"a predicate on an integer beyond a double's", predicate("value == 9007199254740993"), ptr("9007199254740993"), "correct"},
+	{"a predicate that holds for no integer of the double near it", predicate("value == 9007199254740993"), ptr("9007199254740992"), "not_yet"},
+	{"a predicate with a comprehension and a set", predicate("value in set([n * n for n in range(10)])"), ptr("49"), "correct"},
+	{"nothing read in a predicate", predicate(divisibleBy3), nil, "unreadable blank"},
+	{"a predicate's value blank once normalized", predicate(divisibleBy3), ptr("="), "unreadable blank"},
+	{"a decimal for a predicate", predicate(divisibleBy3), ptr("1.5"), "unreadable notation"},
+	{"a decimal of an integer's value for a predicate", predicate(divisibleBy3), ptr("12.0"), "unreadable notation"},
+	{"a fraction for a predicate", predicate(divisibleBy3), ptr("1/2"), "unreadable notation"},
+	{"a predicate that fails on the value", predicate("12 % value == 0"), ptr("0"), "unchecked"},
+	{"a predicate that gives no bool", predicate("value + 1"), ptr("3"), "unchecked"},
+	{"a predicate that gives a truthy value", predicate("[value]"), ptr("3"), "unchecked"},
+	{"a predicate that is no expression", predicate("value = 12"), ptr("12"), "unchecked"},
+	{"a predicate that names what it may not", predicate("number % 12 == 0"), ptr("12"), "unchecked"},
+	{"a predicate that calls a function recursively", predicate("(lambda f: f(f))(lambda f: f(f))"), ptr("3"), "unchecked"},
+	{"a predicate that fails on purpose", predicate("fail('no')"), ptr("3"), "unchecked"},
+	{"a predicate that prints", predicate("print(value) == None"), ptr("3"), "correct"},
 }
 
 func TestOfSlot(t *testing.T) {
@@ -211,7 +237,7 @@ func TestTrapIsTheTrapValue(t *testing.T) {
 }
 
 // An error gives no verdict: the check is one that the format does not take, the value is not
-// UTF-8, ctx is done, the check is a rubric, or the predicate needs the sandbox.
+// UTF-8, ctx is done, or the check is a rubric. A predicate stopped by ctx is TestPredicateStops'.
 func TestOfSlotErrors(t *testing.T) {
 	cancelled, cancel := context.WithCancel(context.Background())
 	cancel()
@@ -219,7 +245,7 @@ func TestOfSlotErrors(t *testing.T) {
 	noKey.Check.Key = nil
 	noChoiceKey := byHand("a", "a", "b")
 	noChoiceKey.Check.Key = nil
-	noExpression := predicate()
+	noExpression := predicate(divisibleBy3)
 	noExpression.Check.Predicate = nil
 	for _, c := range []struct {
 		name  string
@@ -240,7 +266,6 @@ func TestOfSlotErrors(t *testing.T) {
 		{"a choice written with no options", context.Background(), byHand("a"), ptr("a"), "verdict: the choice check has no options", nil},
 		{"a choice tapped with no options", context.Background(), tapped("a"), ptr("a"), "verdict: the choice check has no options", nil},
 		{"a predicate with no expression", context.Background(), noExpression, ptr("3"), "verdict: the predicate check has no predicate", nil},
-		{"a predicate on an integer, before the sandbox", context.Background(), predicate(), ptr("3"), "verdict: " + errNoSandbox.Error(), errNoSandbox},
 		{"a rubric", context.Background(), rubric(), ptr("An essay."), "verdict: a rubric gives no verdict", ErrNoVerdict},
 		{"a value that is not UTF-8", context.Background(), number("7"), ptr("7\xff"), "verdict: the value read is not UTF-8", nil},
 		{"a context that is done", cancelled, number("7"), ptr("7"), "verdict: context canceled", context.Canceled},
@@ -257,6 +282,72 @@ func TestOfSlotErrors(t *testing.T) {
 				t.Errorf("the error %v is not %v", err, c.is)
 			}
 		})
+	}
+}
+
+// A predicate that its limit of steps or module-kit's clock stops is unchecked, and one that ctx
+// stops gives no verdict. The loop of the clock and of ctx keeps no list and has no end of its own:
+// only they stop it.
+func TestPredicateStops(t *testing.T) {
+	endless := predicate("[n for n in range(1 << 62) if False] == []")
+	for _, c := range []struct {
+		name   string
+		slot   AnswerSlot
+		limits sandbox.Limits
+	}{
+		{"the limit of steps", predicate(tooManySteps), sandbox.Predicate},
+		{"the clock", endless, sandbox.Limits{Clock: 20 * time.Millisecond}},
+	} {
+		t.Run(c.name, func(t *testing.T) {
+			got, err := c.slot.predicateVerdict(context.Background(), c.limits, ptr("49"))
+			if err != nil {
+				t.Fatal(err)
+			}
+			if short(got) != "unchecked" {
+				t.Errorf("the verdict is %q, want unchecked", short(got))
+			}
+		})
+	}
+	t.Run("ctx", func(t *testing.T) {
+		ctx, cancel := context.WithTimeout(context.Background(), 20*time.Millisecond)
+		defer cancel()
+		got, err := endless.predicateVerdict(ctx, sandbox.Limits{}, ptr("49"))
+		if !errors.Is(err, context.DeadlineExceeded) {
+			t.Fatalf("the error is %v, and the verdict %q", err, short(got))
+		}
+		if want := "sandbox: context deadline exceeded"; err.Error() != want {
+			t.Errorf("the error says %q, want %q", err, want)
+		}
+	})
+	// Within the limits of a predicate: 40 000 sorts of a range of 1000 take 800 000 steps, 20 a turn,
+	// and some 750 ms, so that ctx stops them first (R28).
+	t.Run("ctx through OfItem", func(t *testing.T) {
+		ctx, cancel := context.WithCancel(context.Background())
+		time.AfterFunc(20*time.Millisecond, cancel)
+		slow := predicate("[n for n in range(40000) if sorted(range(1000)) == None] == []")
+		item := formatv0.Item{AnswerSlots: []formatv0.AnswerSlot{{Binding: formatv0.AnswerSlotBindingAnywhere, Check: slow.Check}}}
+		if _, err := OfItem(ctx, item, []*string{ptr("49")}); !errors.Is(err, context.Canceled) {
+			t.Fatalf("the error is %v", err)
+		}
+	})
+}
+
+// The rule task.predicate-expression: an expression of the dialect on value, the names it binds and
+// the built-in names alone.
+func TestCheckPredicate(t *testing.T) {
+	for _, c := range []struct{ expression, want string }{
+		{divisibleBy3, ""},
+		{tooManySteps, ""},
+		{"(lambda x: x > 0)(value) and chr(ord('a')) == 'a'", ""},
+		{"value = 12", "1:8: got '=' after expression, want EOF"},
+		{"number % 12 == 0", "1:1: undefined: number"},
+		{"json.encode(value) == '12'", "1:1: undefined: json"},
+		{"permutations([value])", "1:1: undefined: permutations"},
+	} {
+		err := CheckPredicate(c.expression)
+		if got := fmt.Sprint(err); err == nil && c.want != "" || err != nil && got != c.want {
+			t.Errorf("CheckPredicate(%q) gives %v, want %q", c.expression, err, c.want)
+		}
 	}
 }
 
@@ -381,8 +472,8 @@ func TestSame(t *testing.T) {
 		{byHand("odd", "even", "odd"), "seven", "SEVEN", true},
 		{byHand("odd", "even", "odd"), "", " ", true},
 		{byHand("odd", "even", "odd"), "odd", "odd.", false},
-		{predicate(), "7", "7.", true},
-		{predicate(), "7", "07", false},
+		{predicate(divisibleBy3), "7", "7.", true},
+		{predicate(divisibleBy3), "7", "07", false},
 		{rubric(), "An essay.", "An essay.", false},
 		{byHand("odd", "even", "odd"), "odd\xff", "odd\xff", false},
 	} {
