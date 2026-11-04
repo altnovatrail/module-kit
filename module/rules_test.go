@@ -69,7 +69,7 @@ func TestPartRules(t *testing.T) {
 		refused []string
 	}{
 		{"bands with one ID, without grades and with a grade that the audience does not name", module(fstest.MapFS{
-			manifestPath: bands("bands:\n  - id: grade-3\n    title: Grade 3\n    grades: [3, 5]\n  - id: grade-3\n    title: Again\n"),
+			manifestPath: bands("bands:\n  - id: grades-3-4\n    title: Grade 3\n    grades: [3, 5]\n  - id: grades-3-4\n    title: Again\n"),
 		}), []string{
 			"manifest.yaml #/audience/grades/1 manifest.bands", "manifest.yaml #/bands/0/grades/1 manifest.bands",
 			"manifest.yaml #/bands/1 manifest.bands", "manifest.yaml #/bands/1/id manifest.bands",
@@ -85,8 +85,9 @@ func TestPartRules(t *testing.T) {
 			"tasks/camp-days-1.yaml":      nil,
 			"tasks/gaps-ladder-1.yaml":    nil,
 			"lessons/days-and-dates.yaml": nil,
+			"lessons/gaps-and-posts.yaml": nil,
 		}), nil},
-		{"the rules within a skill graph, and those between parts that it breaks", module(fstest.MapFS{"skill-graph.yaml": file(brokenGraph)}), []string{
+		{"the rules within a skill graph, and those between parts that it breaks", smallest(fstest.MapFS{"skill-graph.yaml": file(brokenGraph)}), []string{
 			"manifest.yaml # manifest.dependencies", "manifest.yaml # manifest.dependencies",
 			"skill-graph.yaml #/retired_skills/d skill-graph.retired-ids",
 			"skill-graph.yaml #/retired_skills/e/replaced_by/1 skill-graph.known-skills",
@@ -95,7 +96,6 @@ func TestPartRules(t *testing.T) {
 			"skill-graph.yaml #/skills/a/prerequisites/2 skill-graph.own-anchors",
 			"skill-graph.yaml #/skills/b/prerequisites skill-graph.acyclic",
 			"skill-graph.yaml #/skills/c/prerequisites skill-graph.acyclic",
-			"traps.yaml #/traps/off-by-one/skills/0 traps.known-skills",
 		}},
 		{"dependencies that leave one out and name one that no skill needs", module(fstest.MapFS{
 			"skill-graph.yaml": file(strings.Replace(string(base["skill-graph.yaml"].Data), "prerequisites: [counting-gaps]",
@@ -112,15 +112,10 @@ func TestPartRules(t *testing.T) {
 		{"no rung templates, and a task with a verdict", module(fstest.MapFS{
 			manifestPath: file(manifest[:strings.Index(manifest, "rung_templates:")]),
 		}), []string{"manifest.yaml # manifest.rung-templates"}},
-		{"no rung templates, and a box with a verdict", module(fstest.MapFS{
-			manifestPath:                  file(manifest[:strings.Index(manifest, "rung_templates:")]),
-			"tasks/camp-days-1.yaml":      nil,
-			"tasks/gaps-ladder-1.yaml":    nil,
-			"lessons/days-and-dates.yaml": nil,
-			"tasks/tables-and-division-1.yaml": file(strings.NewReplacer("skills:\n  primary: [times-tables]", "skills:\n  primary: [counting-gaps]",
-				"band: tables", "band: grades-3-4").Replace(string(examplePart("task", "workbook-page").Data))),
+		{"trap values of boxes that the trap catalog does not have", module(fstest.MapFS{
+			"tasks/tables-and-division-1.yaml": file(strings.NewReplacer("primary: [times-tables]", "primary: [counting-gaps]",
+				"primary: [division-with-remainder]", "primary: [time-calendar]", "band: grade-3", "band: grades-3-4").Replace(string(examplePart("task", "workbook-page").Data))),
 		}), []string{
-			"manifest.yaml # manifest.rung-templates",
 			"tasks/tables-and-division-1.yaml #/items/0/line/1/check/trap_values/0/trap task.known-traps",
 			"tasks/tables-and-division-1.yaml #/items/1/line/0/check/trap_values/0/trap task.known-traps",
 			"tasks/tables-and-division-1.yaml #/items/2/line/1/check/trap_values/0/trap task.known-traps",
