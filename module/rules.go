@@ -32,6 +32,9 @@ const (
 var partRules = []string{
 	RuleManifestDependencies, RuleManifestBands, RuleManifestRungTemplates, RuleSkillGraphAcyclic, RuleSkillGraphKnownSkills,
 	RuleSkillGraphRetiredIDs, RuleSkillGraphOwnAnchors, RuleTrapsKnownSkills, RuleTaskKnownTraps, RuleTaskKnownTechniques,
+	RuleTaskKnownSkills, RuleTaskSkillRoles, RuleTaskOwnAnchors, RuleTaskKnownBand, RuleTaskKnownPictures, RuleTaskAgeCategories,
+	RuleTaskZones, RuleTaskAssessability, RuleLessonKnownSkills, RuleLessonKnownTasks, RuleLessonTaskSkills,
+	RuleLessonKnownPictures, RuleLessonAreas, RuleLessonAgeCategories, RuleLessonOrder,
 }
 
 // typed reads the value of a file of a part that passed its schema into the type of formatv0 that
@@ -52,7 +55,8 @@ func at(tokens ...string) string {
 
 // A module's parts that passed, read into their types once, for the rules within a part and those
 // between parts: a part the module does not have, or whose file did not pass, is nil, and the tasks
-// stand by their paths. Of the file that CheckFile checks, which has no path, file is true.
+// and the lessons stand by their paths, and media holds the paths of the files in media/, which a
+// picture names. Of the file that CheckFile checks, which has no path, file is true.
 type parts struct {
 	file       bool
 	manifest   *formatv0.Manifest
@@ -60,6 +64,15 @@ type parts struct {
 	traps      *formatv0.Traps
 	techniques *formatv0.Techniques
 	tasks      map[string]formatv0.Task
+	lessons    map[string]formatv0.Lesson
+	media      map[string]bool
+	// The skills of the skill graph that teach each anchor skill, none when there is no graph.
+	teachers map[formatv0.SharedTaxonomy][]string
+}
+
+// newParts gives parts with no part yet.
+func newParts(file bool) parts {
+	return parts{file: file, tasks: map[string]formatv0.Task{}, lessons: map[string]formatv0.Lesson{}, media: map[string]bool{}}
 }
 
 // add reads the value of a file of a part that passed into its type and puts it among the parts,
@@ -70,12 +83,15 @@ func (p *parts) add(path, part string, value any) {
 		p.manifest = new(typed[formatv0.Manifest](value))
 	case partSkillGraph:
 		p.skillGraph = new(typed[formatv0.SkillGraph](value))
+		p.teachers = teachersOf(*p.skillGraph)
 	case partTraps:
 		p.traps = new(typed[formatv0.Traps](value))
 	case partTechniques:
 		p.techniques = new(typed[formatv0.Techniques](value))
 	case partTask:
 		p.tasks[path] = typed[formatv0.Task](value)
+	case partLesson:
+		p.lessons[path] = typed[formatv0.Lesson](value)
 	}
 }
 
@@ -95,7 +111,14 @@ func (c *checker) withinPart(p parts) {
 		c.bands(p.pathOf(manifestPath), *p.manifest)
 	}
 	if p.skillGraph != nil {
-		c.skillGraph(p.pathOf(skillGraphPath), *p.skillGraph)
+		c.skillGraph(p.pathOf(skillGraphPath), *p.skillGraph, p.teachers)
+	}
+	for path, task := range p.tasks {
+		c.skillRoles(path, task)
+		c.zones(path, task)
+	}
+	for path, lesson := range p.lessons {
+		c.areas(path, lesson)
 	}
 }
 
@@ -109,7 +132,12 @@ func (c *checker) betweenParts(p parts) {
 	for path, task := range p.tasks {
 		c.knownTraps(path, task, p.traps)
 		c.knownTechniques(path, task, p.techniques)
+		c.taskRules(path, task, p)
 	}
+	for path, lesson := range p.lessons {
+		c.lessonRules(path, lesson, p)
+	}
+	c.order(p.lessons, p.skillGraph)
 }
 
 // bands checks manifest.bands (format/README.md, section 11): when the manifest has bands, their
@@ -257,12 +285,8 @@ func (c *checker) trapSkills(p parts) {
 	}
 	for id, trap := range p.traps.Traps {
 		for i, skill := range trap.Skills {
-			if p.skillGraph == nil {
-				c.add(RuleTrapsKnownSkills, trapsPath, 0, 0, at("traps", string(id), "skills", strconv.Itoa(i)),
-					fmt.Sprintf("the trap names the skill %s, and the module has no skill graph", skill))
-			} else if _, ok := p.skillGraph.Skills[skill]; !ok {
-				c.add(RuleTrapsKnownSkills, trapsPath, 0, 0, at("traps", string(id), "skills", strconv.Itoa(i)),
-					fmt.Sprintf("the trap names the skill %s, which the skill graph does not have", skill))
+			if message, unknown := unknownSkill(p.skillGraph, "the trap names", skill); unknown {
+				c.add(RuleTrapsKnownSkills, trapsPath, 0, 0, at("traps", string(id), "skills", strconv.Itoa(i)), message)
 			}
 		}
 	}

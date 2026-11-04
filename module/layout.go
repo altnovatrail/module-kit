@@ -28,6 +28,7 @@ const (
 	partTraps      = "traps"
 	partTechniques = "techniques"
 	partTask       = "task"
+	partLesson     = "lesson"
 	manifestPath   = "manifest.yaml"
 	skillGraphPath = "skill-graph.yaml"
 	trapsPath      = "traps.yaml"
@@ -48,7 +49,7 @@ var layout = []row{
 	{techniquesPath, partTechniques},
 	{"solving-steps.yaml", "solving-steps"},
 	{"tasks/<id>.yaml", partTask},
-	{"lessons/<id>.yaml", "lesson"},
+	{"lessons/<id>.yaml", partLesson},
 	{mediaFolder + "<path>", ""},
 	{"eval/<path>", ""},
 	{licensePath, ""},
@@ -59,6 +60,14 @@ const (
 	anyPath = "<path>"
 	anyID   = "<id>"
 )
+
+// taskRow is the row of the layout of the files of tasks, by which a lesson names a task by its ID.
+var taskRow = layout[slices.IndexFunc(layout, func(r row) bool { return r.part == partTask })]
+
+// taskPath gives the path of the file of the task with the ID id, as the layout lays it out.
+func taskPath(id string) string {
+	return strings.Replace(taskRow.path, anyID, id, 1)
+}
 
 // holds says whether a file stands at the row, and, when the row's path has <id>, gives the name the
 // file has there before its extension. Names compare exactly, letter case and all.

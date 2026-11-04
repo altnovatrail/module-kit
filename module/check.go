@@ -9,8 +9,6 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/altnovatrail/spec/types/formatv0"
-
 	"github.com/altnovatrail/module-kit/internal/schema"
 	"github.com/altnovatrail/module-kit/internal/yaml"
 )
@@ -133,7 +131,7 @@ func CheckFile(part string, data []byte) (Report, error) {
 		return Report{Breaches: []Breach{b}}, nil
 	}
 	if read && c.conform("", part, value) {
-		p := parts{file: true, tasks: map[string]formatv0.Task{}}
+		p := newParts(true)
 		p.add("", part, value)
 		c.withinPart(p)
 	}
@@ -252,10 +250,15 @@ func (c *checker) check() error {
 // once: those within a part on each, and then, when every file of a part passed, those between
 // parts (rules.go).
 func (c *checker) rules() {
-	p := parts{tasks: map[string]formatv0.Task{}}
+	p := newParts(false)
 	for path, value := range c.parts {
 		r, _, _ := rowOf(path)
 		p.add(path, r.part, value)
+	}
+	for _, file := range c.files {
+		if strings.HasPrefix(file, mediaFolder) {
+			p.media[file] = true
+		}
 	}
 	c.withinPart(p)
 	if c.allParts() {

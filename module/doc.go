@@ -10,7 +10,9 @@
 // fs.FS, by the layout of section 10 and the rules module.*; the format version of section 2 and
 // manifest.format-version; the YAML rules of section 4 on each file of a part, by internal/yaml
 // (R22); each file of a part against the schema of its part, by internal/schema, with a breach of a
-// schema named by its keyword and place as section 8 names it (R23); and the rules of the manifest,
-// the skill graph and the catalogs of sections 11, 12, 16 and 17, read on the types of formatv0,
-// with the tiers of the skill graph, Tiers, which the package will hold (R25).
+// schema named by its keyword and place as section 8 names it (R23); the rules of the manifest, the
+// skill graph and the catalogs of sections 11, 12, 16 and 17, read on the types of formatv0, with
+// the tiers of the skill graph, Tiers, which the package will hold (R25); and the rules of a task
+// and of a lesson of sections 14, 15 and 21 that need no check kind, no leak check and no template
+// (R26).
 package module

@@ -19,14 +19,8 @@ func isAnchor(id string) bool {
 
 // skillGraph checks the rules within a skill graph (format/README.md, section 12):
 // skill-graph.known-skills, skill-graph.retired-ids, skill-graph.own-anchors and
-// skill-graph.acyclic.
-func (c *checker) skillGraph(path string, g formatv0.SkillGraph) {
-	teachers := map[formatv0.SharedTaxonomy][]string{} // the skills that teach each anchor skill
-	for _, id := range slices.Sorted(maps.Keys(g.Skills)) {
-		for _, anchor := range g.Skills[id].Teaches {
-			teachers[anchor] = append(teachers[anchor], string(id))
-		}
-	}
+// skill-graph.acyclic. teachers are the skills of the graph that teach each anchor skill.
+func (c *checker) skillGraph(path string, g formatv0.SkillGraph, teachers map[formatv0.SharedTaxonomy][]string) {
 	for id, skill := range g.Skills {
 		for i, prerequisite := range skill.Prerequisites {
 			place := at("skills", string(id), "prerequisites", strconv.Itoa(i))
@@ -65,6 +59,30 @@ func (c *checker) skillGraph(path string, g formatv0.SkillGraph) {
 	}
 }
 
+// unknownSkill says whether a part names, by its local ID, a skill that the module's skill graph
+// does not have, and what the breach says: subject is how the part names it, such as "the trap
+// names".
+func unknownSkill(g *formatv0.SkillGraph, subject string, id formatv0.SkillID) (string, bool) {
+	switch {
+	case g == nil:
+		return fmt.Sprintf("%s the skill %s, and the module has no skill graph", subject, id), true
+	case !hasKey(g.Skills, id):
+		return fmt.Sprintf("%s the skill %s, which the skill graph does not have", subject, id), true
+	}
+	return "", false
+}
+
+// teachersOf gives the skills of a graph that teach each anchor skill, in order.
+func teachersOf(g formatv0.SkillGraph) map[formatv0.SharedTaxonomy][]string {
+	teachers := map[formatv0.SharedTaxonomy][]string{}
+	for _, id := range slices.Sorted(maps.Keys(g.Skills)) {
+		for _, anchor := range g.Skills[id].Teaches {
+			teachers[anchor] = append(teachers[anchor], string(id))
+		}
+	}
+	return teachers
+}
+
 // edgesOf gives the prerequisites of each skill of a graph that are skills of the module: neither
 // anchor skills nor IDs that the graph does not have.
 func edgesOf(g formatv0.SkillGraph) map[formatv0.SkillID][]formatv0.SkillID {
@@ -79,18 +97,18 @@ func edgesOf(g formatv0.SkillGraph) map[formatv0.SkillID][]formatv0.SkillID {
 	return edges
 }
 
-// cycles gives each skill of a graph, by its edges, that lies on a cycle of prerequisites among the
-// module's skills, with the other skills of its cycle, in order: the members of each strongly
-// connected component of more than one skill, and a skill that needs itself, with no others. It
-// finds the components as Tarjan does (SIAM Journal on Computing 1(2), 1972), in time linear in the
-// graph.
-func cycles(edges map[formatv0.SkillID][]formatv0.SkillID) map[formatv0.SkillID][]string {
-	found := map[formatv0.SkillID][]string{}
-	index, low := map[formatv0.SkillID]int{}, map[formatv0.SkillID]int{}
-	onStack := map[formatv0.SkillID]bool{}
-	var stack []formatv0.SkillID
-	var connect func(v formatv0.SkillID)
-	connect = func(v formatv0.SkillID) {
+// cycles gives each node of a graph, by its edges, that lies on a cycle — a skill of the module on a
+// cycle of prerequisites, a lesson on a cycle of the order of lessons — with the other nodes of its
+// cycle, in order: the members of each strongly connected component of more than one node, and a
+// node with an edge to itself, with no others. It finds the components as Tarjan does (SIAM Journal
+// on Computing 1(2), 1972), in time linear in the graph.
+func cycles[K ~string](edges map[K][]K) map[K][]string {
+	found := map[K][]string{}
+	index, low := map[K]int{}, map[K]int{}
+	onStack := map[K]bool{}
+	var stack []K
+	var connect func(v K)
+	connect = func(v K) {
 		index[v], low[v] = len(index), len(index)
 		stack = append(stack, v)
 		onStack[v] = true
@@ -120,7 +138,7 @@ func cycles(edges map[formatv0.SkillID][]formatv0.SkillID) map[formatv0.SkillID]
 		}
 		slices.Sort(component)
 		for _, member := range component {
-			found[formatv0.SkillID(member)] = slices.DeleteFunc(slices.Clone(component), func(s string) bool { return s == member })
+			found[K(member)] = slices.DeleteFunc(slices.Clone(component), func(s string) bool { return s == member })
 		}
 	}
 	for _, id := range slices.Sorted(maps.Keys(edges)) {
