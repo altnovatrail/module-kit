@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/fs"
+	"math"
 	"regexp"
 	"slices"
 	"strings"
@@ -256,5 +257,23 @@ func TestErrorString(t *testing.T) {
 	e := Error{Keyword: "required", Location: []string{"items", "0"}, Message: "missing property 'line'"}
 	if got, want := e.String(), "required at #/items/0: missing property 'line'"; got != want {
 		t.Errorf("%q, want %q", got, want)
+	}
+}
+
+// Decode reads a JSON value into a type strictly: a field the type does not know, and a value that
+// is no JSON, are errors.
+func TestDecode(t *testing.T) {
+	type pair struct {
+		A int64  `json:"a"`
+		B string `json:"b"`
+	}
+	if got, err := Decode[pair](map[string]any{"a": int64(1), "b": "x"}); err != nil || got != (pair{1, "x"}) {
+		t.Errorf("%v, %v", got, err)
+	}
+	if _, err := Decode[pair](map[string]any{"a": int64(1), "c": true}); err == nil || !strings.Contains(err.Error(), "not of the type") {
+		t.Errorf("a field the type does not know: %v", err)
+	}
+	if _, err := Decode[pair](map[string]any{"a": math.NaN()}); err == nil {
+		t.Error("a value that is no JSON is read")
 	}
 }

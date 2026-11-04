@@ -3,6 +3,7 @@ package schema
 import (
 	"bytes"
 	"embed"
+	"encoding/json"
 	"fmt"
 	"io/fs"
 	"path"
@@ -162,4 +163,21 @@ func (s *set) schema(location string) *jsonschema.Schema {
 	}
 	s.schemas.Store(location, sch)
 	return sch
+}
+
+// Decode reads a JSON value, as the reader of YAML gives it, into a Go type strictly: a field that
+// the type does not know is an error. A reader of the format checks a value against its schema
+// first, and only then reads it by its type of formatv0 (R72 spec).
+func Decode[T any](value any) (T, error) {
+	var t T
+	data, err := json.Marshal(value)
+	if err != nil {
+		return t, err
+	}
+	decoder := json.NewDecoder(bytes.NewReader(data))
+	decoder.DisallowUnknownFields()
+	if err := decoder.Decode(&t); err != nil {
+		return t, fmt.Errorf("not of the type %T: %v", t, err)
+	}
+	return t, nil
 }

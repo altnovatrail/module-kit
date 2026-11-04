@@ -16,7 +16,8 @@ import (
 )
 
 // The rules that a breach of the check may name, and "" for a file that is not YAML.
-var knownRules = slices.Concat([]string{"", RuleManifest, RuleLayout, RuleFileIDs, RuleMedia, RuleLicense, RulePlainText, RuleFormatVersion}, yaml.Rules)
+var knownRules = slices.Concat([]string{"", RuleManifest, RuleLayout, RuleFileIDs, RuleMedia, RuleLicense, RulePlainText, RuleFormatVersion},
+	partRules, yaml.Rules)
 
 // wellFormed fails on a report whose breach names a rule the check does not hold, or a place out of
 // form, or whose breaches are out of their order.
@@ -43,24 +44,30 @@ func wellFormed(t *testing.T, report Report) {
 
 // On any file at any path of a module, and on any file of a part on its own, the check gives a
 // report without an error or a panic, and the report is in form. The corpus is the files of the
-// vectors of the rules module.* and manifest.format-version, each at its path in its case, and the
-// examples of the parts of the layout, each at a path of its part.
+// vectors of the rules that the check holds but the YAML rules, whose vectors FuzzRead takes, each
+// at its path in its case or, for a case in a file, at a path of its part, and the examples of the
+// parts of the layout, each at a path of its part.
 func FuzzCheck(f *testing.F) {
 	err := fs.WalkDir(spec.Format, "vectors/rules", func(name string, entry fs.DirEntry, err error) error {
 		if err != nil || entry.IsDir() {
 			return err
 		}
 		parts := strings.SplitN(name, "/", 5)
-		if !strings.HasPrefix(parts[2], "module.") && parts[2] != RuleFormatVersion {
+		if !slices.Contains(knownRules, parts[2]) || slices.Contains(yaml.Rules, parts[2]) {
 			return nil
 		}
 		data, err := fs.ReadFile(spec.Format, name)
 		if err != nil {
 			return err
 		}
-		at := manifestPath
+		at := ""
 		if len(parts) == 5 {
 			at = parts[4]
+		}
+		for _, r := range layout {
+			if part, _, _ := strings.Cut(parts[2], "."); at == "" && r.part == part {
+				at = strings.Replace(r.path, anyID, "a", 1)
+			}
 		}
 		f.Add(at, data)
 		return nil

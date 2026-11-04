@@ -18,6 +18,7 @@ import (
 
 	"github.com/altnovatrail/spec"
 	"github.com/altnovatrail/spec/contracts"
+	"github.com/altnovatrail/spec/types/formatv0"
 
 	"github.com/altnovatrail/module-kit/internal/schema"
 	"github.com/altnovatrail/module-kit/internal/yaml"
@@ -310,6 +311,23 @@ func differ(what string, got, want any) error {
 	return fmt.Errorf("%s\n%s\nand open-view.yaml holds\n%s", what, gotText, wantText)
 }
 
+// tiers passes a case of tiers: the tiers of skill_graph are skill_tiers (format/README.md, section
+// 9), the vector read by its schema and its type of formatv0.
+func tiers(v vector) error {
+	var tv formatv0.TierVector
+	if _, err := readVector(v.fsys, v.path, "tier-vector.schema.json", &tv); err != nil {
+		return err
+	}
+	got, err := module.Tiers(tv.SkillGraph)
+	if err != nil {
+		return err
+	}
+	if !maps.Equal(got, tv.SkillTiers) {
+		return fmt.Errorf("the tiers are %v, and the vector gives %v", got, tv.SkillTiers)
+	}
+	return nil
+}
+
 // runners passes a case of each kind: nil when module-kit gives what the case says, and an error
 // that says why not otherwise. A task of the epic of code puts the code it brings in place of
 // noCode, and takes the cases it passes out of testdata/skipped.txt (architecture 3.6; R20).
@@ -327,7 +345,7 @@ var runners = map[string]func(vector) error{
 	"leaks":     noCode,   // each text gives the keys and leak phrases it names
 	"random":    noCode,   // each draw gives its value
 	"templates": noCode,   // the count, and each seed's numbers and instance
-	"tiers":     noCode,   // the tier of each skill
+	"tiers":     tiers,    // the tier of each skill
 	"packages":  noCode,   // the package of module/ is package.yaml
 	"indexes":   noCode,   // the index the release builds, or the rule that refuses it
 	"versions":  noCode,   // the part of the version found, or the rule that refuses it

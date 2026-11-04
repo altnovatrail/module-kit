@@ -9,6 +9,8 @@ import (
 	"slices"
 	"strings"
 
+	"github.com/altnovatrail/spec/types/formatv0"
+
 	"github.com/altnovatrail/module-kit/internal/schema"
 	"github.com/altnovatrail/module-kit/internal/yaml"
 )
@@ -102,11 +104,11 @@ func (r Report) String() string {
 }
 
 // Check reads the module whose folder is the root of fsys and checks it by the format version
-// FormatVersion: its layout, and each file of a part by the YAML rules and against the schema of
-// its part (format/README.md, sections 4, 5, 10 and 11). A manifest that names a version the
-// library does not read gives a report of that breach alone, since the rest of the module is
-// written by rules the library does not know. The error is for a folder or file that could not be
-// read, and then there is no report.
+// FormatVersion: its layout, each file of a part by the YAML rules and against the schema of its
+// part, and the files that both accept by the rules of the parts (format/README.md, sections 4, 5
+// and 10–17). A manifest that names a version the library does not read gives a report of that
+// breach alone, since the rest of the module is written by rules the library does not know. The
+// error is for a folder or file that could not be read, and then there is no report.
 func Check(fsys fs.FS) (Report, error) {
 	c := checker{fsys: fsys, parts: map[string]any{}}
 	if err := c.check(); err != nil {
@@ -117,8 +119,9 @@ func Check(fsys fs.FS) (Report, error) {
 
 // CheckFile checks a file of a part on its own, as an example of the part and a test vector of a
 // part's rule in a file are checked (format/README.md, sections 8 and 9): by the YAML rules and
-// against the schema of the part, and a manifest first by the format version it names, which, when
-// the library does not read it, is the report's only breach, as in Check. Its breaches have no path.
+// against the schema of the part, and, when both accept it, by the rules within its part; a manifest
+// first by the format version it names, which, when the library does not read it, is the report's
+// only breach, as in Check. Its breaches have no path.
 // part is the term of a part of the layout, such as manifest or task; any other is an error.
 func CheckFile(part string, data []byte) (Report, error) {
 	if part == "" || !slices.ContainsFunc(layout, func(r row) bool { return r.part == part }) {
@@ -129,8 +132,10 @@ func CheckFile(part string, data []byte) (Report, error) {
 	if b, other := otherVersion("", part, value); other {
 		return Report{Breaches: []Breach{b}}, nil
 	}
-	if read {
-		c.conform("", part, value)
+	if read && c.conform("", part, value) {
+		p := parts{file: true, tasks: map[string]formatv0.Task{}}
+		p.add("", part, value)
+		c.withinPart(p)
 	}
 	return c.report(), nil
 }
@@ -236,7 +241,26 @@ func (c *checker) check() error {
 	if err := c.media(); err != nil {
 		return err
 	}
-	return c.texts()
+	if err := c.texts(); err != nil {
+		return err
+	}
+	c.rules()
+	return nil
+}
+
+// rules checks the rules of the parts on the files of a part that passed, read into their types
+// once: those within a part on each, and then, when every file of a part passed, those between
+// parts (rules.go).
+func (c *checker) rules() {
+	p := parts{tasks: map[string]formatv0.Task{}}
+	for path, value := range c.parts {
+		r, _, _ := rowOf(path)
+		p.add(path, r.part, value)
+	}
+	c.withinPart(p)
+	if c.allParts() {
+		c.betweenParts(p)
+	}
 }
 
 // read reads a file of a part by the YAML rules, and gives its value, or nil and false when they
