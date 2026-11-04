@@ -15,6 +15,8 @@ import (
 
 	"github.com/altnovatrail/spec"
 	"github.com/altnovatrail/spec/contracts"
+
+	"github.com/altnovatrail/module-kit/internal/yaml"
 )
 
 // A vector is one case of the examples or the test vectors: a file, or a folder, named by its path
@@ -38,6 +40,32 @@ var errNoCode = errors.New("module-kit has no code for this kind yet")
 
 func noCode(vector) error { return errNoCode }
 
+// rule passes a case of a format rule: refused with the ID of the rule its folder names and with no
+// other, since a case breaks its rule and nothing else (format/README.md, section 9). The reader
+// of YAML refuses by the rules yaml.* (R21); the rules of the parts wait for the tasks that bring
+// them.
+func rule(v vector) error {
+	id := strings.Split(v.path, "/")[2]
+	if !strings.HasPrefix(id, "yaml.") {
+		return errNoCode
+	}
+	data, err := fs.ReadFile(v.fsys, v.path)
+	if err != nil {
+		return err
+	}
+	_, err = yaml.Read(data)
+	var refusal *yaml.Refusal
+	if !errors.As(err, &refusal) {
+		return fmt.Errorf("not refused by %s: %v", id, err)
+	}
+	for _, b := range refusal.Breaches {
+		if b.Rule != id {
+			return fmt.Errorf("refused by more than %s:\n%v", id, err)
+		}
+	}
+	return nil
+}
+
 // runners passes a case of each kind: nil when module-kit gives what the case says, and an error
 // that says why not otherwise. A task of the epic of code puts the code it brings in place of
 // noCode, and takes the cases it passes out of testdata/skipped.txt (architecture 3.6; R20).
@@ -49,7 +77,7 @@ var runners = map[string]func(vector) error{
 	"examples/invalid": noCode,
 	"examples/module":  noCode,
 	// The test vectors (format/README.md, section 9).
-	"rules":     noCode, // refused with the ID of the rule the case is filed under
+	"rules":     rule,   // refused with the ID of the rule the case is filed under
 	"open-view": noCode, // the open view of part.yaml is open-view.yaml
 	"verdicts":  noCode, // each reading gets its verdicts, reasons and traps
 	"leaks":     noCode, // each text gives the keys and leak phrases it names

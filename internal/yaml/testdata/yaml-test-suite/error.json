@@ -1,0 +1,475 @@
+[
+  {
+    "id": "236B",
+    "name": "Invalid value after mapping",
+    "yaml": "foo:\n  bar\ninvalid\n"
+  },
+  {
+    "id": "2CMS",
+    "name": "Invalid mapping in plain multiline",
+    "yaml": "this\n is\n  invalid: x\n"
+  },
+  {
+    "id": "2G84/00",
+    "name": "Literal modifers",
+    "yaml": "--- |0\n"
+  },
+  {
+    "id": "2G84/01",
+    "name": "Literal modifers",
+    "yaml": "--- |10\n"
+  },
+  {
+    "id": "3HFZ",
+    "name": "Invalid content after document end marker",
+    "yaml": "---\nkey: value\n... invalid\n"
+  },
+  {
+    "id": "4EJS",
+    "name": "Invalid tabs as indendation in a mapping",
+    "yaml": "---\na:\n\tb:\n\t\tc: value\n"
+  },
+  {
+    "id": "4H7K",
+    "name": "Flow sequence with invalid extra closing bracket",
+    "yaml": "---\n[ a, b, c ] ]\n"
+  },
+  {
+    "id": "4HVU",
+    "name": "Wrong indendation in Sequence",
+    "yaml": "key:\n   - ok\n   - also ok\n  - wrong\n"
+  },
+  {
+    "id": "4JVG",
+    "name": "Scalar value with two anchors",
+    "yaml": "top1: &node1\n  &k1 key1: val1\ntop2: &node2\n  &v2 val2\n"
+  },
+  {
+    "id": "55WF",
+    "name": "Invalid escape in double quoted string",
+    "yaml": "---\n\"\\.\"\n"
+  },
+  {
+    "id": "5LLU",
+    "name": "Block scalar with wrong indented line after spaces only",
+    "yaml": "block scalar: >\n \n  \n   \n invalid\n"
+  },
+  {
+    "id": "5TRB",
+    "name": "Invalid document-start marker in doublequoted tring",
+    "yaml": "---\n\"\n---\n\"\n"
+  },
+  {
+    "id": "5U3A",
+    "name": "Sequence on same Line as Mapping Key",
+    "yaml": "key: - a\n     - b\n"
+  },
+  {
+    "id": "62EZ",
+    "name": "Invalid block mapping key on same line as previous key",
+    "yaml": "---\nx: { y: z }in: valid\n"
+  },
+  {
+    "id": "6JTT",
+    "name": "Flow sequence without closing bracket",
+    "yaml": "---\n[ [ a, b, c ]\n"
+  },
+  {
+    "id": "6S55",
+    "name": "Invalid scalar at the end of sequence",
+    "yaml": "key:\n - bar\n - baz\n invalid\n"
+  },
+  {
+    "id": "7LBH",
+    "name": "Multiline double quoted implicit keys",
+    "yaml": "\"a\\nb\": 1\n\"c\n d\": 1\n"
+  },
+  {
+    "id": "7MNF",
+    "name": "Missing colon",
+    "yaml": "top1:\n  key1: val1\ntop2\n"
+  },
+  {
+    "id": "8XDJ",
+    "name": "Comment in plain multiline value",
+    "yaml": "key: word1\n#  xxx\n  word2\n"
+  },
+  {
+    "id": "9C9N",
+    "name": "Wrong indented flow sequence",
+    "yaml": "---\nflow: [a,\nb,\nc]\n"
+  },
+  {
+    "id": "9CWY",
+    "name": "Invalid scalar at the end of mapping",
+    "yaml": "key:\n - item1\n - item2\ninvalid\n"
+  },
+  {
+    "id": "9HCY",
+    "name": "Need document footer before directives",
+    "yaml": "!foo \"bar\"\n%TAG ! tag:example.com,2000:app/\n---\n!foo \"bar\"\n"
+  },
+  {
+    "id": "9JBA",
+    "name": "Invalid comment after end of flow sequence",
+    "yaml": "---\n[ a, b, c, ]#invalid\n"
+  },
+  {
+    "id": "9KBC",
+    "name": "Mapping starting at --- line",
+    "yaml": "--- key1: value1\n    key2: value2\n"
+  },
+  {
+    "id": "9MAG",
+    "name": "Flow sequence with invalid comma at the beginning",
+    "yaml": "---\n[ , a, b, c ]\n"
+  },
+  {
+    "id": "9MMA",
+    "name": "Directive by itself with no document",
+    "yaml": "%YAML 1.2\n"
+  },
+  {
+    "id": "9MQT/01",
+    "name": "Scalar doc with '...' in content",
+    "yaml": "--- \"a\n... x\nb\"\n",
+    "json": "\"a ...x b\"\n"
+  },
+  {
+    "id": "B63P",
+    "name": "Directive without document",
+    "yaml": "%YAML 1.2\n...\n"
+  },
+  {
+    "id": "BD7L",
+    "name": "Invalid mapping after sequence",
+    "yaml": "- item1\n- item2\ninvalid: x\n"
+  },
+  {
+    "id": "BF9H",
+    "name": "Trailing comment in multiline plain scalar",
+    "yaml": "---\nplain: a\n       b # end of scalar\n       c\n"
+  },
+  {
+    "id": "BS4K",
+    "name": "Comment between plain scalar lines",
+    "yaml": "word1  # comment\nword2\n"
+  },
+  {
+    "id": "C2SP",
+    "name": "Flow Mapping Key on two lines",
+    "yaml": "[23\n]: 42\n"
+  },
+  {
+    "id": "CML9",
+    "name": "Missing comma in flow",
+    "yaml": "key: [ word1\n#  xxx\n  word2 ]\n"
+  },
+  {
+    "id": "CQ3W",
+    "name": "Double quoted string without closing quote",
+    "yaml": "---\nkey: \"missing closing quote\n"
+  },
+  {
+    "id": "CTN5",
+    "name": "Flow sequence with invalid extra comma",
+    "yaml": "---\n[ a, b, c, , ]\n"
+  },
+  {
+    "id": "CVW2",
+    "name": "Invalid comment after comma",
+    "yaml": "---\n[ a, b, c,#invalid\n]\n"
+  },
+  {
+    "id": "CXX2",
+    "name": "Mapping with anchor on document start line",
+    "yaml": "--- &anchor a: b\n"
+  },
+  {
+    "id": "D49Q",
+    "name": "Multiline single quoted implicit keys",
+    "yaml": "'a\\nb': 1\n'c\n d': 1\n"
+  },
+  {
+    "id": "DK4H",
+    "name": "Implicit key followed by newline",
+    "yaml": "---\n[ key\n  : value ]\n"
+  },
+  {
+    "id": "DK95/01",
+    "name": "Tabs that look like indentation",
+    "yaml": "foo: \"bar\n\tbaz\"\n",
+    "json": "{\n  \"foo\" : \"bar\"\n}\n"
+  },
+  {
+    "id": "DK95/06",
+    "name": "Tabs that look like indentation",
+    "yaml": "foo:\n  a: 1\n  \tb: 2\n",
+    "json": "{\n  \"foo\" : 1,\n  \"bar\" : 2\n}\n"
+  },
+  {
+    "id": "DMG6",
+    "name": "Wrong indendation in Map",
+    "yaml": "key:\n  ok: 1\n wrong: 2\n"
+  },
+  {
+    "id": "EB22",
+    "name": "Missing document-end marker before directive",
+    "yaml": "---\nscalar1 # comment\n%YAML 1.2\n---\nscalar2\n"
+  },
+  {
+    "id": "EW3V",
+    "name": "Wrong indendation in mapping",
+    "yaml": "k1: v1\n k2: v2\n"
+  },
+  {
+    "id": "G5U8",
+    "name": "Plain dashes in flow sequence",
+    "yaml": "---\n- [-, -]\n"
+  },
+  {
+    "id": "G7JE",
+    "name": "Multiline implicit keys",
+    "yaml": "a\\nb: 1\nc\n d: 1\n"
+  },
+  {
+    "id": "G9HC",
+    "name": "Invalid anchor in zero indented sequence",
+    "yaml": "---\nseq:\n&anchor\n- a\n- b\n"
+  },
+  {
+    "id": "GDY7",
+    "name": "Comment that looks like a mapping key",
+    "yaml": "key: value\nthis is #not a: key\n"
+  },
+  {
+    "id": "GT5M",
+    "name": "Node anchor in sequence",
+    "yaml": "- item1\n&node\n- item2\n"
+  },
+  {
+    "id": "H7J7",
+    "name": "Node anchor not indented",
+    "yaml": "key: &x\n!!map\n  a: b\n"
+  },
+  {
+    "id": "H7TQ",
+    "name": "Extra words on %YAML directive",
+    "yaml": "%YAML 1.2 foo\n---\n"
+  },
+  {
+    "id": "HRE5",
+    "name": "Double quoted scalar with escaped single quote",
+    "yaml": "---\ndouble: \"quoted \\' scalar\"\n"
+  },
+  {
+    "id": "HU3P",
+    "name": "Invalid Mapping in plain scalar",
+    "yaml": "key:\n  word1 word2\n  no: key\n"
+  },
+  {
+    "id": "JKF3",
+    "name": "Multiline unidented double quoted block key",
+    "yaml": "- - \"bar\nbar\": x\n"
+  },
+  {
+    "id": "JY7Z",
+    "name": "Trailing content that looks like a mapping",
+    "yaml": "key1: \"quoted1\"\nkey2: \"quoted2\" no key: nor value\nkey3: \"quoted3\"\n"
+  },
+  {
+    "id": "KS4U",
+    "name": "Invalid item after end of flow sequence",
+    "yaml": "---\n[\nsequence item\n]\ninvalid item\n"
+  },
+  {
+    "id": "LHL4",
+    "name": "Invalid tag",
+    "yaml": "---\n!invalid{}tag scalar\n"
+  },
+  {
+    "id": "MUS6/00",
+    "name": "Directive variants",
+    "yaml": "%YAML 1.1#...\n---\n"
+  },
+  {
+    "id": "MUS6/01",
+    "name": "Directive variants",
+    "yaml": "%YAML 1.2\n---\n%YAML 1.2\n---\n"
+  },
+  {
+    "id": "N4JP",
+    "name": "Bad indentation in mapping",
+    "yaml": "map:\n  key1: \"quoted1\"\n key2: \"bad indentation\"\n"
+  },
+  {
+    "id": "N782",
+    "name": "Invalid document markers in flow style",
+    "yaml": "[\n--- ,\n...\n]\n"
+  },
+  {
+    "id": "P2EQ",
+    "name": "Invalid sequene item on same line as previous item",
+    "yaml": "---\n- { y: z }- invalid\n"
+  },
+  {
+    "id": "Q4CL",
+    "name": "Trailing content after quoted value",
+    "yaml": "key1: \"quoted1\"\nkey2: \"quoted2\" trailing content\nkey3: \"quoted3\"\n"
+  },
+  {
+    "id": "QB6E",
+    "name": "Wrong indented multiline quoted scalar",
+    "yaml": "---\nquoted: \"a\nb\nc\"\n"
+  },
+  {
+    "id": "QLJ7",
+    "name": "Tag shorthand used in documents but only defined in the first",
+    "yaml": "%TAG !prefix! tag:example.com,2011:\n--- !prefix!A\na: b\n--- !prefix!B\nc: d\n--- !prefix!C\ne: f\n"
+  },
+  {
+    "id": "RHX7",
+    "name": "YAML directive without document end marker",
+    "yaml": "---\nkey: value\n%YAML 1.2\n---\n"
+  },
+  {
+    "id": "RXY3",
+    "name": "Invalid document-end marker in single quoted string",
+    "yaml": "---\n'\n...\n'\n"
+  },
+  {
+    "id": "S4GJ",
+    "name": "Invalid text after block scalar indicator",
+    "yaml": "---\nfolded: > first line\n  second line\n"
+  },
+  {
+    "id": "S98Z",
+    "name": "Block scalar with more spaces than first content line",
+    "yaml": "empty block scalar: >\n \n  \n   \n # comment\n"
+  },
+  {
+    "id": "SF5V",
+    "name": "Duplicate YAML directive",
+    "yaml": "%YAML 1.2\n%YAML 1.2\n---\n"
+  },
+  {
+    "id": "SR86",
+    "name": "Anchor plus Alias",
+    "yaml": "key1: &a value\nkey2: &b *a\n"
+  },
+  {
+    "id": "SU5Z",
+    "name": "Comment without whitespace after doublequoted scalar",
+    "yaml": "key: \"value\"# invalid comment\n"
+  },
+  {
+    "id": "SU74",
+    "name": "Anchor and alias as mapping key",
+    "yaml": "key1: &alias value1\n&b *alias : value2\n"
+  },
+  {
+    "id": "SY6V",
+    "name": "Anchor before sequence entry on same line",
+    "yaml": "&anchor - sequence entry\n"
+  },
+  {
+    "id": "T833",
+    "name": "Flow mapping missing a separating comma",
+    "yaml": "---\n{\n foo: 1\n bar: 2 }\n"
+  },
+  {
+    "id": "TD5N",
+    "name": "Invalid scalar after sequence",
+    "yaml": "- item1\n- item2\ninvalid\n"
+  },
+  {
+    "id": "U44R",
+    "name": "Bad indentation in mapping (2)",
+    "yaml": "map:\n  key1: \"quoted1\"\n   key2: \"bad indentation\"\n"
+  },
+  {
+    "id": "U99R",
+    "name": "Invalid comma in tag",
+    "yaml": "- !!str, xxx\n"
+  },
+  {
+    "id": "VJP3/00",
+    "name": "Flow collections over many lines",
+    "yaml": "k: {\nk\n:\nv\n}\n"
+  },
+  {
+    "id": "W9L4",
+    "name": "Literal block scalar with more spaces in first line",
+    "yaml": "---\nblock scalar: |\n     \n  more spaces at the beginning\n  are invalid\n"
+  },
+  {
+    "id": "X4QW",
+    "name": "Comment without whitespace after block scalar indicator",
+    "yaml": "block: ># comment\n  scalar\n"
+  },
+  {
+    "id": "Y79Y/000",
+    "name": "Tabs in various contexts",
+    "yaml": "foo: |\n\t\nbar: 1\n"
+  },
+  {
+    "id": "Y79Y/003",
+    "name": "Tabs in various contexts",
+    "yaml": "- [\n\tfoo,\n foo\n ]\n"
+  },
+  {
+    "id": "Y79Y/004",
+    "name": "Tabs in various contexts",
+    "yaml": "-\t-\n"
+  },
+  {
+    "id": "Y79Y/005",
+    "name": "Tabs in various contexts",
+    "yaml": "- \t-\n"
+  },
+  {
+    "id": "Y79Y/006",
+    "name": "Tabs in various contexts",
+    "yaml": "?\t-\n"
+  },
+  {
+    "id": "Y79Y/007",
+    "name": "Tabs in various contexts",
+    "yaml": "? -\n:\t-\n"
+  },
+  {
+    "id": "Y79Y/008",
+    "name": "Tabs in various contexts",
+    "yaml": "?\tkey:\n"
+  },
+  {
+    "id": "Y79Y/009",
+    "name": "Tabs in various contexts",
+    "yaml": "? key:\n:\tkey:\n"
+  },
+  {
+    "id": "YJV2",
+    "name": "Dash in flow sequence",
+    "yaml": "[-]\n"
+  },
+  {
+    "id": "ZCZ6",
+    "name": "Invalid mapping in plain single line value",
+    "yaml": "a: b: c: d\n"
+  },
+  {
+    "id": "ZL4Z",
+    "name": "Invalid nested mapping",
+    "yaml": "---\na: 'b': c\n"
+  },
+  {
+    "id": "ZVH3",
+    "name": "Wrong indented sequence item",
+    "yaml": "- key: value\n - item1\n"
+  },
+  {
+    "id": "ZXT5",
+    "name": "Implicit key followed by newline and adjacent value",
+    "yaml": "[ \"key\"\n  :value ]\n"
+  }
+]
