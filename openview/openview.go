@@ -55,7 +55,6 @@ func Task(part formatv0.Task) (open.Task, error) {
 // back strictly into its type: a field that the type does not know is a fault, since the type is
 // what the marks of the same schemas give (R72 spec).
 func of[O any](part string, value any) (O, error) {
-	var view O
 	file := part + ".schema.json"
 	v := jsonValue(value)
 	if errs := schema.Validate(file, v); len(errs) > 0 {
@@ -63,14 +62,12 @@ func of[O any](part string, value any) (O, error) {
 		for i, e := range errs {
 			lines[i] = e.String()
 		}
-		return view, fmt.Errorf("openview: the %s is not valid against %s:\n%s", part, file, strings.Join(lines, "\n"))
+		var none O
+		return none, fmt.Errorf("openview: the %s is not valid against %s:\n%s", part, file, strings.Join(lines, "\n"))
 	}
-	// The open view of a JSON value is JSON.
-	data, _ := json.Marshal(schema.Open(file, v))
-	decoder := json.NewDecoder(bytes.NewReader(data))
-	decoder.DisallowUnknownFields()
-	if err := decoder.Decode(&view); err != nil {
-		panic(fmt.Sprintf("openview: the open view of the %s is not of the type %T: %v", part, view, err))
+	view, err := schema.Decode[O](schema.Open(file, v))
+	if err != nil {
+		panic(fmt.Sprintf("openview: the open view of the %s: %v", part, err))
 	}
 	return view, nil
 }

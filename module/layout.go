@@ -23,11 +23,18 @@ type row struct {
 
 // The parts of the layout and the files of the module's folder that the rules read by name.
 const (
-	partManifest = "manifest"
-	manifestPath = "manifest.yaml"
-	licensePath  = "LICENSE"
-	noticePath   = "NOTICE"
-	mediaFolder  = "media/"
+	partManifest   = "manifest"
+	partSkillGraph = "skill-graph"
+	partTraps      = "traps"
+	partTechniques = "techniques"
+	partTask       = "task"
+	manifestPath   = "manifest.yaml"
+	skillGraphPath = "skill-graph.yaml"
+	trapsPath      = "traps.yaml"
+	techniquesPath = "techniques.yaml"
+	licensePath    = "LICENSE"
+	noticePath     = "NOTICE"
+	mediaFolder    = "media/"
 	// The path of the module's folder itself, as fs.FS names its root.
 	moduleFolder = "."
 )
@@ -36,11 +43,11 @@ const (
 // stands in the layout, though the package leaves it out (section 25).
 var layout = []row{
 	{manifestPath, partManifest},
-	{"skill-graph.yaml", "skill-graph"},
-	{"traps.yaml", "traps"},
-	{"techniques.yaml", "techniques"},
+	{skillGraphPath, partSkillGraph},
+	{trapsPath, partTraps},
+	{techniquesPath, partTechniques},
 	{"solving-steps.yaml", "solving-steps"},
-	{"tasks/<id>.yaml", "task"},
+	{"tasks/<id>.yaml", partTask},
 	{"lessons/<id>.yaml", "lesson"},
 	{mediaFolder + "<path>", ""},
 	{"eval/<path>", ""},

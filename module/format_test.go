@@ -71,11 +71,12 @@ func TestLayoutIsTheFormats(t *testing.T) {
 	}
 }
 
-// The rules of a whole module are those of section 10, in its order, and the format version is a
-// rule of the manifest.
+// The rules of a whole module are those of section 10, in its order, the format version is a rule of
+// the manifest, and the text lists every rule of the parts that the check holds.
 func TestRulesAreTheFormats(t *testing.T) {
-	var module, manifest []string
+	var module, manifest, all []string
 	for _, cells := range formatText(t, "| ID | Rule |") {
+		all = append(all, cells[0])
 		switch {
 		case strings.HasPrefix(cells[0], "module."):
 			module = append(module, cells[0])
@@ -88,6 +89,11 @@ func TestRulesAreTheFormats(t *testing.T) {
 	}
 	if !slices.Contains(manifest, RuleFormatVersion) {
 		t.Errorf("format/README.md lists no %s among %v", RuleFormatVersion, manifest)
+	}
+	for _, rule := range partRules {
+		if !slices.Contains(all, rule) {
+			t.Errorf("format/README.md lists no rule %s", rule)
+		}
 	}
 }
 
