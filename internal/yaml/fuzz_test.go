@@ -6,7 +6,6 @@ import (
 	"io/fs"
 	"maps"
 	"math"
-	"os"
 	"reflect"
 	"slices"
 	"strconv"
@@ -34,19 +33,12 @@ func FuzzRead(f *testing.F) {
 		}
 		f.Add(data)
 	}
-	suite := os.DirFS(suiteRoot)
-	for _, pattern := range []string{"*/in.yaml", "*/*/in.yaml"} {
-		cases, err := fs.Glob(suite, pattern)
-		if err != nil {
-			f.Fatal(err)
-		}
-		for _, name := range cases {
-			data, err := fs.ReadFile(suite, name)
-			if err != nil {
-				f.Fatal(err)
-			}
-			f.Add(data)
-		}
+	cases, err := suiteCases()
+	if err != nil {
+		f.Fatal(err)
+	}
+	for _, c := range cases {
+		f.Add([]byte(c.YAML))
 	}
 	for _, test := range readCases {
 		f.Add([]byte(test.in))
