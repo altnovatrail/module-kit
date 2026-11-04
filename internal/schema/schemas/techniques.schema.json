@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://altnovatrail.github.io/spec/format/0.3/techniques.schema.json",
+  "title": "Technique catalog",
+  "description": "The technique catalog of a module, techniques.yaml at the root of its folder: the ways of solving that the module names and teaches, each under its local ID, with its title and what it is. A task names the techniques that help in it, and which those are is closed, in the task. Every field of the catalog is open, as the skills of the skill graph are.",
+  "type": "object",
+  "properties": {
+    "techniques": {
+      "type": "object",
+      "propertyNames": {
+        "$ref": "common.schema.json#/$defs/technique_id"
+      },
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "$ref": "common.schema.json#/$defs/text",
+            "description": "What the technique is called, in the module's explanation language.",
+            "x-open": true
+          },
+          "description": {
+            "$ref": "common.schema.json#/$defs/text",
+            "description": "What the technique is and when it helps, in the module's explanation language.",
+            "x-open": true
+          }
+        },
+        "required": [
+          "title"
+        ],
+        "unevaluatedProperties": false,
+        "description": "A technique of the module, under its local ID.",
+        "x-open": true
+      },
+      "minProperties": 1,
+      "description": "The module's techniques, each under its local ID. Their order carries no meaning, and this version gives them no numbers.",
+      "x-open": true
+    }
+  },
+  "required": [
+    "techniques"
+  ],
+  "unevaluatedProperties": false
+}

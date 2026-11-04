@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io/fs"
 	"maps"
+	"net/url"
 	"os"
 	"path"
 	"regexp"
@@ -16,6 +17,7 @@ import (
 	"github.com/altnovatrail/spec"
 	"github.com/altnovatrail/spec/contracts"
 
+	"github.com/altnovatrail/module-kit/internal/schema"
 	"github.com/altnovatrail/module-kit/internal/yaml"
 	"github.com/altnovatrail/module-kit/module"
 )
@@ -106,6 +108,166 @@ func reportRules(report module.Report) []string {
 	return rules
 }
 
+// A finding is one thing that the check of a file of a part finds: the rule it breaks, or the
+// keyword of its schema that fails at a place in it, or, with neither, that it is not YAML.
+type finding struct {
+	rule, keyword, pointer, text string
+}
+
+// checkPart checks a file of a part on its own, as its examples are checked (format/README.md,
+// section 8): a part of the layout of a module by the check of a module (R22), and the inventory
+// of a package and the module index, which are no parts of a module, by the YAML rules and their
+// schemas, the roots of inventory.schema.json and module-index.schema.json.
+func checkPart(part string, data []byte) ([]finding, error) {
+	if !slices.Contains(layoutParts, part) {
+		_, found, err := readBySchema(data, part+".schema.json")
+		return found, err
+	}
+	report, err := module.CheckFile(part, data)
+	var found []finding
+	for _, b := range report.Breaches {
+		found = append(found, finding{b.Rule, b.Keyword, b.Pointer, b.String()})
+	}
+	return found, err
+}
+
+// readBySchema reads a file that is no part of a module's layout as the format has it read: by the
+// YAML rules, then against the schema at schemaFile. It gives the value, and what refuses it: each
+// breach of a YAML rule, or else each keyword of the schema that fails.
+func readBySchema(data []byte, schemaFile string) (any, []finding, error) {
+	value, err := yaml.Read(data)
+	var refusal *yaml.Refusal
+	var found []finding
+	switch {
+	case errors.As(err, &refusal):
+		for _, b := range refusal.Breaches {
+			found = append(found, finding{rule: b.Rule, text: b.String()})
+		}
+		return nil, found, nil
+	case err != nil:
+		return nil, nil, err
+	}
+	for _, e := range schema.Validate(schemaFile, value) {
+		found = append(found, finding{keyword: e.Keyword, pointer: e.Pointer(), text: e.String()})
+	}
+	return value, found, nil
+}
+
+func texts(found []finding) string {
+	lines := make([]string, len(found))
+	for i, f := range found {
+		lines[i] = f.text
+	}
+	return strings.Join(lines, "\n")
+}
+
+// examplePart reads an example of a part, examples/<part>/<valid or invalid>/<case>.yaml, and what
+// its check finds.
+func examplePart(v vector) ([]byte, []finding, error) {
+	data, err := fs.ReadFile(v.fsys, v.path)
+	if err != nil {
+		return nil, nil, err
+	}
+	found, err := checkPart(strings.Split(v.path, "/")[1], data)
+	return data, found, err
+}
+
+// validExample passes a valid example of a part: valid against its schema, and breaking no rule
+// within its part that module-kit holds (format/README.md, section 8).
+func validExample(v vector) error {
+	_, found, err := examplePart(v)
+	if err != nil {
+		return err
+	}
+	if len(found) > 0 {
+		return fmt.Errorf("a valid example is refused:\n%s", texts(found))
+	}
+	return nil
+}
+
+// invalidExample passes an invalid example of a part: it breaks its schema alone, and the
+// validator, reporting all its errors, reports one with the keyword its first line names at the
+// place it names (format/README.md, section 8). Two places compare as the JSON Pointers they
+// encode, since a fragment of a URI may encode one in more than one way.
+func invalidExample(v vector) error {
+	data, found, err := examplePart(v)
+	if err != nil {
+		return err
+	}
+	keyword, location, err := expectedError(data)
+	if err != nil {
+		return err
+	}
+	if len(found) == 0 {
+		return fmt.Errorf("passes its schema, and names %s at %s", keyword, location)
+	}
+	named := false
+	for _, f := range found {
+		if f.keyword == "" {
+			return fmt.Errorf("breaks more than its schema:\n%s", texts(found))
+		}
+		if pointer, err := decodePlace(f.pointer); err == nil && f.keyword == keyword && pointer == location {
+			named = true
+		}
+	}
+	if !named {
+		return fmt.Errorf("gives no %s at %s; it gives\n%s", keyword, location, texts(found))
+	}
+	return nil
+}
+
+// The first line of an invalid example: # error: <keyword> at <location>.
+var errorLine = regexp.MustCompile(`^# error: ([^ ]+) at (#[^ ]*)$`)
+
+// expectedError reads the error that an invalid example names on its first line, its place as the
+// JSON Pointer that the fragment encodes.
+func expectedError(data []byte) (keyword, location string, err error) {
+	first, _, _ := strings.Cut(string(data), "\n")
+	// A line break of YAML may be CR LF too (YAML 1.2.2, section 5.4).
+	first = strings.TrimSuffix(first, "\r")
+	m := errorLine.FindStringSubmatch(first)
+	if m == nil {
+		return "", "", fmt.Errorf("the first line, %q, names no error as # error: <keyword> at <location>", first)
+	}
+	location, err = decodePlace(m[2])
+	if err != nil {
+		return "", "", fmt.Errorf("the first line, %q: %v", first, err)
+	}
+	return m[1], location, nil
+}
+
+// decodePlace gives the JSON Pointer that a place in URI fragment form encodes: # and the pointer,
+// percent-encoded (RFC 6901, section 6).
+func decodePlace(place string) (string, error) {
+	pointer, err := url.PathUnescape(strings.TrimPrefix(place, "#"))
+	switch {
+	case !strings.HasPrefix(place, "#"):
+		return "", fmt.Errorf("%q is no fragment of a URI", place)
+	case err != nil:
+		return "", err
+	case pointer != "" && !strings.HasPrefix(pointer, "/"):
+		return "", fmt.Errorf("%q encodes no JSON Pointer", place)
+	}
+	return pointer, nil
+}
+
+// moduleExample passes an example of a whole module: it breaks no rule that module-kit holds, and
+// each of its files of a part is valid against its schema (format/README.md, section 8).
+func moduleExample(v vector) error {
+	folder, err := fs.Sub(v.fsys, v.path)
+	if err != nil {
+		return err
+	}
+	report, err := module.Check(folder)
+	if err != nil {
+		return err
+	}
+	if len(report.Breaches) > 0 {
+		return fmt.Errorf("an example of a whole module is refused:\n%s", report)
+	}
+	return nil
+}
+
 // runners passes a case of each kind: nil when module-kit gives what the case says, and an error
 // that says why not otherwise. A task of the epic of code puts the code it brings in place of
 // noCode, and takes the cases it passes out of testdata/skipped.txt (architecture 3.6; R20).
@@ -113,9 +275,9 @@ var runners = map[string]func(vector) error{
 	// A part's valid example is valid against its schema and meets every rule within its part; an
 	// invalid one gives the error its first line names; a whole module breaks no rule
 	// (format/README.md, section 8).
-	"examples/valid":   noCode,
-	"examples/invalid": noCode,
-	"examples/module":  noCode,
+	"examples/valid":   validExample,
+	"examples/invalid": invalidExample,
+	"examples/module":  moduleExample,
 	// The test vectors (format/README.md, section 9).
 	"rules":     rule,   // refused with the ID of the rule the case is filed under
 	"open-view": noCode, // the open view of part.yaml is open-view.yaml

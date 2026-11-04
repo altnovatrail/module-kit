@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://altnovatrail.github.io/spec/format/0.3/tier-vector.schema.json",
+  "title": "Tier vector",
+  "description": "A test vector of tiers (sections 12 and 25 of the format text): a skill graph and the tier of each of its skills. An implementation computes the tiers from the prerequisites and gets exactly these.",
+  "type": "object",
+  "properties": {
+    "skill_graph": {
+      "$ref": "skill-graph.schema.json",
+      "unevaluatedProperties": false,
+      "description": "The skill graph, whose prerequisites among the module's skills run in no cycle."
+    },
+    "skill_tiers": {
+      "$ref": "canonical-view.schema.json#/$defs/skill_tiers",
+      "description": "The tier of every skill of the graph, as the canonical view holds it."
+    }
+  },
+  "required": [
+    "skill_graph",
+    "skill_tiers"
+  ],
+  "unevaluatedProperties": false
+}

@@ -1,0 +1,152 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://altnovatrail.github.io/spec/format/0.3/verdict-vector.schema.json",
+  "title": "Verdict vector",
+  "description": "A test vector of a check kind's verdicts, vectors/verdicts/<kind>/<case>.yaml: an item of a task whose answer slots are checked by that kind, and readings of it, each the value read in every answer slot, with the verdict and the trap that each answer slot gets and the verdict that the item gets (section 15 of the format text). It describes no part of a module.",
+  "type": "object",
+  "properties": {
+    "item": {
+      "$ref": "task.schema.json#/$defs/item",
+      "unevaluatedProperties": false,
+      "if": {
+        "required": [
+          "line"
+        ]
+      },
+      "then": {
+        "not": {
+          "required": [
+            "answer_slots"
+          ]
+        }
+      },
+      "else": {
+        "required": [
+          "answer_slots"
+        ]
+      },
+      "description": "The item: on a handwriting sheet its answer slots, on a workbook its line, and every answer slot with its check."
+    },
+    "readings": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/reading",
+        "unevaluatedProperties": false
+      },
+      "minItems": 1,
+      "description": "The readings of the item, each a case of the vector."
+    }
+  },
+  "required": [
+    "item",
+    "readings"
+  ],
+  "unevaluatedProperties": false,
+  "$defs": {
+    "reading": {
+      "type": "object",
+      "properties": {
+        "answer_slots": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/slot_reading",
+            "unevaluatedProperties": false
+          },
+          "minItems": 1,
+          "description": "The value read in each answer slot of the item, in the order of the answer slots, and the verdict that each gets."
+        },
+        "verdict": {
+          "$ref": "#/$defs/verdict",
+          "description": "The verdict that the item gets, made of its answer slots' verdicts."
+        }
+      },
+      "required": [
+        "answer_slots",
+        "verdict"
+      ],
+      "description": "A reading of the item: the values read in its answer slots, and the verdicts they give."
+    },
+    "slot_reading": {
+      "type": "object",
+      "properties": {
+        "value": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "The value read in the answer slot, as it is written, or null when nothing was read."
+        },
+        "verdict": {
+          "$ref": "#/$defs/verdict",
+          "description": "The verdict that the answer slot gets."
+        },
+        "reason": {
+          "enum": [
+            "blank",
+            "notation"
+          ],
+          "description": "Why the answer slot is unreadable: nothing was read, or the value is not in the notation of the check kind."
+        },
+        "trap": {
+          "$ref": "common.schema.json#/$defs/trap_id",
+          "description": "The trap that the value matches among the trap values of the answer slot's check: only for a value that is not yet right."
+        }
+      },
+      "required": [
+        "value",
+        "verdict"
+      ],
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "verdict": {
+                "const": "unreadable"
+              }
+            },
+            "required": [
+              "verdict"
+            ]
+          },
+          "then": {
+            "required": [
+              "reason"
+            ]
+          },
+          "else": {
+            "not": {
+              "required": [
+                "reason"
+              ]
+            }
+          }
+        },
+        {
+          "if": {
+            "required": [
+              "trap"
+            ]
+          },
+          "then": {
+            "properties": {
+              "verdict": {
+                "const": "not_yet",
+                "description": "A value that matches a trap is not yet right."
+              }
+            }
+          }
+        }
+      ],
+      "description": "The value read in an answer slot, and its verdict: with the reason, when it is unreadable, and with the trap, when it matches one."
+    },
+    "verdict": {
+      "enum": [
+        "correct",
+        "not_yet",
+        "unreadable",
+        "unchecked"
+      ],
+      "description": "A verdict: correct; not yet; unreadable, which asks the learner to write again; or unchecked, when the check could not run."
+    }
+  }
+}

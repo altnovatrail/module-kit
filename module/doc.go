@@ -8,6 +8,7 @@
 //
 // The epic of code brings it part by part (R16). It holds so far the folder of a module as an
 // fs.FS, by the layout of section 10 and the rules module.*; the format version of section 2 and
-// manifest.format-version; and the YAML rules of section 4 on each file of a part, by
-// internal/yaml (R22).
+// manifest.format-version; the YAML rules of section 4 on each file of a part, by internal/yaml
+// (R22); and each file of a part against the schema of its part, by internal/schema, with a breach
+// of a schema named by its keyword and place as section 8 names it (R23).
 package module

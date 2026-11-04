@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://altnovatrail.github.io/spec/format/0.3/package-vector.schema.json",
+  "title": "Package vector",
+  "description": "The package that a test vector of packages gives, package.yaml beside the module/ it is of (sections 9 and 25 of the format text): the module's server part, the listing of its device part, its inventory and its digest. An implementation builds the package of module/ and gets exactly these, whatever the order of keys. The results of a solver are the vector's, in the instances of the server part.",
+  "type": "object",
+  "properties": {
+    "server_part": {
+      "$ref": "canonical-view.schema.json",
+      "unevaluatedProperties": false,
+      "description": "The server part: the canonical view of the module."
+    },
+    "device_part": {
+      "$ref": "inventory.schema.json#/$defs/device_listing",
+      "unevaluatedProperties": false,
+      "description": "The listing of the device part."
+    },
+    "inventory": {
+      "$ref": "inventory.schema.json",
+      "unevaluatedProperties": false,
+      "description": "The inventory of the package."
+    },
+    "digest": {
+      "$ref": "inventory.schema.json#/$defs/digest",
+      "description": "The digest of the package: the digest of the canonical text of its inventory."
+    }
+  },
+  "required": [
+    "server_part",
+    "device_part",
+    "inventory",
+    "digest"
+  ],
+  "unevaluatedProperties": false
+}

@@ -11,6 +11,7 @@ import (
 
 	"github.com/altnovatrail/spec"
 
+	"github.com/altnovatrail/module-kit/internal/schema"
 	"github.com/altnovatrail/module-kit/internal/yaml"
 )
 
@@ -26,9 +27,15 @@ func wellFormed(t *testing.T, report Report) {
 			b.Path != "" && !fs.ValidPath(b.Path) || b.Pointer != "" && !strings.HasPrefix(b.Pointer, "#") || b.Message == "" {
 			t.Errorf("a breach out of form: %#v", b)
 		}
+		// A breach of a schema names a keyword of section 5 at a value, with no rule and no line.
+		if b.Keyword != "" && (b.Rule != "" || b.Line != 0 || !strings.HasPrefix(b.Pointer, "#") ||
+			!slices.Contains(schema.Keywords, b.Keyword)) {
+			t.Errorf("a breach of a schema out of form: %#v", b)
+		}
 	}
 	if !slices.IsSortedFunc(report.Breaches, func(a, b Breach) int {
-		return cmp.Or(strings.Compare(a.Path, b.Path), cmp.Compare(a.Line, b.Line), cmp.Compare(a.Column, b.Column))
+		return cmp.Or(strings.Compare(a.Path, b.Path), cmp.Compare(a.Line, b.Line), cmp.Compare(a.Column, b.Column),
+			comparePointers(a.Pointer, b.Pointer))
 	}) {
 		t.Errorf("the breaches are out of order:\n%s", report)
 	}
@@ -36,7 +43,8 @@ func wellFormed(t *testing.T, report Report) {
 
 // On any file at any path of a module, and on any file of a part on its own, the check gives a
 // report without an error or a panic, and the report is in form. The corpus is the files of the
-// vectors of the rules module.* and manifest.format-version, each at its path in its case.
+// vectors of the rules module.* and manifest.format-version, each at its path in its case, and the
+// examples of the parts of the layout, each at a path of its part.
 func FuzzCheck(f *testing.F) {
 	err := fs.WalkDir(spec.Format, "vectors/rules", func(name string, entry fs.DirEntry, err error) error {
 		if err != nil || entry.IsDir() {
@@ -60,10 +68,24 @@ func FuzzCheck(f *testing.F) {
 	if err != nil {
 		f.Fatal(err)
 	}
+	for name, part := range partFiles(f) {
+		if !strings.HasPrefix(name, "examples/") {
+			continue
+		}
+		data, err := fs.ReadFile(spec.Format, name)
+		if err != nil {
+			f.Fatal(err)
+		}
+		for _, r := range layout {
+			if r.part == part[0] {
+				f.Add(strings.Replace(r.path, anyID, "a", 1), data)
+			}
+		}
+	}
 	f.Add("media/sounds/bell.mp3", []byte{0xff, 0xfb, 0x90})
 	f.Add("tasks/a.yaml", []byte("id: b\n"))
 	f.Fuzz(func(t *testing.T, name string, data []byte) {
-		fsys := module(fstest.MapFS{noticePath: bytesFile(data)})
+		fsys := smallest(fstest.MapFS{noticePath: bytesFile(data)})
 		// A path that a file of the module would also make a folder is left out: the file system
 		// would hold both.
 		folderOfFile := func(k string) bool { return strings.HasPrefix(name, k+"/") || strings.HasPrefix(k, name+"/") }
