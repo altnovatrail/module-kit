@@ -83,6 +83,7 @@ func TestReadRefuses(t *testing.T) {
 		{"no format version", withInventory(`[]`), ErrFormatVersion, InventoryFile},
 		{"no JSON", withInventory(`{`), ErrNotCanonical, InventoryFile},
 		{"two values", withInventory(`{} {}`), ErrNotCanonical, InventoryFile},
+		{"a number past a double", withInventory(`{"module_format_version":"0.3","id":1e700}`), ErrNotCanonical, InventoryFile},
 		{"an inventory not of its schema", withInventory(`{"module_format_version":"0.3"}`), ErrNotCanonical, InventoryFile},
 		{"an inventory not canonical", withInventory(strings.Replace(string(pkg.Files[InventoryFile]), `,"id":`, `, "id":`, 1)),
 			ErrNotCanonical, InventoryFile},

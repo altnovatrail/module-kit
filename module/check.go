@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	"github.com/altnovatrail/module-kit/internal/schema"
+	"github.com/altnovatrail/module-kit/internal/semver"
 	"github.com/altnovatrail/module-kit/internal/yaml"
 	"github.com/altnovatrail/module-kit/leak"
 )
@@ -25,6 +26,21 @@ const FormatVersion = "0.3"
 // (format/README.md, section 2).
 func ReadsFormat(v string) bool {
 	return v == FormatVersion
+}
+
+// NewerFormat says whether v, a format version MAJOR.MINOR, is newer than FormatVersion: by its
+// major number, then its minor, each by its value, so that 0.10 is newer than 0.9. A v that is no
+// version MAJOR.MINOR is newer than none. The build of the module index reads a previous index by
+// it (R35).
+func NewerFormat(v string) bool {
+	// MAJOR.MINOR are two numerals with no leading zero, and so is each number of X.Y.Z: the version
+	// MAJOR.MINOR orders as the version of a module MAJOR.MINOR.0.
+	newer, err := semver.Parse(v + ".0")
+	if err != nil {
+		return false
+	}
+	reader, _ := semver.Parse(FormatVersion + ".0")
+	return newer.Compare(reader) > 0
 }
 
 // The rules the check holds, by the part a breach of each is reported in (format/README.md,

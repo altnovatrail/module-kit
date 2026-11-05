@@ -300,3 +300,22 @@ func TestExampleRunners(t *testing.T) {
 		}
 	}
 }
+
+// A valid example of the module index is refused when its root names another format version than
+// format/VERSION, or when an entry lists teaches out of order: section 26 asks both, and its schema
+// can say neither, as indexFormProblems of spec's format-check holds them.
+func TestIndexForm(t *testing.T) {
+	const entry = `{module_format_version: "0.3", package_digest: "sha256:fcbe6e68430776b0506c93ab51b155f8e7f92e2b3ecbe03e34e2afb91b4d4d08", release: v0.1.0`
+	for _, c := range []struct{ data, refused string }{
+		{"module_format_version: \"0.3\"\nmodules: {example/a: {\"0.1.0\": " + entry + ", teaches: [core.a, core.b]}}}\n", ""},
+		{"module_format_version: \"0.2\"\nmodules: {example/a: {\"0.1.0\": " + entry + "}}}\n", "names the format version 0.2"},
+		{"module_format_version: \"0.3\"\nmodules: {example/a: {\"0.1.0\": " + entry + ", teaches: [core.b, core.a]}}}\n",
+			"the teaches of example/a 0.1.0 are not in the order of code units"},
+	} {
+		path := "examples/module-index/valid/a.yaml"
+		err := validExample(vector{name: path, fsys: fstest.MapFS{path: {Data: []byte(c.data)}}, path: path})
+		if c.refused == "" && err != nil || c.refused != "" && (err == nil || !strings.Contains(err.Error(), c.refused)) {
+			t.Errorf("%q: %v, want %q", c.data, err, c.refused)
+		}
+	}
+}

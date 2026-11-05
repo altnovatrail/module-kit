@@ -1,11 +1,3 @@
-format/vectors/indexes/another-reason
-format/vectors/indexes/below-a-published-version
-format/vectors/indexes/earlier-format-version
-format/vectors/indexes/first-release
-format/vectors/indexes/next-release
-format/vectors/indexes/republished-version
-format/vectors/indexes/unknown-withdrawal
-format/vectors/indexes/withdrawal
 format/vectors/versions/after-a-withdrawn-version
 format/vectors/versions/age-categories-narrower
 format/vectors/versions/age-categories-wider
