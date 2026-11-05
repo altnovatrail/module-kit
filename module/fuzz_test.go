@@ -36,7 +36,7 @@ func wellFormed(t *testing.T, report Report) {
 	}
 	if !slices.IsSortedFunc(report.Breaches, func(a, b Breach) int {
 		return cmp.Or(strings.Compare(a.Path, b.Path), cmp.Compare(a.Line, b.Line), cmp.Compare(a.Column, b.Column),
-			comparePointers(a.Pointer, b.Pointer))
+			schema.ComparePointers(a.Pointer, b.Pointer))
 	}) {
 		t.Errorf("the breaches are out of order:\n%s", report)
 	}

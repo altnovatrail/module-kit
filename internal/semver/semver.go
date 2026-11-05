@@ -61,3 +61,41 @@ func (v Version) Compare(w Version) int {
 func (v Version) String() string {
 	return strings.Join(v.numbers[:], ".")
 }
+
+// The places of the numbers of a version, from the highest, as Raise and Zero take them.
+const (
+	Major = iota
+	Minor
+	Patch
+)
+
+// Raise gives the version with the number at place raised by one and every lower number 0, as a
+// step to the next version by that part does (format/README.md, section 27): 1.2.3 raised at Minor
+// is 1.3.0. The number has no bound: 9 is raised to 10 in its text, digit by digit.
+func (v Version) Raise(place int) Version {
+	w := v
+	w.numbers[place] = increment(v.numbers[place])
+	for i := place + 1; i < len(w.numbers); i++ {
+		w.numbers[i] = "0"
+	}
+	return w
+}
+
+// Zero says whether the number at place is 0.
+func (v Version) Zero(place int) bool {
+	return v.numbers[place] == "0"
+}
+
+// increment adds one to a decimal numeral with no leading zero: the last digit that is not 9 goes
+// up, the 9s after it become 0s, and a numeral of 9s alone gets a 1 before it.
+func increment(n string) string {
+	digits := []byte(n)
+	for i := len(digits) - 1; i >= 0; i-- {
+		if digits[i] != '9' {
+			digits[i]++
+			return string(digits)
+		}
+		digits[i] = '0'
+	}
+	return "1" + string(digits)
+}

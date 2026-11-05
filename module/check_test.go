@@ -1,7 +1,6 @@
 package module
 
 import (
-	"cmp"
 	"errors"
 	"fmt"
 	"io/fs"
@@ -536,18 +535,6 @@ func ExampleCheck() {
 	// .: module.manifest: the folder holds no file manifest.yaml
 	// LICENSE:1:25: module.plain-text: holds a carriage return: every line ends with LF alone
 	// Manifest.yaml: module.layout: stands at no path of the layout of a module
-}
-
-// Places in a file go member by member, and two indices of an array by their numbers.
-func TestOrderOfPointers(t *testing.T) {
-	ordered := []string{"", "#", "#/a", "#/a/0", "#/a/2", "#/a/10", "#/a/10/x", "#/a/01", "#/a/9b", "#/b"}
-	for i, a := range ordered {
-		for j, b := range ordered {
-			if got, want := comparePointers(a, b), cmp.Compare(i, j); got != want {
-				t.Errorf("comparePointers(%q, %q) is %d, want %d", a, b, got, want)
-			}
-		}
-	}
 }
 
 // The check keeps the value of each file of a part that the YAML rules and its schema accept, and

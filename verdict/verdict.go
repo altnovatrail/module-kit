@@ -185,9 +185,9 @@ func Same(slot AnswerSlot, a, b string) bool {
 	if !utf8.ValidString(a) || !utf8.ValidString(b) {
 		return false
 	}
-	units := unitsOf(slot.Check)
-	x, xok := comparedBy(slot.Check, units, a)
-	y, yok := comparedBy(slot.Check, units, b)
+	units := normal.Units(slot.Check)
+	x, xok := normal.Compared(slot.Check, units, a)
+	y, yok := normal.Compared(slot.Check, units, b)
 	return xok && yok && x == y
 }
 
@@ -219,26 +219,11 @@ func NormalForm(slot AnswerSlot, value string) (form string, inNotation bool) {
 		}
 		return form, false
 	case formatv0.CheckKindNumber, formatv0.CheckKindFraction, formatv0.CheckKindPredicate:
-		form = normal.Number(value, unitsOf(c))
+		form = normal.Number(value, normal.Units(c))
 		_, ok := normal.Notation(form, c.Kind)
 		return form, ok
 	}
 	return value, false
-}
-
-// comparedBy gives what a check compares a value by, and whether it compares it at all: a choice,
-// its normal form, always; a number, a fraction and a predicate, its value in the kind's notation,
-// exactly, written in lowest terms. units are the forms of a number's units.
-func comparedBy(c formatv0.Check, units []string, text string) (string, bool) {
-	switch c.Kind {
-	case formatv0.CheckKindChoice:
-		return normal.Choice(text), true
-	case formatv0.CheckKindNumber, formatv0.CheckKindFraction, formatv0.CheckKindPredicate:
-		if w, ok := normal.Notation(normal.Number(text, units), c.Kind); ok {
-			return w.Value.RatString(), true
-		}
-	}
-	return "", false
 }
 
 // verdict gives the verdict of the answer slot on a value, as OfSlot does, with an error that names
@@ -329,7 +314,7 @@ func (s AnswerSlot) numberVerdict(value *string) (SlotVerdict, error) {
 	if value == nil {
 		return SlotVerdict{Verdict: Unreadable, Reason: Blank}, nil
 	}
-	text := normal.Number(*value, unitsOf(c))
+	text := normal.Number(*value, normal.Units(c))
 	if text == "" {
 		return SlotVerdict{Verdict: Unreadable, Reason: Blank}, nil
 	}
@@ -384,29 +369,14 @@ func (s AnswerSlot) ChoiceOptions() []formatv0.Text {
 // notYet gives NotYet with the first trap value that the check compares equal to the value: a value
 // matches one at most, since no two trap values of a check are equal (task.trap-values).
 func (s AnswerSlot) notYet(value string) SlotVerdict {
-	units := unitsOf(s.Check)
-	read, _ := comparedBy(s.Check, units, value)
+	units := normal.Units(s.Check)
+	read, _ := normal.Compared(s.Check, units, value)
 	for _, trapValue := range s.Check.TrapValues {
-		if compared, ok := comparedBy(s.Check, units, trapValue.Value); ok && compared == read {
+		if compared, ok := normal.Compared(s.Check, units, trapValue.Value); ok && compared == read {
 			return SlotVerdict{Verdict: NotYet, Trap: &trapValue}
 		}
 	}
 	return SlotVerdict{Verdict: NotYet}
-}
-
-// unitsOf gives the forms of the units of a number, those that are not empty: a check of another
-// kind has none.
-func unitsOf(c formatv0.Check) []string {
-	if c.Kind != formatv0.CheckKindNumber {
-		return nil
-	}
-	var forms []string
-	for _, unit := range c.Units {
-		if form := normal.Unit(string(unit)); form != "" {
-			forms = append(forms, form)
-		}
-	}
-	return forms
 }
 
 // reducedForm says whether a fraction check takes only a fraction in lowest terms.
