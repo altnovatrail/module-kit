@@ -1,8 +1,6 @@
 package openview
 
 import (
-	"bytes"
-	"encoding/json"
 	"fmt"
 	"strings"
 
@@ -56,7 +54,7 @@ func Task(part formatv0.Task) (open.Task, error) {
 // what the marks of the same schemas give (R72 spec).
 func of[O any](part string, value any) (O, error) {
 	file := part + ".schema.json"
-	v := jsonValue(value)
+	v := schema.ValueOf(value)
 	if errs := schema.Validate(file, v); len(errs) > 0 {
 		lines := make([]string, len(errs))
 		for i, e := range errs {
@@ -70,43 +68,4 @@ func of[O any](part string, value any) (O, error) {
 		panic(fmt.Sprintf("openview: the open view of the %s: %v", part, err))
 	}
 	return view, nil
-}
-
-// jsonValue gives a value of a type of formatv0 as the reader of YAML gives a JSON value:
-// map[string]any, []any, string, int64 for a number without a fraction or an exponent, float64 for
-// another, bool or nil. A part of formatv0 holds only strings, integers, booleans and lists and
-// maps of them, so it is always JSON.
-func jsonValue(value any) any {
-	data, err := json.Marshal(value)
-	if err != nil {
-		panic(fmt.Sprintf("openview: %T is no JSON: %v", value, err))
-	}
-	decoder := json.NewDecoder(bytes.NewReader(data))
-	decoder.UseNumber()
-	var v any
-	// The text is what json.Marshal has just written.
-	_ = decoder.Decode(&v)
-	return numbers(v)
-}
-
-// numbers puts int64 or float64 in the place of each json.Number in v.
-func numbers(v any) any {
-	switch v := v.(type) {
-	case map[string]any:
-		for key, member := range v {
-			v[key] = numbers(member)
-		}
-	case []any:
-		for i, element := range v {
-			v[i] = numbers(element)
-		}
-	case json.Number:
-		if i, err := v.Int64(); err == nil {
-			return i
-		}
-		// json.Marshal writes a float64 that it can read back.
-		f, _ := v.Float64()
-		return f
-	}
-	return v
 }

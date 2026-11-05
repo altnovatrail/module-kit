@@ -15,6 +15,7 @@ import (
 	"github.com/altnovatrail/spec/types/formatv0"
 
 	"github.com/altnovatrail/module-kit/internal/random"
+	"github.com/altnovatrail/module-kit/internal/schema"
 	"github.com/altnovatrail/module-kit/internal/yaml"
 )
 
@@ -67,9 +68,10 @@ var vectorAttempts = map[string][]attempt{
 }
 
 // The instance of an attempt is the one that the vectors of templates without a solver give each
-// seed. The vectors are read from spec.Format, so that the attempts here are every attempt of every
-// such vector, with the parameters they give; their task gives the ID and their count the count.
-// The vectors whole, with the instance that each seed gets, are the templates' (T31).
+// seed, and Instances counts it at that number. The vectors are read from spec.Format, so that the
+// attempts here are every attempt of every such vector, with the parameters they give; their task
+// gives the ID and their count the count. The vectors whole, with the instance that each seed gets,
+// the test of vectors passes.
 func TestAttemptInstanceOfTheVectors(t *testing.T) {
 	files, err := fs.Glob(spec.Format, "vectors/templates/*.yaml")
 	if err != nil || len(files) == 0 {
@@ -94,6 +96,14 @@ func TestAttemptInstanceOfTheVectors(t *testing.T) {
 		held = append(held, file)
 		id := formatv0.TaskID(task["id"].(string))
 		count := int(v["count"].(int64))
+		typed, err := schema.Decode[formatv0.Task](task)
+		if err != nil {
+			t.Fatalf("%s: %v", name, err)
+		}
+		instances, breaches := Instances(typed)
+		if len(instances) != count || len(breaches) > 0 {
+			t.Fatalf("%s: %d instances, %v, and the vector gives %d", file, len(instances), breaches, count)
+		}
 		given := v["attempts"].([]any)
 		attempts := vectorAttempts[file]
 		if len(given) != len(attempts) {
@@ -113,6 +123,11 @@ func TestAttemptInstanceOfTheVectors(t *testing.T) {
 			}
 			if got, err := AttemptInstance(a.seed, id, count); err != nil || got != a.instance {
 				t.Errorf("%s: the seed %d gives the instance %d, %v, want %d, of %v", file, a.seed, got, err, a.instance, a.parameters)
+			}
+			for name, n := range a.parameters {
+				if got := instances[a.instance][formatv0.TemplateName(name)]; got != n {
+					t.Errorf("%s: instance %d has %s = %d, and the test %d", file, a.instance, name, got, n)
+				}
 			}
 		}
 	}

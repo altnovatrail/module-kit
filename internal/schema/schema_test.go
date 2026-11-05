@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io/fs"
 	"math"
+	"reflect"
 	"regexp"
 	"slices"
 	"strings"
@@ -276,4 +277,19 @@ func TestDecode(t *testing.T) {
 	if _, err := Decode[pair](map[string]any{"a": math.NaN()}); err == nil {
 		t.Error("a value that is no JSON is read")
 	}
+}
+
+// ValueOf gives the value as the reader of YAML would, with int64 and float64 for numbers.
+func TestValueOf(t *testing.T) {
+	got := ValueOf(map[string]any{"i": int64(3), "big": int64(math.MaxInt64), "f": 1.5, "e": 1e300, "list": []any{2.0, "s", true, nil}})
+	want := map[string]any{"i": int64(3), "big": int64(math.MaxInt64), "f": 1.5, "e": 1e300, "list": []any{int64(2), "s", true, nil}}
+	if !reflect.DeepEqual(got, want) {
+		t.Errorf("%#v, want %#v", got, want)
+	}
+	defer func() {
+		if recover() == nil {
+			t.Error("a value that is no JSON does not panic")
+		}
+	}()
+	ValueOf(math.NaN())
 }

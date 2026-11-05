@@ -15,6 +15,7 @@
 // the tiers of the skill graph, Tiers, which the package will hold (R25); and the rules of a task
 // and of a lesson of sections 14, 15 and 21 that need no check kind, no leak check and no template
 // (R26); the rules of a task that the check of an answer slot sees itself, by package verdict
-// (R27, R28); and task.no-leaks and lesson.no-leaks, by package leak, on the tasks and lessons that
-// are no templates (R30).
+// (R27, R28); task.no-leaks and lesson.no-leaks, by package leak (R30); and the rules of templates of
+// section 23, by package template, with the rules of a task on every instance of a template that
+// read its strings, and task.instances, which holds each instance to the schema of a task (R32).
 package module

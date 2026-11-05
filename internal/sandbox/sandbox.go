@@ -86,6 +86,62 @@ func Eval(ctx context.Context, limits Limits, src string, env starlark.StringDic
 	})
 }
 
+// A Func is an expression of the dialect compiled once on the names it is written on, so that it is
+// evaluated on many bindings of them: an expression of a template, on each combination of the
+// parameters (format/README.md, section 23). It holds nothing that changes, so one Func is called from
+// many goroutines at once.
+type Func struct {
+	names  []string
+	result string // the global that the program assigns the value of the expression to
+	prog   *starlark.Program
+}
+
+// Compile compiles src, an expression of the dialect that names nothing but names, the names that it
+// binds itself and the built-in names of the dialect, as CheckExpr checks it, into a Func of names,
+// in their order. The error is CheckExpr's.
+//
+// The Func is a program of one statement, which assigns the parsed src to a global that names do not
+// hold: built from its tree rather than its text, so that it compiles whatever CheckExpr takes — a
+// comment, a line break — and is as deep to the parser as src, which a lambda around it would not be;
+// and with the steps of src, as Eval counts them.
+func Compile(src string, names ...string) (*Func, error) {
+	expr, err := checked(src, names)
+	if err != nil {
+		return nil, err
+	}
+	result := "_result"
+	for slices.Contains(names, result) {
+		result += "_"
+	}
+	at := syntax.Start(expr)
+	file := &syntax.File{Options: options(), Stmts: []syntax.Stmt{
+		&syntax.AssignStmt{OpPos: at, Op: syntax.EQ, LHS: &syntax.Ident{NamePos: at, Name: result}, RHS: expr},
+	}}
+	prog, err := starlark.FileProgram(file, func(name string) bool { return slices.Contains(names, name) })
+	if err != nil {
+		// CheckExpr resolved src on the same names, and the global is none of them.
+		panic(fmt.Sprintf("sandbox: an expression that CheckExpr takes does not compile: %v", err))
+	}
+	return &Func{names: names, result: result, prog: prog}, nil
+}
+
+// Call evaluates the expression with args bound to its names, in order, on a thread of its own with
+// the limits and ctx, as Eval does, and its error is as Eval's. Args that are not one for each name
+// are an error.
+func (f *Func) Call(ctx context.Context, limits Limits, args ...starlark.Value) (starlark.Value, error) {
+	if len(args) != len(f.names) {
+		return nil, fmt.Errorf("sandbox: %d values for the %d names %v", len(args), len(f.names), f.names)
+	}
+	env := make(starlark.StringDict, len(args))
+	for i, name := range f.names {
+		env[name] = args[i]
+	}
+	return run(ctx, limits, func(thread *starlark.Thread) (starlark.Value, error) {
+		globals, err := f.prog.Init(thread, env)
+		return globals[f.result], err
+	})
+}
+
 // cancelled begins the error of go.starlark.net's interpreter when it sees the thread cancelled,
 // which then names the reason (starlark/interp.go, checkStepsSlow).
 const cancelled = "Starlark computation cancelled: "

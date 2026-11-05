@@ -7,6 +7,7 @@
 // Manifest, SkillGraph, Traps, Techniques, SolvingSteps, Lesson and Task take a part as the type of
 // formatv0 holds it and give its open view as the type of formatv0/open holds it (R72 spec). The
 // walk of the schemas is internal/schema's: a mark counts only where its subschema applies and
-// passes, and no list of fields is kept here (R45 spec). The open view of an instance and the
-// digest come with the tasks of templates and of the package (R16).
+// passes, and no list of fields is kept here (R45 spec). The open view of an instance of a template
+// is the open view of a task: Task of what template.Instance gives (format/README.md, section 23;
+// R32). The digest comes with the task of the package (R16).
 package openview

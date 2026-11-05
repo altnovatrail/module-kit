@@ -50,16 +50,17 @@ type slotBreach struct {
 
 // checkRules checks the rules of a task that the check of each answer slot sees itself:
 // task.choice-key, task.choice-options, task.fraction-key, task.trap-values and
-// task.predicate-expression. A template is checked through its instances, and a placeholder outside
-// a template breaks task.placeholders, so neither is read here (format/README.md, section 23).
+// task.predicate-expression. It reads a task that is no template: a template is checked through its
+// instances, each a task of its own (templates.go). The key or a trap value of a number or a fraction
+// that holds a placeholder outside a template breaks task.placeholders, since no instance puts a
+// number in its place, and nothing more of its check is read (format/README.md, section 23).
 func (c *checker) checkRules(path string, task formatv0.Task) {
-	if task.Template != nil {
-		return
-	}
 	for i, item := range task.Items {
 		slots, places := slotsOf(item, i)
 		for n, slot := range slots {
 			if holdsPlaceholder(slot) {
+				c.add(RuleTaskPlaceholders, path, 0, 0, at(slices.Concat(places[n], []string{"check"})...),
+					"the key or a trap value holds the placeholder of a template, and the task is no template: no instance puts a number in its place")
 				continue
 			}
 			for _, b := range slotRules(slot) {
@@ -143,8 +144,8 @@ func choiceRules(slot verdict.AnswerSlot) []slotBreach {
 }
 
 // verdictOf gives the verdict of the check of an answer slot on a value written in a module. The
-// schema and the YAML rules took the check and the value, and a placeholder is passed over, so a
-// check that gives no verdict is a fault of module-kit.
+// schema and the YAML rules took the check and the value, and a placeholder breaks another rule, so
+// a check that gives no verdict is a fault of module-kit.
 func verdictOf(slot verdict.AnswerSlot, value string) verdict.SlotVerdict {
 	v, err := verdict.OfSlot(context.Background(), slot, &value)
 	if err != nil {

@@ -27,6 +27,8 @@ import (
 	"github.com/altnovatrail/module-kit/internal/yaml"
 	"github.com/altnovatrail/module-kit/leak"
 	"github.com/altnovatrail/module-kit/module"
+	"github.com/altnovatrail/module-kit/openview"
+	"github.com/altnovatrail/module-kit/template"
 	"github.com/altnovatrail/module-kit/verdict"
 )
 
@@ -428,6 +430,71 @@ func unsigned(text formatv0.Unsigned) (uint64, error) {
 	return strconv.ParseUint(string(text), 10, 64)
 }
 
+// errNoSolver is what a vector of templates whose template has a solver gives until the task of the
+// epic of code that runs solvers (R16).
+var errNoSolver = errors.New("module-kit runs no solver of a template yet")
+
+// templates passes a case of templates: its template breaks no rule of a task, as the check of a task
+// on its own reads it, on any instance; it has count instances; and each attempt's seed picks the
+// instance of the attempt's numbers, which is the attempt's instance, whatever the order of keys,
+// and has its open view (format/README.md, sections 9 and 23). The vector is read by its schema and
+// its type of formatv0.
+func templates(v vector) error {
+	var tv formatv0.TemplateVector
+	value, err := readVector(v.fsys, v.path, "template-vector.schema.json", &tv)
+	if err != nil {
+		return err
+	}
+	if tv.Task.Template.Solver != nil {
+		return errNoSolver
+	}
+	vector := value.(map[string]any)
+	// A file written in JSON syntax is YAML, and the same rules apply to it (format/README.md,
+	// section 4).
+	task, err := json.Marshal(vector["task"])
+	if err != nil {
+		return err
+	}
+	report, err := module.CheckFile("task", task)
+	if err != nil {
+		return err
+	}
+	if len(report.Breaches) > 0 {
+		return fmt.Errorf("the template is refused:\n%s", report)
+	}
+	instances, breaches := template.Instances(tv.Task)
+	if len(breaches) > 0 || int64(len(instances)) != tv.Count {
+		return fmt.Errorf("the template has %d instances, %v, and the vector gives %d", len(instances), breaches, tv.Count)
+	}
+	for n, attempt := range tv.Attempts {
+		seed, err := unsigned(attempt.Seed)
+		if err != nil {
+			return err
+		}
+		picked, err := template.AttemptInstance(seed, tv.Task.ID, len(instances))
+		if err != nil {
+			return err
+		}
+		if numbers := instances[picked]; !maps.Equal(numbers, attempt.Numbers) {
+			return fmt.Errorf("attempt %d: the seed %d picks the instance %v, and the vector gives %v", n+1, seed, numbers, attempt.Numbers)
+		}
+		got, err := template.Instance(tv.Task, instances[picked])
+		if err != nil {
+			return fmt.Errorf("attempt %d: %w", n+1, err)
+		}
+		want := vector["attempts"].([]any)[n].(map[string]any)["instance"]
+		if gotValue := schema.ValueOf(got); !reflect.DeepEqual(gotValue, want) {
+			gotText, _ := json.MarshalIndent(gotValue, "", "  ")
+			wantText, _ := json.MarshalIndent(want, "", "  ")
+			return fmt.Errorf("attempt %d: the instance is\n%s\nand the vector gives\n%s", n+1, gotText, wantText)
+		}
+		if _, err := openview.Task(got); err != nil {
+			return fmt.Errorf("attempt %d: %w", n+1, err)
+		}
+	}
+	return nil
+}
+
 // tiers passes a case of tiers: the tiers of skill_graph are skill_tiers (format/README.md, section
 // 9), the vector read by its schema and its type of formatv0.
 func tiers(v vector) error {
@@ -524,7 +591,7 @@ var runners = map[string]func(vector) error{
 	"verdicts":  verdicts,    // each reading gets its verdicts, reasons and traps
 	"leaks":     leaks,       // each text gives the keys and leak phrases it names
 	"random":    randomDraws, // each draw gives its value
-	"templates": noCode,      // the count, and each seed's numbers and instance
+	"templates": templates,   // the count, and each seed's numbers and instance
 	"tiers":     tiers,       // the tier of each skill
 	"packages":  noCode,      // the package of module/ is package.yaml
 	"indexes":   noCode,      // the index the release builds, or the rule that refuses it

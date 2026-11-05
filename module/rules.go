@@ -36,6 +36,7 @@ var partRules = []string{
 	RuleTaskZones, RuleTaskAssessability, RuleLessonKnownSkills, RuleLessonKnownTasks, RuleLessonTaskSkills,
 	RuleLessonKnownPictures, RuleLessonAreas, RuleLessonAgeCategories, RuleLessonOrder, RuleTaskChoiceKey, RuleTaskChoiceOptions,
 	RuleTaskFractionKey, RuleTaskTrapValues, RuleTaskPredicateExpression, RuleTaskNoLeaks, RuleLessonNoLeaks,
+	RuleTaskTemplateNames, RuleTaskTemplateExpressions, RuleTaskPlaceholders, RuleTaskTemplateInstances, RuleTaskInstances,
 }
 
 // typed reads the value of a file of a part that passed its schema into the type of formatv0 that
@@ -57,7 +58,8 @@ func at(tokens ...string) string {
 // A module's parts that passed, read into their types once, for the rules within a part and those
 // between parts: a part the module does not have, or whose file did not pass, is nil, and the tasks
 // and the lessons stand by their paths, and media holds the paths of the files in media/, which a
-// picture names. Of the file that CheckFile checks, which has no path, file is true.
+// picture names. A template's instances stand by its path too, counted once for every rule that
+// reads them (templates.go). Of the file that CheckFile checks, which has no path, file is true.
 type parts struct {
 	file       bool
 	manifest   *formatv0.Manifest
@@ -65,6 +67,7 @@ type parts struct {
 	traps      *formatv0.Traps
 	techniques *formatv0.Techniques
 	tasks      map[string]formatv0.Task
+	templates  map[string]*expansion
 	lessons    map[string]formatv0.Lesson
 	media      map[string]bool
 	// The skills of the skill graph that teach each anchor skill, none when there is no graph.
@@ -73,7 +76,8 @@ type parts struct {
 
 // newParts gives parts with no part yet.
 func newParts(file bool) parts {
-	return parts{file: file, tasks: map[string]formatv0.Task{}, lessons: map[string]formatv0.Lesson{}, media: map[string]bool{}}
+	return parts{file: file, tasks: map[string]formatv0.Task{}, templates: map[string]*expansion{}, lessons: map[string]formatv0.Lesson{},
+		media: map[string]bool{}}
 }
 
 // add reads the value of a file of a part that passed into its type and puts it among the parts,
@@ -90,7 +94,11 @@ func (p *parts) add(path, part string, value any) {
 	case partTechniques:
 		p.techniques = new(typed[formatv0.Techniques](value))
 	case partTask:
-		p.tasks[path] = typed[formatv0.Task](value)
+		task := typed[formatv0.Task](value)
+		p.tasks[path] = task
+		if task.Template != nil {
+			p.templates[path] = expand(task)
+		}
 	case partLesson:
 		p.lessons[path] = typed[formatv0.Lesson](value)
 	}
@@ -106,7 +114,9 @@ func (p parts) pathOf(path string) string {
 
 // withinPart checks the rules within one part on the files of it that passed their schemas: Check
 // on each such file of the module, and CheckFile on its file, as an example of a part is checked
-// (format/README.md, section 8).
+// (format/README.md, section 8). A template is checked through its instances by the rules that read
+// the strings of a task, where its placeholders stand, and as it is written by those that read none
+// of them, which every instance breaks alike (format/README.md, section 23).
 func (c *checker) withinPart(p parts) {
 	if p.manifest != nil {
 		c.bands(p.pathOf(manifestPath), *p.manifest)
@@ -117,6 +127,10 @@ func (c *checker) withinPart(p parts) {
 	for path, task := range p.tasks {
 		c.skillRoles(path, task)
 		c.zones(path, task)
+		if e, ok := p.templates[path]; ok {
+			c.templateRules(path, e)
+			continue
+		}
 		c.checkRules(path, task)
 		c.taskLeaks(path, task, ownShown(task))
 	}
@@ -136,11 +150,19 @@ func (c *checker) betweenParts(p parts) {
 		c.knownTraps(path, task, p.traps)
 		c.knownTechniques(path, task, p.techniques)
 		c.taskRules(path, task, p)
+		if e, ok := p.templates[path]; ok {
+			c.onInstances(e, func(sub *checker, i instance) {
+				if len(i.invalid) == 0 {
+					sub.taskLeaks(path, i.task, partsShown(i.task, p))
+				}
+			})
+			continue
+		}
 		c.taskLeaks(path, task, partsShown(task, p))
 	}
 	for path, lesson := range p.lessons {
 		c.lessonRules(path, lesson, p)
-		c.lessonLeaks(path, lesson, p.tasks)
+		c.lessonLeaks(path, lesson, p)
 	}
 	c.order(p.lessons, p.skillGraph)
 }
