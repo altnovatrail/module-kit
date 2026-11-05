@@ -26,15 +26,25 @@ const (
 	Unchecked  Verdict = "unchecked"  // the check could not run
 )
 
-// Reason is why an answer slot is unreadable, as the format writes it. These are the reasons that a
-// check kind gives itself; those that a reading gives before the value is judged come with the
-// observation (contracts/README.md, section 10).
+// Reason is why an answer slot is unreadable, as the format and the contracts write it: blank and
+// notation, which a check kind gives itself (format/README.md, section 15), and the reasons that a
+// reading gives before the value is judged, each named after a reason of the observation
+// (contracts/README.md, section 10).
 type Reason string
 
 // The reasons that a check kind gives.
 const (
 	Blank    Reason = "blank"    // nothing was read, or nothing is left once the value is normalized
 	Notation Reason = "notation" // the value is not in the kind's notation
+)
+
+// The reasons that a reading gives, by the table of contracts/README.md, section 10, which the
+// package observation reads them by.
+const (
+	Illegible           Reason = "illegible"             // something is written, and it cannot be read
+	Ambiguous           Reason = "ambiguous"             // it can be read more than one way, or two readers read it differently
+	NoFinalAnswer       Reason = "no_final_answer"       // in a slot bound anywhere: the work holds no final answer
+	SeveralFinalAnswers Reason = "several_final_answers" // in a slot bound anywhere: the work holds more than one
 )
 
 // UnicodeVersion is the version of Unicode that the normalization follows: that of the tables of
@@ -129,7 +139,7 @@ func OfItem(ctx context.Context, item formatv0.Item, values []*string) (ItemVerd
 		}
 		verdicts[i] = v
 	}
-	return ItemVerdict{Verdict: itemOf(verdicts), Slots: verdicts}, nil
+	return ItemVerdict{Verdict: ItemOf(verdicts), Slots: verdicts}, nil
 }
 
 // OfSlot gives the verdict of an answer slot on the value read in it: the value as it is written, or
@@ -168,8 +178,9 @@ func OfSlot(ctx context.Context, slot AnswerSlot, value *string) (SlotVerdict, e
 // value that is not UTF-8 is equal to none.
 //
 // A value out of a number's notation is equal to nothing here. The joining of two readings joins
-// such values by their normal forms, and keeps apart a value out of the notation from one in it,
-// which its normal form can spell, as 1/100000000000000 does (contracts/README.md, section 10).
+// such values by their normal forms, NormalForm, and keeps apart a value out of the notation from
+// one in it, which its normal form can spell, as 1/100000000000000 does (contracts/README.md,
+// section 10).
 func Same(slot AnswerSlot, a, b string) bool {
 	if !utf8.ValidString(a) || !utf8.ValidString(b) {
 		return false
@@ -178,6 +189,41 @@ func Same(slot AnswerSlot, a, b string) bool {
 	x, xok := comparedBy(slot.Check, units, a)
 	y, yok := comparedBy(slot.Check, units, b)
 	return xok && yok && x == y
+}
+
+// NormalForm gives a value as the check of an answer slot normalizes it, and whether it is in the
+// kind's notation, with no Starlark (format/README.md, section 15): for a choice, its normal form,
+// in the notation when it is the key's or an option's; for a number, a fraction and a predicate,
+// steps 1 to 7, with a number's units dropped, in the notation when the kind takes what is left. An
+// empty form is blank, and in no notation. A rubric normalizes nothing: the form is the value as it
+// is, in no notation, and so is a value that is not UTF-8. The joining of two readings compares the
+// values out of the notation by it (contracts/README.md, section 10).
+func NormalForm(slot AnswerSlot, value string) (form string, inNotation bool) {
+	if !utf8.ValidString(value) {
+		return value, false
+	}
+	c := slot.Check
+	switch c.Kind {
+	case formatv0.CheckKindChoice:
+		form = choiceForm(value)
+		if form == "" {
+			return form, false
+		}
+		if c.Key != nil && choiceForm(*c.Key) == form {
+			return form, true
+		}
+		for _, option := range slot.ChoiceOptions() {
+			if choiceForm(string(option)) == form {
+				return form, true
+			}
+		}
+		return form, false
+	case formatv0.CheckKindNumber, formatv0.CheckKindFraction, formatv0.CheckKindPredicate:
+		form = numberText(value, unitsOf(c))
+		_, ok := notation(form, c.Kind)
+		return form, ok
+	}
+	return value, false
 }
 
 // comparedBy gives what a check compares a value by, and whether it compares it at all: a choice,
@@ -353,15 +399,19 @@ func reducedForm(c formatv0.Check) bool {
 	return c.Form != nil && *c.Form == formatv0.CheckFormReduced
 }
 
-// itemOf gives the verdict of an item, made of its answer slots' verdicts: correct when every one is;
-// otherwise not_yet when one is, since a value read clearly and wrong is no doubt; otherwise
-// unreadable when one is; otherwise unchecked (format/README.md, section 15).
-func itemOf(slots []SlotVerdict) Verdict {
+// ItemOf gives the verdict of an item, made of its answer slots' verdicts: unchecked when there are
+// none, since nothing was checked; correct when every one is; otherwise not_yet when one is, since a
+// value read clearly and wrong is no doubt; otherwise unreadable when one is; otherwise unchecked
+// (format/README.md, section 15). The verdict on an observation makes an item's of its answer
+// slots' by it.
+func ItemOf(slots []SlotVerdict) Verdict {
 	count := map[Verdict]int{}
 	for _, s := range slots {
 		count[s.Verdict]++
 	}
 	switch {
+	case len(slots) == 0:
+		return Unchecked
 	case count[Correct] == len(slots):
 		return Correct
 	case count[NotYet] > 0:
