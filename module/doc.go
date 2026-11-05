@@ -17,5 +17,7 @@
 // (R26); the rules of a task that the check of an answer slot sees itself, by package verdict
 // (R27, R28); task.no-leaks and lesson.no-leaks, by package leak (R30); and the rules of templates of
 // section 23, by package template, with the rules of a task on every instance of a template that
-// read its strings, and task.instances, which holds each instance to the schema of a task (R32).
+// read its strings, and task.instances, which holds each instance to the schema of a task (R32); and
+// task.template-solver of section 24, by package template, with the results of a solver among the
+// numbers of every instance that the rules of a task read (R33).
 package module

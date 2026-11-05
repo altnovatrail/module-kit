@@ -19,19 +19,20 @@ import (
 )
 
 // The rules of templates that a template breaks by itself — by its names, its expressions, its
-// placeholders and the combinations of its parameters — whatever its instances hold
-// (format/README.md, section 23). task.placeholders holds outside a template too, and the check of a
-// module reads it there.
+// placeholders, the combinations of its parameters and its solver — whatever its instances hold
+// (format/README.md, sections 23 and 24). task.placeholders holds outside a template too, and the
+// check of a module reads it there.
 const (
 	RuleNames        = "task.template-names"
 	RuleExpressions  = "task.template-expressions"
 	RulePlaceholders = "task.placeholders"
 	RuleInstances    = "task.template-instances"
+	RuleSolver       = "task.template-solver"
 )
 
 // A Breach is a reason that a template breaks a rule of templates: its Rule, one of RuleNames,
-// RuleExpressions, RulePlaceholders and RuleInstances; the value of the task that breaks it, as a
-// JSON Pointer in URI fragment form, such as #/template/derived/b; and what breaks it.
+// RuleExpressions, RulePlaceholders, RuleInstances and RuleSolver; the value of the task that breaks
+// it, as a JSON Pointer in URI fragment form, such as #/template/derived/b; and what breaks it.
 type Breach struct {
 	Rule, Pointer, Message string
 }
@@ -41,33 +42,50 @@ type Breach struct {
 const limit = 1<<53 - 1
 
 // Instances counts the instances of a template and gives the numbers of each, in their order: every
-// parameter and every derived number of the instance, by its name (format/README.md, section 23).
-// The combinations of the parameters come in the order of an odometer — the parameters in the order
-// of their names, the first changing slowest, each through its domain upwards —, and on each the
-// derived numbers are computed and then the constraint, in the sandbox of Starlark; those for which
-// the constraint holds, or all of them when there is none, are the instances.
+// parameter, every derived number and every result of the solver of the instance, by its name
+// (format/README.md, sections 23 and 24). The combinations of the parameters come in the order of an
+// odometer — the parameters in the order of their names, the first changing slowest, each through
+// its domain upwards —, and on each the derived numbers are computed and then the constraint, in the
+// sandbox of Starlark; those for which the constraint holds, or all of them when there is none, are
+// the instances. A solver then runs on them in their order, on one thread of its own, and its results
+// join the numbers of each.
 //
 // A template that breaks a rule of templates gives its breaches and no numbers, in the order of
-// spec's second implementation: every breach of its names, its expressions and its placeholders;
-// and only when none of them breaks, those of its combinations — every empty domain, or too many
-// combinations, or the first combination on which an expression fails or a derived number lies past
-// ±(2^53 − 1), where the count stops, or none that gives an instance. A task that is no template
-// gives neither.
+// spec's second implementation: every breach of its names, its expressions, its placeholders and the
+// program of its solver; and only when none of them breaks, those of its combinations — every empty
+// domain, or too many combinations, or the first combination on which an expression fails or a
+// derived number lies past ±(2^53 − 1), where the count stops, or none that gives an instance; and
+// only when it has instances, that of its solver on the first instance where it fails, or before the
+// first. A task that is no template gives neither.
 //
-// The results of a solver are no numbers here: the solver runs with its own task of the epic of code
-// (R16), and its results come then.
-func Instances(task formatv0.Task) ([]formatv0.Numbers, []Breach) {
+// The count looks at ctx before each combination, and the solver runs with it, on the caller's
+// goroutine; how many templates the caller counts at once is its own to say (R11). The error is that
+// of ctx when ctx is done before the count ends, and is no breach: there are then neither numbers nor
+// breaches. Instances may be called from many goroutines at once, each on a template of its own or the
+// same.
+func Instances(ctx context.Context, task formatv0.Task) ([]formatv0.Numbers, []Breach, error) {
 	if task.Template == nil {
-		return nil, nil
+		return nil, nil, nil
 	}
 	t := *task.Template
 	parameters := slices.Sorted(maps.Keys(t.Parameters))
 	derived := slices.Sorted(maps.Keys(t.Derived))
-	breaches := slices.Concat(namesBreaches(t), expressionBreaches(t, parameters, derived), placeholderBreaches(task))
+	breaches := slices.Concat(namesBreaches(t), expressionBreaches(t, parameters, derived), placeholderBreaches(task), programBreaches(t))
 	if len(breaches) > 0 {
-		return nil, breaches
+		return nil, breaches, nil
 	}
-	return count(t, parameters, derived)
+	instances, breaches, err := count(ctx, t, parameters, derived)
+	if err == nil && len(breaches) == 0 && t.Solver != nil {
+		var breach *Breach
+		instances, breach, err = solve(ctx, task, instances)
+		if breach != nil {
+			breaches = []Breach{*breach}
+		}
+	}
+	if err != nil {
+		return nil, nil, fmt.Errorf("template: the task %s: %w", task.ID, err)
+	}
+	return instances, breaches, nil
 }
 
 // results gives the names of the results of a template's solver: none when it has none.
@@ -213,9 +231,9 @@ func at(tokens ...string) string {
 	return schema.Pointer(tokens)
 }
 
-// count counts the instances of a template whose names, expressions and placeholders break no rule,
-// as Instances does.
-func count(t formatv0.Template, parameters, derived []formatv0.TemplateName) ([]formatv0.Numbers, []Breach) {
+// count counts the instances of a template whose names, expressions, placeholders and program break
+// no rule, as Instances does, with ctx, whose error is the error when it is done.
+func count(ctx context.Context, t formatv0.Template, parameters, derived []formatv0.TemplateName) ([]formatv0.Numbers, []Breach, error) {
 	var empty []Breach
 	combinations := big.NewInt(1)
 	for _, name := range parameters {
@@ -230,10 +248,10 @@ func count(t formatv0.Template, parameters, derived []formatv0.TemplateName) ([]
 	}
 	switch {
 	case len(empty) > 0:
-		return nil, empty
+		return nil, empty, nil
 	case combinations.Cmp(big.NewInt(MaxInstances)) > 0:
 		return nil, []Breach{{RuleInstances, at("template", "parameters"),
-			fmt.Sprintf("its domains multiply to %s combinations, more than %d", combinations, MaxInstances)}}
+			fmt.Sprintf("its domains multiply to %s combinations, more than %d", combinations, MaxInstances)}}, nil
 	}
 	expressions := compiled(t, parameters, derived)
 	var instances []formatv0.Numbers
@@ -242,9 +260,13 @@ func count(t formatv0.Template, parameters, derived []formatv0.TemplateName) ([]
 		values[i] = t.Parameters[name].From
 	}
 	for {
+		// ctx is looked at once a combination: an expression of the subset is bounded by its length.
+		if err := ctx.Err(); err != nil {
+			return nil, nil, err
+		}
 		numbers, holds, breach := expressions.on(parameters, values)
 		if breach != nil {
-			return nil, []Breach{*breach}
+			return nil, []Breach{*breach}, nil
 		}
 		if holds {
 			instances = append(instances, numbers)
@@ -260,9 +282,9 @@ func count(t formatv0.Template, parameters, derived []formatv0.TemplateName) ([]
 		values[i]++
 	}
 	if len(instances) == 0 {
-		return nil, []Breach{{RuleInstances, at("template", "constraint"), "no combination of its parameters meets the constraint"}}
+		return nil, []Breach{{RuleInstances, at("template", "constraint"), "no combination of its parameters meets the constraint"}}, nil
 	}
-	return instances, nil
+	return instances, nil, nil
 }
 
 // The expressions of a template, each compiled once in the sandbox of Starlark: each derived number
@@ -299,8 +321,8 @@ func compiled(t formatv0.Template, parameters, derived []formatv0.TemplateName) 
 // and then the constraint, and gives the numbers, and whether the combination is an instance; or the
 // breach of task.template-instances when an expression fails on it or a derived number lies past
 // ±(2^53 − 1). An expression of the subset calls no function and holds no loop, so its steps are
-// bounded by its length, and it runs with no limit of steps and no clock (format/README.md, section
-// 23).
+// bounded by its length, and it runs with no limit of steps, no clock and no context: count looks at
+// the caller's before each combination (format/README.md, section 23).
 func (e expressions) on(parameters []formatv0.TemplateName, values []int64) (formatv0.Numbers, bool, *Breach) {
 	numbers := formatv0.Numbers{}
 	args := make(starlark.Tuple, len(values), len(values)+len(e.derived))

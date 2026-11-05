@@ -1,6 +1,7 @@
 package module
 
 import (
+	"context"
 	"fmt"
 	"slices"
 
@@ -10,14 +11,15 @@ import (
 	"github.com/altnovatrail/module-kit/template"
 )
 
-// The rules of templates (format/README.md, section 23): those that a template breaks by itself,
-// which package template reads, and task.instances, which holds each of its instances to the schema
-// of a task.
+// The rules of templates (format/README.md, sections 23 and 24): those that a template breaks by
+// itself, which package template reads, and task.instances, which holds each of its instances to the
+// schema of a task.
 const (
 	RuleTaskTemplateNames       = template.RuleNames
 	RuleTaskTemplateExpressions = template.RuleExpressions
 	RuleTaskPlaceholders        = template.RulePlaceholders
 	RuleTaskTemplateInstances   = template.RuleInstances
+	RuleTaskTemplateSolver      = template.RuleSolver
 	RuleTaskInstances           = "task.instances"
 )
 
@@ -31,23 +33,27 @@ type instance struct {
 }
 
 // What the check of a module reads of a template: the breaches of its own rules, and, when it breaks
-// none, its instances, in their order (format/README.md, section 23). A template with a solver has
-// none here: the rules of a task read its instances with the results of its solver, which come with
-// the solvers (R16), and its own rules alone are checked until then.
+// none, its instances, in their order, with the results of its solver among their numbers
+// (format/README.md, sections 23 and 24).
 type expansion struct {
 	breaches  []template.Breach
 	instances []instance
 }
 
-// expand counts the instances of a template and builds each one, the task with its numbers in place,
-// against the schema of a task. A template whose placeholders break no rule has an instance for its
-// numbers, so an error of template.Instance is a fault of module-kit.
+// expand counts the instances of a template, running its solver, and builds each one, the task with
+// its numbers in place, against the schema of a task. A template whose placeholders break no rule has
+// an instance for its numbers, so an error of template.Instance is a fault of module-kit.
+//
+// The check of a module counts its templates one after another, with a context that is never done:
+// Check and CheckFile take none yet, and a solver that runs long stops only by its budget or its
+// clock. The CLI's solvers one on each CPU, and a context that stops them, come with its commands,
+// T37 of RUN.md (architecture 3.4).
 func expand(task formatv0.Task) *expansion {
-	numbers, breaches := template.Instances(task)
-	e := &expansion{breaches: breaches}
-	if task.Template.Solver != nil {
-		return e
+	numbers, breaches, err := template.Instances(context.Background(), task)
+	if err != nil {
+		panic(fmt.Sprintf("module: the instances of a template, with a context that is never done: %v", err))
 	}
+	e := &expansion{breaches: breaches}
 	for _, n := range numbers {
 		t, err := template.Instance(task, n)
 		if err != nil {

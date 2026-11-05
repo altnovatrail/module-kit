@@ -1,6 +1,7 @@
 package template
 
 import (
+	"context"
 	"errors"
 	"io/fs"
 	"maps"
@@ -27,8 +28,8 @@ type attempt struct {
 	instance   int
 }
 
-// The vectors of templates without a solver, by their files, each with every attempt it holds
-// (format/README.md, section 23). The order of the odometer: the parameters by their names, compared
+// The vectors of templates, by their files, each with every attempt it holds (format/README.md,
+// section 23). The order of the odometer: the parameters by their names, compared
 // by code units, the first changing slowest, and the combinations that the constraint leaves out
 // not numbered.
 var vectorAttempts = map[string][]attempt{
@@ -65,13 +66,36 @@ var vectorAttempts = map[string][]attempt{
 		{2, map[string]int64{"a1": -1, "a_1": 0, "ab": 6, "b": 2}, 19},
 		{3, map[string]int64{"a1": -2, "a_1": 1, "ab": 6, "b": 2}, 15},
 	},
+	// left from 2 to 9 and to_ben from 2 to 6, but never alike: four instances for each left up to 6,
+	// and five for each after, so 4(left − 2) then to_ben − 2 when it is below left and to_ben − 3 when
+	// it is above, and 20 + 5(left − 7) + to_ben − 2 from left 7.
+	"number-thought-of.yaml": {
+		{0, map[string]int64{"left": 7, "to_ben": 6}, 24},
+		{20261028, map[string]int64{"left": 9, "to_ben": 5}, 33},
+		{math.MaxUint64, map[string]int64{"left": 3, "to_ben": 2}, 4},
+	},
+	// One instance.
+	"within-the-budget.yaml": {
+		{0, map[string]int64{"a": 3, "b": 4}, 0},
+	},
 }
 
-// The instance of an attempt is the one that the vectors of templates without a solver give each
-// seed, and Instances counts it at that number. The vectors are read from spec.Format, so that the
-// attempts here are every attempt of every such vector, with the parameters they give; their task
-// gives the ID and their count the count. The vectors whole, with the instance that each seed gets,
-// the test of vectors passes.
+// zeros gives a program of a solver whose solve returns 0 for each of results.
+func zeros(results []any) string {
+	var members []string
+	for _, name := range results {
+		members = append(members, strconv.Quote(name.(string))+": 0")
+	}
+	return "def solve(numbers):\n    return {" + strings.Join(members, ", ") + "}\n"
+}
+
+// The instance of an attempt is the one that the vectors of templates give each seed, and Instances
+// counts it at that number. The vectors are read from spec.Format, so that the attempts here are every
+// attempt of every vector, with the parameters they give; their task gives the ID and their count the
+// count. The number of an instance does not hang on the solver, so a template is counted here with one
+// that returns 0 for each result, and not with the vector's, which may take its budget. The vectors
+// whole, with the instance that each seed gets and the results of the solver, the test of vectors
+// passes.
 func TestAttemptInstanceOfTheVectors(t *testing.T) {
 	files, err := fs.Glob(spec.Format, "vectors/templates/*.yaml")
 	if err != nil || len(files) == 0 {
@@ -89,8 +113,8 @@ func TestAttemptInstanceOfTheVectors(t *testing.T) {
 		}
 		v := value.(map[string]any)
 		task := v["task"].(map[string]any)
-		if _, solver := task["template"].(map[string]any)["solver"]; solver {
-			continue
+		if solver, ok := task["template"].(map[string]any)["solver"].(map[string]any); ok {
+			solver["program"] = zeros(solver["results"].([]any))
 		}
 		file := path.Base(name)
 		held = append(held, file)
@@ -100,9 +124,9 @@ func TestAttemptInstanceOfTheVectors(t *testing.T) {
 		if err != nil {
 			t.Fatalf("%s: %v", name, err)
 		}
-		instances, breaches := Instances(typed)
-		if len(instances) != count || len(breaches) > 0 {
-			t.Fatalf("%s: %d instances, %v, and the vector gives %d", file, len(instances), breaches, count)
+		instances, breaches, err := Instances(context.Background(), typed)
+		if err != nil || len(instances) != count || len(breaches) > 0 {
+			t.Fatalf("%s: %d instances, %v, %v, and the vector gives %d", file, len(instances), breaches, err, count)
 		}
 		given := v["attempts"].([]any)
 		attempts := vectorAttempts[file]
@@ -132,7 +156,7 @@ func TestAttemptInstanceOfTheVectors(t *testing.T) {
 		}
 	}
 	if want := slices.Sorted(maps.Keys(vectorAttempts)); !slices.Equal(held, want) {
-		t.Errorf("the vectors without a solver are %v, and the test holds %v", held, want)
+		t.Errorf("the vectors are %v, and the test holds %v", held, want)
 	}
 }
 

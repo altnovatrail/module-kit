@@ -430,23 +430,24 @@ func unsigned(text formatv0.Unsigned) (uint64, error) {
 	return strconv.ParseUint(string(text), 10, 64)
 }
 
-// errNoSolver is what a vector of templates whose template has a solver gives until the task of the
-// epic of code that runs solvers (R16).
-var errNoSolver = errors.New("module-kit runs no solver of a template yet")
-
 // templates passes a case of templates: its template breaks no rule of a task, as the check of a task
-// on its own reads it, on any instance; it has count instances; and each attempt's seed picks the
-// instance of the attempt's numbers, which is the attempt's instance, whatever the order of keys,
-// and has its open view (format/README.md, sections 9 and 23). The vector is read by its schema and
-// its type of formatv0.
+// on its own reads it, on any instance; it has count instances; its solver, when it has one, gets the
+// numbers of inputs, in any order; and each attempt's seed picks the instance of the attempt's
+// numbers, the results of the solver among them as module-kit's own run of the solver finds them,
+// which is the attempt's instance, whatever the order of keys, and has its open view
+// (format/README.md, sections 9, 23 and 24). The vector is read by its schema and its type of
+// formatv0.
 func templates(v vector) error {
 	var tv formatv0.TemplateVector
 	value, err := readVector(v.fsys, v.path, "template-vector.schema.json", &tv)
 	if err != nil {
 		return err
 	}
-	if tv.Task.Template.Solver != nil {
-		return errNoSolver
+	switch inputs := slices.Sorted(slices.Values(tv.Inputs)); {
+	case tv.Task.Template.Solver == nil && len(inputs) > 0:
+		return fmt.Errorf("the vector gives the inputs %v of a template without a solver", inputs)
+	case tv.Task.Template.Solver != nil && !slices.Equal(template.Inputs(tv.Task), inputs):
+		return fmt.Errorf("the solver gets %v, and the vector gives %v", template.Inputs(tv.Task), inputs)
 	}
 	vector := value.(map[string]any)
 	// A file written in JSON syntax is YAML, and the same rules apply to it (format/README.md,
@@ -462,7 +463,10 @@ func templates(v vector) error {
 	if len(report.Breaches) > 0 {
 		return fmt.Errorf("the template is refused:\n%s", report)
 	}
-	instances, breaches := template.Instances(tv.Task)
+	instances, breaches, err := template.Instances(context.Background(), tv.Task)
+	if err != nil {
+		return err
+	}
 	if len(breaches) > 0 || int64(len(instances)) != tv.Count {
 		return fmt.Errorf("the template has %d instances, %v, and the vector gives %d", len(instances), breaches, tv.Count)
 	}

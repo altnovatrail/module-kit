@@ -1,6 +1,7 @@
 package template
 
 import (
+	"context"
 	"maps"
 	"slices"
 	"strings"
@@ -74,10 +75,20 @@ func edited(t *testing.T, pairs ...string) formatv0.Task {
 
 const solver = "  solver:\n    program: |\n      def solve(numbers):\n          return {\"factor\": 1}\n    results: [factor]\n"
 
+// instancesOf gives Instances of a task with a context that is never done, which gives no error.
+func instancesOf(t *testing.T, task formatv0.Task) ([]formatv0.Numbers, []Breach) {
+	t.Helper()
+	numbers, breaches, err := Instances(context.Background(), task)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return numbers, breaches
+}
+
 // The instances come in the order of the odometer: the parameters by their names, the first
 // changing slowest, each through its domain upwards; each with every parameter and derived number.
 func TestInstances(t *testing.T) {
-	numbers, breaches := Instances(taskOf(t, times))
+	numbers, breaches := instancesOf(t, taskOf(t, times))
 	want := []formatv0.Numbers{
 		{"a": 4, "b": 2, "product": 8}, {"a": 4, "b": 3, "product": 12},
 		{"a": 5, "b": 2, "product": 10}, {"a": 5, "b": 3, "product": 15},
@@ -88,21 +99,22 @@ func TestInstances(t *testing.T) {
 	}
 	// The constraint leaves combinations out, and reads the derived numbers; and and or evaluate their
 	// right operand only when the left one does not decide.
-	numbers, breaches = Instances(edited(t, "    product: a * b\n", "    product: a * b\n  constraint: product != 12 and (b == 3 or a // (b - 3) < 0)\n"))
+	numbers, breaches = instancesOf(t, edited(t, "    product: a * b\n", "    product: a * b\n  constraint: product != 12 and (b == 3 or a // (b - 3) < 0)\n"))
 	if want := []formatv0.Numbers{{"a": 4, "b": 2, "product": 8}, {"a": 5, "b": 2, "product": 10}, {"a": 5, "b": 3, "product": 15}, {"a": 6, "b": 3, "product": 18}}; len(breaches) > 0 || !slices.EqualFunc(numbers, want, maps.Equal) {
 		t.Errorf("with a constraint: %v, %v; want %v", numbers, breaches, want)
 	}
 	// Floored division and its remainder take the sign of the divisor, and unary - binds tighter.
-	numbers, breaches = Instances(edited(t, "    product: a * b\n", "    product: a * b\n    q: \"-a // b\"\n    r: a % -b\n"))
+	numbers, breaches = instancesOf(t, edited(t, "    product: a * b\n", "    product: a * b\n    q: \"-a // b\"\n    r: a % -b\n"))
 	if first := numbers[0]; len(breaches) > 0 || first["q"] != -2 || first["r"] != 0 || numbers[1]["q"] != -2 || numbers[1]["r"] != -2 {
 		t.Errorf("floored: %v, %v", numbers, breaches)
 	}
-	// A template with a solver is counted as one without: its results come with the solvers.
-	numbers, breaches = Instances(edited(t, "    product: a * b\n", "    product: a * b\n"+solver))
-	if len(breaches) > 0 || len(numbers) != 6 {
+	// A template with a solver is counted as one without, and the results of its solver join the
+	// numbers of each instance.
+	numbers, breaches = instancesOf(t, edited(t, "    product: a * b\n", "    product: a * b\n"+solver))
+	if len(breaches) > 0 || len(numbers) != 6 || !maps.Equal(numbers[5], formatv0.Numbers{"a": 6, "b": 3, "product": 18, "factor": 1}) {
 		t.Errorf("with a solver: %v, %v", numbers, breaches)
 	}
-	if numbers, breaches := Instances(taskOf(t, strings.Replace(times, times[strings.Index(times, "template:"):strings.Index(times, "statement:")], "", 1))); numbers != nil || breaches != nil {
+	if numbers, breaches := instancesOf(t, taskOf(t, strings.Replace(times, times[strings.Index(times, "template:"):strings.Index(times, "statement:")], "", 1))); numbers != nil || breaches != nil {
 		t.Errorf("a task that is no template gives %v, %v", numbers, breaches)
 	}
 }
@@ -164,7 +176,7 @@ func TestInstancesBreaches(t *testing.T) {
 		{"no instance", edited(t, "    product: a * b\n", "    product: a * b\n  constraint: product > 18\n"),
 			[]string{"task.template-instances #/template/constraint no combination of its parameters meets the constraint"}},
 	} {
-		numbers, breaches := Instances(c.task)
+		numbers, breaches := instancesOf(t, c.task)
 		var found []string
 		for _, b := range breaches {
 			found = append(found, b.Rule+" "+b.Pointer+" "+b.Message)

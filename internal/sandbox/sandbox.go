@@ -47,6 +47,12 @@ type Limits struct {
 // (format/README.md, section 15; R11).
 var Predicate = Limits{Steps: 1_000_000, Clock: time.Second}
 
+// Solver are the limits of the solver of a template, for the top level of its program and every
+// call of solve together: the format's budget of 100 000 000 steps, and module-kit's clock of a
+// minute, which a solver of simple steps does not come near, since a loop takes 0.10–0.16 s for the
+// budget (format/README.md, section 24; R11, R33).
+var Solver = Limits{Steps: 100_000_000, Clock: time.Minute}
+
 // Why an evaluation stopped without its result. A context that is done stops it too, and then the
 // error is the context's, wrapped: that is the caller's stop, not the sandbox's (R11).
 var (
@@ -54,6 +60,12 @@ var (
 	ErrClock = errors.New("the clock stopped the evaluation")
 	ErrPanic = errors.New("the interpreter panicked")
 )
+
+// ContextDone says whether an error of the sandbox is that of a context that is done: the caller's
+// stop, which gives no verdict and no breach (R11).
+func ContextDone(err error) bool {
+	return errors.Is(err, context.Canceled) || errors.Is(err, context.DeadlineExceeded)
+}
 
 // CheckExpr says whether src is an expression of the dialect that names nothing but names, the
 // names that it binds itself, such as n in [n * n for n in range(10)], and the built-in names of
@@ -142,43 +154,190 @@ func (f *Func) Call(ctx context.Context, limits Limits, args ...starlark.Value) 
 	})
 }
 
+// CheckProgram says whether src is a program of the dialect: one that its parser parses, that holds
+// no load, and that names nothing but the names that it binds itself and the built-in names of the
+// dialect, as task.template-solver asks of the program of a solver (format/README.md, section 24).
+// The error says why not, at the line and the column where go.starlark.net finds it, or where the
+// load stands.
+func CheckProgram(src string) error {
+	file, err := parseFile(src)
+	if err != nil {
+		return err
+	}
+	var load *syntax.LoadStmt
+	syntax.Walk(file, func(n syntax.Node) bool {
+		if l, ok := n.(*syntax.LoadStmt); ok && load == nil {
+			load = l
+		}
+		return load == nil
+	})
+	if load != nil {
+		return fmt.Errorf("%d:%d: the dialect has no load", load.Load.Line, load.Load.Col)
+	}
+	return located(resolve.File(file, none, builtin))
+}
+
+// none is the predicate of a program's predeclared names: it has none.
+func none(string) bool { return false }
+
+// A Program is a program of the dialect whose top level has run on a thread of its own, and whose
+// functions Call calls on the same thread: the solver of a template, whose solve is called on each
+// of its instances in turn (format/README.md, section 24). The limits are the program's, not each
+// call's: the steps of the top level and of every call count together against one limit, and one
+// clock runs from Exec to Close, as does the watch of ctx.
+//
+// Its globals are frozen once the top level has run, as Starlark freezes those of a module
+// ("Immediately after execution of a Starlark module, all values in its top-level environment are
+// frozen", the spec of Starlark of go.starlark.net, Freezing a value), so a call changes nothing that
+// the next one reads. A Program is for one goroutine at a time.
+type Program struct {
+	thread   *thread
+	globals  starlark.StringDict
+	panicked error // the panic of a call, after which the thread is no longer called
+	closed   bool  // whether Close has ended its clock and its watch of ctx
+}
+
+// Exec runs the top level of the program src on a thread of its own with the limits and ctx, on the
+// caller's goroutine, and gives the Program, whose Close the caller calls once it has called its
+// functions. src is checked first as CheckProgram checks it, so that it names nothing else even in a
+// process that changed starlark.Universe.
+//
+// The error is the context's, wrapped, when ctx is done before the program runs or stops it;
+// CheckProgram's; ErrSteps, ErrClock or ErrPanic, wrapped, when the top level stops so; and otherwise
+// that of the top level, which fails as it runs. With an error there is no Program.
+func Exec(ctx context.Context, limits Limits, src string) (*Program, error) {
+	if err := ctx.Err(); err != nil {
+		return nil, fmt.Errorf("sandbox: %w", err)
+	}
+	if err := CheckProgram(src); err != nil {
+		return nil, err
+	}
+	// Parsed afresh: the resolver wrote into the one that CheckProgram checked, and FileProgram
+	// resolves the one it compiles again.
+	file, _ := parseFile(src)
+	prog, err := starlark.FileProgram(file, none)
+	if err != nil {
+		// CheckProgram resolved src on fewer built-in names than starlark.Universe holds.
+		panic(fmt.Sprintf("sandbox: a program that CheckProgram takes does not compile: %v", err))
+	}
+	p := &Program{thread: start(ctx, limits)}
+	if _, err := p.thread.do(func(thread *starlark.Thread) (starlark.Value, error) {
+		globals, err := prog.Init(thread, nil)
+		globals.Freeze()
+		p.globals = globals
+		return starlark.None, err
+	}); err != nil {
+		p.thread.end()
+		return nil, err
+	}
+	return p, nil
+}
+
+// Global gives the value of a global of the program, which its top level bound, and whether it bound
+// it.
+func (p *Program) Global(name string) (starlark.Value, bool) {
+	v, ok := p.globals[name]
+	return v, ok
+}
+
+// Call calls fn with args on the thread of the program, within the steps and the clock that the top
+// level and the calls before have left, and its error is as Exec's: the context's, ErrSteps, ErrClock
+// or ErrPanic, wrapped, or that of the call. After a panic, Call calls nothing and gives the same
+// error again; after Close, which ended its clock and its watch of ctx, it calls nothing and gives
+// ErrClosed.
+func (p *Program) Call(fn starlark.Value, args ...starlark.Value) (starlark.Value, error) {
+	switch {
+	case p.closed:
+		return nil, fmt.Errorf("sandbox: %w", ErrClosed)
+	case p.panicked != nil:
+		return nil, p.panicked
+	}
+	v, err := p.thread.do(func(thread *starlark.Thread) (starlark.Value, error) {
+		return starlark.Call(thread, fn, args, nil)
+	})
+	if errors.Is(err, ErrPanic) {
+		p.panicked = err
+	}
+	return v, err
+}
+
+// Close stops the clock of the program and the watch of its ctx, so that Call calls nothing after
+// it. It is called once the program's functions have been called, and may be called again.
+func (p *Program) Close() {
+	p.closed = true
+	p.thread.end()
+}
+
+// ErrClosed is what Call gives after Close: the program has no clock and no watch of ctx left.
+var ErrClosed = errors.New("the program is closed")
+
 // cancelled begins the error of go.starlark.net's interpreter when it sees the thread cancelled,
 // which then names the reason (starlark/interp.go, checkStepsSlow).
 const cancelled = "Starlark computation cancelled: "
 
-// run runs an evaluation on a thread of its own, on the caller's goroutine: with the limits and
-// ctx, a print that writes nothing and no load, and a panic of the interpreter recovered (R11). The
-// limit of steps, the clock and ctx each cancel the thread with their own cause, and the first to
-// come is the one that the error names, as the thread keeps the first reason it is cancelled with.
-// The interpreter sees a cancel between its instructions, so a built-in function that it is in
-// runs to its end first. An evaluation that ends before the interpreter sees a cancel keeps its own
-// result or error, whatever cause comes as it ends.
-func run(ctx context.Context, limits Limits, evaluate func(*starlark.Thread) (starlark.Value, error)) (result starlark.Value, err error) {
+// run runs an evaluation on a thread of its own, on the caller's goroutine, with the limits and ctx
+// (R11).
+func run(ctx context.Context, limits Limits, evaluate func(*starlark.Thread) (starlark.Value, error)) (starlark.Value, error) {
 	if err := ctx.Err(); err != nil {
 		return nil, fmt.Errorf("sandbox: %w", err)
 	}
-	thread := &starlark.Thread{Print: func(*starlark.Thread, string) {}}
-	var cause atomic.Pointer[error]
-	stop := func(err error) {
-		if cause.CompareAndSwap(nil, &err) {
-			thread.Cancel(err.Error())
-		}
-	}
-	thread.SetMaxExecutionSteps(limits.Steps)
-	thread.OnMaxSteps = func(*starlark.Thread) { stop(ErrSteps) }
+	t := start(ctx, limits)
+	defer t.end()
+	return t.do(evaluate)
+}
+
+// A thread is a thread of Starlark with limits and a context, for one evaluation, or for a program
+// and every call of its functions: with a print that writes nothing and no load (R11). The limit of
+// steps, the clock and ctx each cancel it with their own cause, and the first to come is the one
+// that an error names, as the thread keeps the first reason it is cancelled with. The interpreter
+// sees a cancel between its instructions and on the entry to each call, so a built-in function that
+// it is in runs to its end first.
+type thread struct {
+	starlark *starlark.Thread
+	cause    atomic.Pointer[error]
+	clock    *time.Timer // nil with no clock
+	unwatch  func() bool // ends the watch of ctx
+}
+
+// start gives a thread with the limits and ctx, whose clock runs from now.
+func start(ctx context.Context, limits Limits) *thread {
+	t := &thread{starlark: &starlark.Thread{Print: func(*starlark.Thread, string) {}}}
+	t.starlark.SetMaxExecutionSteps(limits.Steps)
+	t.starlark.OnMaxSteps = func(*starlark.Thread) { t.stop(ErrSteps) }
 	if limits.Clock > 0 {
-		clock := time.AfterFunc(limits.Clock, func() { stop(ErrClock) })
-		defer clock.Stop()
+		t.clock = time.AfterFunc(limits.Clock, func() { t.stop(ErrClock) })
 	}
-	defer context.AfterFunc(ctx, func() { stop(ctx.Err()) })()
+	t.unwatch = context.AfterFunc(ctx, func() { t.stop(ctx.Err()) })
+	return t
+}
+
+// stop cancels the thread with its cause, unless another cause came first.
+func (t *thread) stop(cause error) {
+	if t.cause.CompareAndSwap(nil, &cause) {
+		t.starlark.Cancel(cause.Error())
+	}
+}
+
+// end stops the clock and the watch of ctx.
+func (t *thread) end() {
+	if t.clock != nil {
+		t.clock.Stop()
+	}
+	t.unwatch()
+}
+
+// do runs an evaluation on the thread, on the caller's goroutine, with a panic of the interpreter
+// recovered. An evaluation that ends before the interpreter sees a cancel keeps its own result or
+// error, whatever cause comes as it ends.
+func (t *thread) do(evaluate func(*starlark.Thread) (starlark.Value, error)) (result starlark.Value, err error) {
 	defer func() {
 		if r := recover(); r != nil {
 			result, err = nil, fmt.Errorf("sandbox: %w: %v", ErrPanic, r)
 		}
 	}()
-	result, err = evaluate(thread)
+	result, err = evaluate(t.starlark)
 	if err != nil {
-		if c := cause.Load(); c != nil && strings.Contains(err.Error(), cancelled+(*c).Error()) {
+		if c := t.cause.Load(); c != nil && strings.Contains(err.Error(), cancelled+(*c).Error()) {
 			err = *c
 		}
 		return nil, fmt.Errorf("sandbox: %w", err)
@@ -200,6 +359,12 @@ func checked(src string, names []string) (syntax.Expr, error) {
 func parse(src string) (syntax.Expr, error) {
 	expr, err := options().ParseExpr("", src, 0)
 	return expr, located(err)
+}
+
+// parseFile parses src as a program of the dialect.
+func parseFile(src string) (*syntax.File, error) {
+	file, err := options().Parse("", src, 0)
+	return file, located(err)
 }
 
 // located writes an error of the parser or of the resolver at its line and column, as
