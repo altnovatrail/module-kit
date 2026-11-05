@@ -6,12 +6,6 @@ format/vectors/indexes/next-release
 format/vectors/indexes/republished-version
 format/vectors/indexes/unknown-withdrawal
 format/vectors/indexes/withdrawal
-format/vectors/packages/smallest
-format/vectors/packages/strings
-format/vectors/packages/with-lessons
-format/vectors/packages/with-media-and-notice
-format/vectors/packages/with-solver
-format/vectors/packages/with-templates
 format/vectors/versions/after-a-withdrawn-version
 format/vectors/versions/age-categories-narrower
 format/vectors/versions/age-categories-wider

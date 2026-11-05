@@ -17,16 +17,19 @@ import (
 	"strconv"
 	"strings"
 	"testing"
+	"testing/fstest"
 
 	"github.com/altnovatrail/spec"
 	"github.com/altnovatrail/spec/contracts"
 	"github.com/altnovatrail/spec/types/formatv0"
 
+	"github.com/altnovatrail/module-kit/internal/canonical"
 	"github.com/altnovatrail/module-kit/internal/random"
 	"github.com/altnovatrail/module-kit/internal/schema"
 	"github.com/altnovatrail/module-kit/internal/yaml"
 	"github.com/altnovatrail/module-kit/leak"
 	"github.com/altnovatrail/module-kit/module"
+	"github.com/altnovatrail/module-kit/modulepackage"
 	"github.com/altnovatrail/module-kit/openview"
 	"github.com/altnovatrail/module-kit/template"
 	"github.com/altnovatrail/module-kit/verdict"
@@ -499,6 +502,69 @@ func templates(v vector) error {
 	return nil
 }
 
+// packages passes a case of packages: the package that module-kit builds of module/ is package.yaml
+// (format/README.md, sections 9 and 25). The canonical view, the listing of the device part and the
+// inventory compare as their canonical texts, so whatever the order of keys, and their digests and
+// sizes, and the digest of the package, pin those texts byte for byte. The results of a solver are
+// module-kit's own run of it, compared with the vector's in the canonical view. The package as files
+// is read back by the chain of digests from its digest, and gives the same package.
+func packages(v vector) error {
+	var pv formatv0.PackageVector
+	value, err := readVector(v.fsys, path.Join(v.path, "package.yaml"), "package-vector.schema.json", &pv)
+	if err != nil {
+		return err
+	}
+	folder, err := fs.Sub(v.fsys, path.Join(v.path, "module"))
+	if err != nil {
+		return err
+	}
+	pkg, err := modulepackage.Build(context.Background(), folder)
+	if err != nil {
+		return err
+	}
+	want := value.(map[string]any)
+	for _, part := range []struct{ member, file string }{
+		{"server_part", modulepackage.ServerFile},
+		{"device_part", modulepackage.DeviceFile},
+		{"inventory", modulepackage.InventoryFile},
+	} {
+		text, err := canonical.Text(want[part.member])
+		if err != nil {
+			return fmt.Errorf("%s of the vector: %w", part.member, err)
+		}
+		if got := pkg.Files[part.file]; !bytes.Equal(got, text) {
+			return fmt.Errorf("%s is\n%s\nand the vector's %s is\n%s", part.file, got, part.member, text)
+		}
+	}
+	switch {
+	case pkg.Digest != pv.Digest:
+		return fmt.Errorf("the digest of the package is %s, and the vector gives %s", pkg.Digest, pv.Digest)
+	case !reflect.DeepEqual(pkg.Inventory, pv.Inventory):
+		return fmt.Errorf("the inventory is %+v, and the vector gives %+v", pkg.Inventory, pv.Inventory)
+	case canonical.Descriptor(pkg.Files[modulepackage.ServerFile]) != pv.Inventory.ServerPart:
+		return fmt.Errorf("the server part is not the one the vector's inventory names")
+	case canonical.Descriptor(pkg.Files[modulepackage.DeviceFile]) != pv.Inventory.DevicePart:
+		return fmt.Errorf("the device part is not the one the vector's inventory names")
+	}
+	read, err := modulepackage.Read(fstest.MapFS(asFiles(pkg.Files)), pv.Digest)
+	if err != nil {
+		return fmt.Errorf("the package as files: %w", err)
+	}
+	if !reflect.DeepEqual(read, pkg) {
+		return fmt.Errorf("the package as files reads back as another package")
+	}
+	return nil
+}
+
+// asFiles gives the files of a package as the files of a file system that tests read.
+func asFiles(files map[string][]byte) map[string]*fstest.MapFile {
+	m := make(map[string]*fstest.MapFile, len(files))
+	for name, data := range files {
+		m[name] = &fstest.MapFile{Data: data}
+	}
+	return m
+}
+
 // tiers passes a case of tiers: the tiers of skill_graph are skill_tiers (format/README.md, section
 // 9), the vector read by its schema and its type of formatv0.
 func tiers(v vector) error {
@@ -597,7 +663,7 @@ var runners = map[string]func(vector) error{
 	"random":    randomDraws, // each draw gives its value
 	"templates": templates,   // the count, and each seed's numbers and instance
 	"tiers":     tiers,       // the tier of each skill
-	"packages":  noCode,      // the package of module/ is package.yaml
+	"packages":  packages,    // the package of module/ is package.yaml
 	"indexes":   noCode,      // the index the release builds, or the rule that refuses it
 	"versions":  noCode,      // the part of the version found, or the rule that refuses it
 	// The validity of an observation, the joining of two readings and the verdict on the observation
