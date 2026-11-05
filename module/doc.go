@@ -19,5 +19,7 @@
 // section 23, by package template, with the rules of a task on every instance of a template that
 // read its strings, and task.instances, which holds each instance to the schema of a task (R32); and
 // task.template-solver of section 24, by package template, with the results of a solver among the
-// numbers of every instance that the rules of a task read (R33).
+// numbers of every instance that the rules of a task read (R33). Check runs the solvers of a
+// module's templates one on each CPU, with the caller's context, and CheckModule gives the numbers
+// of their instances to the build of a package, so that each solver runs once (R38).
 package module

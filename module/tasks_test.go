@@ -1,6 +1,7 @@
 package module
 
 import (
+	"context"
 	"maps"
 	"slices"
 	"strings"
@@ -126,7 +127,7 @@ var taskCases = []struct {
 func TestTaskRules(t *testing.T) {
 	for _, c := range taskCases {
 		t.Run(c.name, func(t *testing.T) {
-			report, err := Check(c.fsys)
+			report, err := Check(context.Background(), c.fsys)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -170,7 +171,7 @@ func TestTaskRulesOfAFile(t *testing.T) {
 func TestTaskRuleMessages(t *testing.T) {
 	messages := map[string]bool{}
 	for _, c := range taskCases {
-		report, err := Check(c.fsys)
+		report, err := Check(context.Background(), c.fsys)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -233,7 +234,7 @@ func TestReviewedCases(t *testing.T) {
 			"skill-graph.yaml #/skills/time-calendar/prerequisites skill-graph.acyclic",
 		}},
 	} {
-		report, err := Check(c.fsys)
+		report, err := Check(context.Background(), c.fsys)
 		if err != nil {
 			t.Fatal(err)
 		}

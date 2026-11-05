@@ -2,6 +2,7 @@ package module
 
 import (
 	"cmp"
+	"context"
 	"io/fs"
 	"maps"
 	"slices"
@@ -102,7 +103,7 @@ func FuzzCheck(f *testing.F) {
 		if fs.ValidPath(name) && name != "." && !slices.ContainsFunc(slices.Collect(maps.Keys(fsys)), folderOfFile) {
 			fsys[name] = bytesFile(data)
 		}
-		report, err := Check(fsys)
+		report, err := Check(context.Background(), fsys)
 		if err != nil {
 			t.Fatal(err)
 		}

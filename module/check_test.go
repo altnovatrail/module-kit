@@ -1,6 +1,7 @@
 package module
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"io/fs"
@@ -321,7 +322,7 @@ var checkCases = []struct {
 func TestCheck(t *testing.T) {
 	for _, c := range checkCases {
 		t.Run(c.name, func(t *testing.T) {
-			report, err := Check(c.fsys)
+			report, err := Check(context.Background(), c.fsys)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -334,7 +335,7 @@ func TestCheck(t *testing.T) {
 
 // Every breach of a check of a module says what breaks the rule.
 func TestMessages(t *testing.T) {
-	report, err := Check(module(fstest.MapFS{
+	report, err := Check(context.Background(), module(fstest.MapFS{
 		manifestPath:     nil,
 		licensePath:      file("a\rb\rc"),
 		"tasks/a.yaml":   task("b"),
@@ -384,7 +385,7 @@ func TestBreachString(t *testing.T) {
 			t.Errorf("%q, want %q", got, c.want)
 		}
 	}
-	report, err := Check(module(fstest.MapFS{manifestPath: file(strings.Replace(manifest, `"0.3"`, `"0.2"`, 1))}))
+	report, err := Check(context.Background(), module(fstest.MapFS{manifestPath: file(strings.Replace(manifest, `"0.3"`, `"0.2"`, 1))}))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -455,11 +456,11 @@ func (r reversed) ReadDir(name string) ([]fs.DirEntry, error) {
 // The report is the same however the folder lists its files.
 func TestOrderOfListing(t *testing.T) {
 	for _, c := range checkCases {
-		inOrder, err := Check(c.fsys)
+		inOrder, err := Check(context.Background(), c.fsys)
 		if err != nil {
 			t.Fatal(err)
 		}
-		reverse, err := Check(reversed{c.fsys})
+		reverse, err := Check(context.Background(), reversed{c.fsys})
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -490,7 +491,7 @@ func TestReadErrors(t *testing.T) {
 		noticePath: file("x"), "tasks/a.yaml": file("id: a\n"), "media/a.png": bytesFile(png),
 	})
 	for _, name := range []string{".", "tasks", manifestPath, "tasks/a.yaml", "media/a.png", licensePath, noticePath} {
-		if _, err := Check(failing{fsys, name}); !errors.Is(err, errFailing) {
+		if _, err := Check(context.Background(), failing{fsys, name}); !errors.Is(err, errFailing) {
 			t.Errorf("%s fails, and Check gives %v", name, err)
 		}
 	}
@@ -513,7 +514,7 @@ func TestSymbolicLinkOnDisk(t *testing.T) {
 	if err := os.Symlink("eval", filepath.Join(dir, "media")); err != nil {
 		t.Fatal(err)
 	}
-	report, err := Check(os.DirFS(dir))
+	report, err := Check(context.Background(), os.DirFS(dir))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -523,7 +524,7 @@ func TestSymbolicLinkOnDisk(t *testing.T) {
 }
 
 func ExampleCheck() {
-	report, err := Check(fstest.MapFS{
+	report, err := Check(context.Background(), fstest.MapFS{
 		"Manifest.yaml": {Data: []byte(manifest)},
 		"LICENSE":       {Data: []byte("The text of the license.\r\n")},
 	})
@@ -563,7 +564,7 @@ func TestPartsThatPassed(t *testing.T) {
 		{"no manifest", module(fstest.MapFS{manifestPath: nil}), without(manifestPath), false},
 	} {
 		check := checker{fsys: c.fsys, parts: map[string]any{}}
-		if err := check.check(); err != nil {
+		if _, err := check.check(context.Background()); err != nil {
 			t.Fatal(err)
 		}
 		if got := slices.Sorted(maps.Keys(check.parts)); !slices.Equal(got, c.passed) || check.allParts() != c.allParts {

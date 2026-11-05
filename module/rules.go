@@ -60,7 +60,8 @@ func at(tokens ...string) string {
 // between parts: a part the module does not have, or whose file did not pass, is nil, and the tasks
 // and the lessons stand by their paths, and media holds the paths of the files in media/, which a
 // picture names. A template's instances stand by its path too, counted once for every rule that
-// reads them (templates.go). Of the file that CheckFile checks, which has no path, file is true.
+// reads them, by expandAll once every part is added (templates.go). Of the file that CheckFile
+// checks, which has no path, file is true.
 type parts struct {
 	file       bool
 	manifest   *formatv0.Manifest
@@ -95,11 +96,7 @@ func (p *parts) add(path, part string, value any) {
 	case partTechniques:
 		p.techniques = new(typed[formatv0.Techniques](value))
 	case partTask:
-		task := typed[formatv0.Task](value)
-		p.tasks[path] = task
-		if task.Template != nil {
-			p.templates[path] = expand(task)
-		}
+		p.tasks[path] = typed[formatv0.Task](value)
 	case partLesson:
 		p.lessons[path] = typed[formatv0.Lesson](value)
 	}
