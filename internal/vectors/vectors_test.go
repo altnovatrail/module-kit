@@ -29,6 +29,7 @@ import (
 	"github.com/altnovatrail/module-kit/internal/yaml"
 	"github.com/altnovatrail/module-kit/leak"
 	"github.com/altnovatrail/module-kit/module"
+	"github.com/altnovatrail/module-kit/moduleindex"
 	"github.com/altnovatrail/module-kit/modulepackage"
 	"github.com/altnovatrail/module-kit/openview"
 	"github.com/altnovatrail/module-kit/template"
@@ -130,10 +131,14 @@ type finding struct {
 // checkPart checks a file of a part on its own, as its examples are checked (format/README.md,
 // section 8): a part of the layout of a module by the check of a module (R22), and the inventory
 // of a package and the module index, which are no parts of a module, by the YAML rules and their
-// schemas, the roots of inventory.schema.json and module-index.schema.json.
+// schemas, the roots of inventory.schema.json and module-index.schema.json. A module index that its
+// schema accepts is held also to what section 26 asks and the schema cannot say (indexForm).
 func checkPart(part string, data []byte) ([]finding, error) {
 	if !slices.Contains(layoutParts, part) {
-		_, found, err := readBySchema(data, part+".schema.json")
+		value, found, err := readBySchema(data, part+".schema.json")
+		if err == nil && len(found) == 0 && part == "module-index" {
+			found = indexForm(value)
+		}
 		return found, err
 	}
 	report, err := module.CheckFile(part, data)
@@ -142,6 +147,31 @@ func checkPart(part string, data []byte) ([]finding, error) {
 		found = append(found, finding{b.Rule, b.Keyword, b.Pointer, b.String()})
 	}
 	return found, err
+}
+
+// indexForm gives what a module index that its schema accepts does against section 26 of
+// format/README.md, as indexFormProblems of spec's format-check finds it: its root names another
+// format version than the one module-kit reads, FormatVersion, which is the one in format/VERSION;
+// or an entry lists teaches out of the order of the code units of their IDs, which are ASCII.
+func indexForm(value any) []finding {
+	index, err := schema.Decode[formatv0.ModuleIndex](value)
+	if err != nil {
+		return []finding{{text: err.Error()}}
+	}
+	var found []finding
+	if index.ModuleFormatVersion != module.FormatVersion {
+		found = append(found, finding{pointer: "#/module_format_version",
+			text: fmt.Sprintf("the index names the format version %s, and format/VERSION %s", index.ModuleFormatVersion, module.FormatVersion)})
+	}
+	for _, id := range slices.Sorted(maps.Keys(index.Modules)) {
+		for _, version := range slices.Sorted(maps.Keys(index.Modules[id])) {
+			if teaches := index.Modules[id][version].Teaches; !slices.IsSorted(teaches) {
+				found = append(found, finding{pointer: schema.Pointer([]string{"modules", string(id), string(version), "teaches"}),
+					text: fmt.Sprintf("the teaches of %s %s are not in the order of code units: %v", id, version, teaches)})
+			}
+		}
+	}
+	return found
 }
 
 // readBySchema reads a file that is no part of a module's layout as the format has it read: by the
@@ -556,6 +586,82 @@ func packages(v vector) error {
 	return nil
 }
 
+// indexes passes a case of the module index: the release that index.yaml gives — the previous
+// index, unless it is the first release, its tag and its withdrawals — with the package of each
+// module of modules/ builds the index that index.yaml gives, byte for byte as its canonical text, or
+// is refused by the rule it names and by no other (format/README.md, sections 9 and 26). The
+// previous index goes to the build as its canonical text, as a release of modules holds it, and it
+// reads back, as the index built does, as the vector gives it.
+func indexes(v vector) error {
+	var iv formatv0.IndexVector
+	value, err := readVector(v.fsys, path.Join(v.path, "index.yaml"), "index-vector.schema.json", &iv)
+	if err != nil {
+		return err
+	}
+	release := moduleindex.Release{First: iv.Previous == nil, Tag: iv.Release, Withdrawals: iv.Withdrawals}
+	modules, err := fs.ReadDir(v.fsys, path.Join(v.path, "modules"))
+	if err != nil {
+		return err
+	}
+	for _, m := range modules {
+		folder, err := fs.Sub(v.fsys, path.Join(v.path, "modules", m.Name()))
+		if err != nil {
+			return err
+		}
+		pkg, err := modulepackage.Build(context.Background(), folder)
+		if err != nil {
+			return fmt.Errorf("modules/%s: %w", m.Name(), err)
+		}
+		release.Packages = append(release.Packages, pkg)
+	}
+	want := value.(map[string]any)
+	if iv.Previous != nil {
+		if release.Previous, err = canonical.Text(want["previous"]); err != nil {
+			return fmt.Errorf("previous of the vector: %w", err)
+		}
+		if err := readsBack(release.Previous, *iv.Previous); err != nil {
+			return fmt.Errorf("the previous index: %w", err)
+		}
+	}
+	text, err := moduleindex.Build(release)
+	if iv.Refusal != nil {
+		var refusal *moduleindex.Refusal
+		if !errors.As(err, &refusal) {
+			return fmt.Errorf("not refused by %s: %v", *iv.Refusal, err)
+		}
+		for _, b := range refusal.Breaches {
+			if b.Rule != string(*iv.Refusal) {
+				return fmt.Errorf("refused by more than %s:\n%v", *iv.Refusal, refusal)
+			}
+		}
+		return nil
+	}
+	if err != nil {
+		return err
+	}
+	index, err := canonical.Text(want["index"])
+	if err != nil {
+		return fmt.Errorf("index of the vector: %w", err)
+	}
+	if !bytes.Equal(text, index) {
+		return fmt.Errorf("the index is\n%s\nand the vector's is\n%s", text, index)
+	}
+	return readsBack(text, *iv.Index)
+}
+
+// readsBack reads the text of an index as a reader does, and gives an error when it does not read
+// as the index the vector gives.
+func readsBack(text []byte, want formatv0.ModuleIndex) error {
+	got, err := moduleindex.Read(text)
+	if err != nil {
+		return err
+	}
+	if !reflect.DeepEqual(got, want) {
+		return fmt.Errorf("it reads back as %+v, and the vector gives %+v", got, want)
+	}
+	return nil
+}
+
 // asFiles gives the files of a package as the files of a file system that tests read.
 func asFiles(files map[string][]byte) map[string]*fstest.MapFile {
 	m := make(map[string]*fstest.MapFile, len(files))
@@ -664,7 +770,7 @@ var runners = map[string]func(vector) error{
 	"templates": templates,   // the count, and each seed's numbers and instance
 	"tiers":     tiers,       // the tier of each skill
 	"packages":  packages,    // the package of module/ is package.yaml
-	"indexes":   noCode,      // the index the release builds, or the rule that refuses it
+	"indexes":   indexes,     // the index the release builds, or the rule that refuses it
 	"versions":  noCode,      // the part of the version found, or the rule that refuses it
 	// The validity of an observation, the joining of two readings and the verdict on the observation
 	// (contracts/README.md, section 10).

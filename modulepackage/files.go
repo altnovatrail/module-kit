@@ -25,7 +25,7 @@ func readPart(fsys fs.FS, file string, want formatv0.Descriptor, location string
 	if err != nil {
 		return nil, err
 	}
-	value, err := parse(data)
+	value, err := canonical.Parse(data)
 	if err != nil {
 		return nil, fmt.Errorf("modulepackage: %s is no JSON text of the format: %v: %w", file, err, ErrNotCanonical)
 	}

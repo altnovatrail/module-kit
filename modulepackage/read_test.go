@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"io/fs"
-	"maps"
 	"reflect"
 	"testing"
 	"testing/fstest"
@@ -52,18 +51,5 @@ func TestReadUnreadable(t *testing.T) {
 	_, err := Read(brokenFS{}, built(t, "smallest").Digest)
 	if !errors.Is(err, fs.ErrPermission) {
 		t.Errorf("Read = %v; want fs.ErrPermission", err)
-	}
-}
-
-// parse reads an integer as an int64, and any other number as a float64, as the reader of YAML
-// does: so the canonical text refuses 1.0 and 1e2 in a package, which it never writes.
-func TestParse(t *testing.T) {
-	got, err := parse([]byte(`{"a":1,"b":1.0,"c":1e2,"d":-9007199254740991,"e":[true,null,"x"]}`))
-	if err != nil {
-		t.Fatal(err)
-	}
-	want := map[string]any{"a": int64(1), "b": 1.0, "c": 100.0, "d": int64(-9007199254740991), "e": []any{true, nil, "x"}}
-	if !maps.EqualFunc(got.(map[string]any), want, reflect.DeepEqual) {
-		t.Errorf("parse = %#v; want %#v", got, want)
 	}
 }

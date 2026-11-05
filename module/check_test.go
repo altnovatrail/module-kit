@@ -433,6 +433,17 @@ func TestReadsFormat(t *testing.T) {
 	}
 }
 
+// A format version is newer than FormatVersion by the values of its numbers, and what is no version
+// MAJOR.MINOR is newer than none.
+func TestNewerFormat(t *testing.T) {
+	for v, want := range map[string]bool{"0.4": true, "0.10": true, "1.0": true, "10.0": true, "0.3": false, "0.2": false, "0.0": false,
+		"0.03": false, "0.4.0": false, "v0.4": false, "": false} {
+		if NewerFormat(v) != want {
+			t.Errorf("NewerFormat(%q) is %t", v, !want)
+		}
+	}
+}
+
 // reversed lists each folder in the reverse order of its names.
 type reversed struct{ fstest.MapFS }
 
