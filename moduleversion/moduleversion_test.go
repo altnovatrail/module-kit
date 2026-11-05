@@ -215,17 +215,6 @@ func TestCompare(t *testing.T) {
 	if _, err := Compare(next, []Published{{Digest: newest.Digest, Files: fstest.MapFS{}}}); !errors.Is(err, modulepackage.ErrChain) {
 		t.Errorf("a missing package: %v; want ErrChain", err)
 	}
-	earlier, err := fs.Sub(spec.Format, "vectors/versions/format-transition/published/1.0.0")
-	if err != nil {
-		t.Fatal(err)
-	}
-	inventory, err := fs.ReadFile(earlier, modulepackage.InventoryFile)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if _, err := Compare(next, []Published{{Digest: digestOf(inventory), Files: earlier}}); !errors.Is(err, modulepackage.ErrFormatVersion) {
-		t.Errorf("a package of an earlier version of the format: %v; want ErrFormatVersion", err)
-	}
 }
 
 // The report writes the versions, the part found, the next versions and the part raised, and a line

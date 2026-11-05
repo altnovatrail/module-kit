@@ -119,7 +119,7 @@
 | [x] | T33 | Пакет, канонический текст и чтение пакета | Claude, проверяю я | — | T24, T32 |
 | [x] | T34 | Индекс модулей и версия новой попытки | Claude, проверяю я | — | T33 |
 | [x] | T35 | Сравнение версий: часть версии | Claude, проверяю я | да | T34 |
-| [ ] | T36 | Сравнение версий: правила `module-version.*` и переход формата | Claude, проверяю я | — | T35 |
+| [x] | T36 | Сравнение версий: правила `module-version.*` и переход формата | Claude, проверяю я | — | T35 |
 | [ ] | T37 | Команды `check` и `build` | Claude, проверяю я | да | T33 |
 | [ ] | T38 | Команды `index` и `diff`, запуск CLI на каждой ОС | я + Claude | да | T36, T37 |
 | [ ] | T39 | Первый релиз линии 0.2 | я + Claude | — | T28, T38 |
@@ -1033,6 +1033,20 @@
 - **Мой шаг:** мерж pull request. Ветку, коммит, push и pull request делает исполнитель: правило 7 в задачах эпика не действует («Общее для задач эпика»).
 - **Как проверить:** все векторы `versions/` проходят и вышли из списка пропусков; `just -f spec/justfile docs-check-repo`; `/code-review high`.
 - **Разделы:** [текст формата](spec/format/README.md), разделы 2, 25–27; R89 spec, R101 spec; R13; architecture 3.5.
+- **Сделано (2026-11-05):**
+  - работа — в ветке `t36-version-rules` от `main` (8948447: мерж T35 #52), исполнитель — Cline. «Решить при планировании» у задачи нет, и вопросов автору не понадобилось: правила, места и часть перехода задают [текст формата](spec/format/README.md), разделы 2 и 27, и векторы;
+  - находки по прошлой задаче, T35 (правило 12): у SonarCloud новых нет — анализ 8948447, 0 находок, quality gate — OK; у CodeQL открытых нет; у Scorecard — те же пять из R33 spec. Codecov на #52 — 97,3 % изменённых строк, и `codecov/patch` прошёл. Править нечего;
+  - релиз v0.1.23, который дал мерж T35: `just -f spec/justfile release-verify module-kit v0.1.23 <файл>` пустил все девять файлов — «signed by the shared release.yml of .github v0.1.15», — `sha256sum -c SHA256SUMS` сошёлся, а `module-kit_v0.1.23_linux_amd64 --version` — `module-kit v0.1.23` и `Unicode 17.0.0`;
+  - `moduleversion` (R37): `rules.go` — `Rules`, `Breach` и шесть правил по местам; `places.go` — места, которые формат держит во всех версиях, одной функцией над JSON-значениями; `published.go` — чтение опубликованного пакета по цепочке: версии 0.3 через `modulepackage.ReadParts`, более ранней — по местам, более новой — `ErrFormatVersion`; `compare.go` — `above`, `step`, часть перехода, `Comparison.Breaches`, `Refused()` и строки `refused:` в отчёте; `doc.go`. Тесты — `rules_test.go` (`TestRulesAreTheFormats`, `TestBreaches`) и `places_test.go` (`TestReadPublished`, `TestPlacesOf`); из `TestCompare` ушла проверка отказа по пакету 0.2;
+  - тест векторов: исполнитель `versions` сверяет отказ — ровно одно правило, своё, — а у вектора с частью — ни одного нарушения. Тест назвал прошедшими ровно 33 оставшихся случая, и список пропусков пуст;
+  - зависимостей задача не добавила, `go list -deps ./cmd/module-kit` по-прежнему без сторонних модулей: Д15 не меняется;
+  - журнал — R37, «Следующий номер — R38». [docs/architecture.md](docs/architecture.md): статус, вступление раздела 3, раздел 3.5 — правила, переход формата и тесты, раздел 3.6 — таблица пакетов и пустой список пропусков. README — статус;
+  - проверки: `just ci-lint`, `just ci-test` и `just ci-vuln` — «No vulnerabilities found» — зелёные; покрытие `moduleversion` — 97,3 %, нового кода — 90–100 % по функциям, модуля Go — 98,2 %. `FuzzDiff` — 30 с, без падений. `just -f spec/justfile docs-check-repo` — ok;
+  - `/code-review high` не шёл: исполнитель — Cline, а команды Claude Code у него нет. По AGENTS.md ревью запускает автор, один круг, — по pull request, до мержа.
+- **Открыто:**
+  - `/code-review high` — шаг автора до мержа (AGENTS.md): его находки исполнитель исправит одним кругом;
+  - мерж даст релиз — в перечне `paths` новые `moduleversion/places.go`, `published.go` и `rules.go` и правка `compare.go`, — его сверит следующая задача первым делом;
+  - список пропусков пуст, а держит его пустым тест — T39; команда `diff` с кодом завершения 1 по `Breaches` — T38.
 
 #### T37. Команды `check` и `build`
 
