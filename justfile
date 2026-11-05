@@ -56,6 +56,25 @@ release-files version:
     just release-licenses dist
     (cd dist && sha256sum -- module-kit_* LICENSE LICENSE-* NOTICE-* > SHA256SUMS)
 
+# What the job Binaries of ci.yml runs each binary of a release on (R41): an example module with
+# templates and a solver, a test vector of a rule, the test vector of a package with a solver and
+# the modules of the test vector of a first release, copied from spec's Go module at the version
+# go.mod requires (R20), as CI checks out no submodule. The Go module cache holds its files
+# read-only, and the copies are made writable.
+# Copy the samples that the job Binaries runs the binaries on into a folder.
+binaries-samples folder:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    folder={{ quote(folder) }}
+    format="$(go list -m -f '{{{{.Dir}}' github.com/altnovatrail/spec)/format"
+    rm -rf "$folder"
+    mkdir -p "$folder/first-release"
+    cp -R "$format/examples/module/valid/with-templates" "$folder/with-templates"
+    cp -R "$format/vectors/rules/task.known-band/unknown-band" "$folder/unknown-band"
+    cp -R "$format/vectors/packages/with-solver" "$folder/with-solver"
+    cp -R "$format/vectors/indexes/first-release/modules" "$folder/first-release/modules"
+    chmod -R u+w "$folder"
+
 # The modules besides the standard library that the CLI is built from, on any of the six platforms
 # of a release, each with the name its license takes in a release: LICENSE-<name>, and NOTICE-<name>
 # beside it when the module has a NOTICE. spec's LICENSE is this repository's own, Apache-2.0 word

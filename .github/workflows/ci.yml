@@ -40,3 +40,94 @@ jobs:
       contents: read
       id-token: write
     uses: altnovatrail/.github/.github/workflows/go.yml@89d3ceee0b9977b3334488a4133d084d76474e0d # v0.1.15
+
+  # The six binaries of a release, each run on a runner of its own system (Д6 in RUN.md; R41 in
+  # docs/decisions.md). The build job builds them as release.yml does, by release-files in the
+  # toolchain stage, with the samples from spec's Go module, and runs the binary of linux/amd64
+  # first: what it builds is the reference that every other runner's must equal, byte for byte.
+  binaries-build:
+    name: Binaries / build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Toolchain image
+        run: docker build --target toolchain --tag toolchain - < .devcontainer/Dockerfile
+
+      # As go.yml runs a recipe: as the runner's user, with its home in /tmp, and nothing of the
+      # step's environment.
+      - name: Release files and samples
+        run: |
+          docker run --rm --user "$(id -u):$(id -g)" --env HOME=/tmp \
+              --volume "$PWD:/work" --workdir /work \
+              toolchain sh -c 'just release-files v0.0.0-ci && just binaries-samples binaries/samples'
+          mv dist binaries/dist
+
+      - name: Reference of linux/amd64
+        run: .github/binaries.sh binaries/dist binaries/dist/module-kit_v0.0.0-ci_linux_amd64 binaries/samples binaries/reference
+
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: binaries
+          path: binaries/
+          retention-days: 3
+          if-no-files-found: error
+
+  binaries-run:
+    name: Binaries / ${{ matrix.binary }}
+    needs: binaries-build
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 20
+    strategy:
+      # Every system reports on its own, rather than the first one to fail cancelling the rest.
+      fail-fast: false
+      matrix:
+        include:
+          - { runner: ubuntu-24.04, binary: linux_amd64 }
+          - { runner: ubuntu-24.04-arm, binary: linux_arm64 }
+          - { runner: macos-15-intel, binary: darwin_amd64 }
+          - { runner: macos-15, binary: darwin_arm64 }
+          - { runner: windows-2025, binary: windows_amd64.exe }
+          - { runner: windows-11-arm, binary: windows_arm64.exe }
+    defaults:
+      run:
+        shell: bash
+    steps:
+      # The script that runs a binary, and nothing else of the repository.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          sparse-checkout: .github/binaries.sh
+          sparse-checkout-cone-mode: false
+
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: binaries
+          path: binaries
+
+      - name: module-kit_v0.0.0-ci_${{ matrix.binary }}
+        env:
+          BINARY: module-kit_v0.0.0-ci_${{ matrix.binary }}
+        run: .github/binaries.sh binaries/dist "binaries/dist/$BINARY" binaries/samples binaries/reference
+
+  # The one check that the ruleset of main requires, which waits for every system: a matrix gives a
+  # check for each of its jobs, whose names the ruleset would have to follow.
+  binaries:
+    name: Binaries
+    needs: [binaries-build, binaries-run]
+    if: ${{ always() }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - name: Every binary on its own system
+        env:
+          BUILD: ${{ needs.binaries-build.result }}
+          RUN: ${{ needs.binaries-run.result }}
+        run: |
+          if [ "$BUILD" != success ] || [ "$RUN" != success ]; then
+              echo "::error::The build gave ${BUILD}, and the runs of the binaries ${RUN}: the jobs above say which."
+              exit 1
+          fi
