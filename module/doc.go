@@ -14,5 +14,7 @@
 // skill graph and the catalogs of sections 11, 12, 16 and 17, read on the types of formatv0, with
 // the tiers of the skill graph, Tiers, which the package will hold (R25); and the rules of a task
 // and of a lesson of sections 14, 15 and 21 that need no check kind, no leak check and no template
-// (R26).
+// (R26); the rules of a task that the check of an answer slot sees itself, by package verdict
+// (R27, R28); and task.no-leaks and lesson.no-leaks, by package leak, on the tasks and lessons that
+// are no templates (R30).
 package module

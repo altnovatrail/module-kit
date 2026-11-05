@@ -1,4 +1,4 @@
-package verdict
+package normal
 
 import (
 	"slices"
@@ -6,20 +6,22 @@ import (
 	"unicode"
 	"unicode/utf8"
 
-	"github.com/altnovatrail/spec/types/formatv0"
 	"golang.org/x/text/unicode/norm"
 )
 
-// The normalization of a value read, as the check kinds normalize it (format/README.md, section
-// 15). NFKC is golang.org/x/text/unicode/norm, which follows the Stream-Safe Text Process of UAX #15
-// too: after 30 non-starters in a row it puts U+034F in, and spec's second implementation does not
-// (R27).
+// The normalization of a value read, as the check kinds normalize it, and of a text that the leak
+// check searches (format/README.md, sections 15 and 20). NFKC is golang.org/x/text/unicode/norm,
+// which follows the Stream-Safe Text Process of UAX #15 too: after 30 non-starters in a row it puts
+// U+034F in, and spec's second implementation does not (R27).
 
-// scriptsReplaced takes step 1: every superscript or subscript digit becomes U+FFFD, which no
-// notation takes, and so does every vulgar fraction that a number, a character of the general
-// category N, stands right before or right after in the text as it is, so that NFKC does not make
-// 7² into 72 or 1½ into 11⁄2.
-func scriptsReplaced(text string) string {
+// UnicodeVersion is the version of Unicode of the tables of NFKC that the package is built with.
+const UnicodeVersion = norm.Version
+
+// Scripts takes step 1: every superscript or subscript digit becomes U+FFFD, which no notation
+// takes, and so does every vulgar fraction that a number, a character of the general category N,
+// stands right before or right after in the text as it is, so that NFKC does not make 7² into 72 or
+// 1½ into 11⁄2. The leak check takes the same step (section 20).
+func Scripts(text string) string {
 	runes := []rune(text)
 	out := slices.Clone(runes)
 	isNumber := func(i int) bool { return i >= 0 && i < len(runes) && unicode.Is(unicode.N, runes[i]) }
@@ -43,11 +45,11 @@ func vulgarFraction(r rune) bool {
 	return '\u00BC' <= r && r <= '\u00BE' || '\u2150' <= r && r <= '\u215F' || r == '\u2189'
 }
 
-// normalized takes steps 2 to 4, in their order, so that steps 3 and 4 take what NFKC gives too: NFKC;
-// the hyphens and dashes U+2010 and U+2012 to U+2015 and the minus sign U+2212 become -, the
-// fraction slash U+2044 and the division slash U+2215 become /; and every run of white space, the
-// characters with the property White_Space, becomes one space, with none at either end.
-func normalized(text string) string {
+// Text takes steps 2 to 4, in their order, so that steps 3 and 4 take what NFKC gives too: NFKC; the
+// hyphens and dashes U+2010 and U+2012 to U+2015 and the minus sign U+2212 become -, the fraction
+// slash U+2044 and the division slash U+2215 become /; and every run of white space, the characters
+// with the property White_Space, becomes one space, with none at either end.
+func Text(text string) string {
 	var b strings.Builder
 	space := false
 	for _, r := range norm.NFKC.String(text) {
@@ -69,10 +71,10 @@ func normalized(text string) string {
 	return b.String()
 }
 
-// lowercase maps each character to its simple lowercase mapping (UnicodeData.txt, field 13), as
+// Lower maps each character to its simple lowercase mapping (UnicodeData.txt, field 13), as
 // unicode.ToLower does, a character at a time: no context counts, as a final sigma's would, and no
 // character becomes two.
-func lowercase(text string) string {
+func Lower(text string) string {
 	return strings.Map(unicode.ToLower, text)
 }
 
@@ -80,7 +82,7 @@ func lowercase(text string) string {
 // start is dropped, and so is every ., ! and ? at the end. The spaces that this leaves at either end
 // stay until step 7.
 func upToStep5(text string) string {
-	return strings.TrimRight(strings.TrimPrefix(normalized(scriptsReplaced(text)), "="), ".!?")
+	return strings.TrimRight(strings.TrimPrefix(Text(Scripts(text)), "="), ".!?")
 }
 
 // trimmed drops the spaces at either end of a text that steps 1 to 4 normalized, where white space
@@ -89,31 +91,16 @@ func trimmed(text string) string {
 	return strings.Trim(text, " ")
 }
 
-// numberText gives a value as number, fraction and predicate read it, steps 1 to 7, with the unit
-// forms of a number: "" when it is blank.
-func numberText(value string, units []string) string {
+// Number gives a value as number, fraction and predicate read it, steps 1 to 7, with units, the
+// forms of a number's units that Unit gives: "" when it is blank.
+func Number(value string, units []string) string {
 	return trimmed(withoutUnit(upToStep5(value), units))
 }
 
-// unitForm gives what a unit compares by: steps 1 to 5, as the value goes through them, the spaces
-// at either end dropped, and each character in lowercase (step 6).
-func unitForm(unit string) string {
-	return lowercase(trimmed(upToStep5(unit)))
-}
-
-// unitsOf gives the forms of the units of a number, those that are not empty: a check of another
-// kind has none.
-func unitsOf(c formatv0.Check) []string {
-	if c.Kind != formatv0.CheckKindNumber {
-		return nil
-	}
-	var forms []string
-	for _, unit := range c.Units {
-		if form := unitForm(string(unit)); form != "" {
-			forms = append(forms, form)
-		}
-	}
-	return forms
+// Unit gives what a unit compares by: steps 1 to 5, as the value goes through them, the spaces at
+// either end dropped, and each character in lowercase (step 6).
+func Unit(unit string) string {
+	return Lower(trimmed(upToStep5(unit)))
 }
 
 // withoutUnit takes step 6: of the units that end the text, with a space before it or none, the
@@ -123,7 +110,7 @@ func unitsOf(c formatv0.Check) []string {
 // bytes, as İ and i do.
 func withoutUnit(text string, units []string) string {
 	runes := []rune(text)
-	lowered := []rune(lowercase(text))
+	lowered := []rune(Lower(text))
 	longest := 0
 	for _, unit := range units {
 		u := []rune(unit)
@@ -141,9 +128,9 @@ func withoutUnit(text string, units []string) string {
 	return strings.TrimSuffix(before, " ")
 }
 
-// choiceForm gives what a choice compares: the text through NFKC, the dashes and slashes of step 3
-// and the white space of step 4, and then in lowercase. Nothing more is dropped: a = or a . can be
-// what the learner chose.
-func choiceForm(text string) string {
-	return lowercase(normalized(text))
+// Choice gives what a choice compares: the text through NFKC, the dashes and slashes of step 3 and
+// the white space of step 4, and then in lowercase. Nothing more is dropped: a = or a . can be what
+// the learner chose.
+func Choice(text string) string {
+	return Lower(Text(text))
 }

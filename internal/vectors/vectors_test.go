@@ -23,6 +23,7 @@ import (
 
 	"github.com/altnovatrail/module-kit/internal/schema"
 	"github.com/altnovatrail/module-kit/internal/yaml"
+	"github.com/altnovatrail/module-kit/leak"
 	"github.com/altnovatrail/module-kit/module"
 	"github.com/altnovatrail/module-kit/verdict"
 )
@@ -313,6 +314,33 @@ func differ(what string, got, want any) error {
 	return fmt.Errorf("%s\n%s\nand open-view.yaml holds\n%s", what, gotText, wantText)
 }
 
+// leaks passes a case of the leak check: in each text, the leak check finds every key and leak
+// phrase of the task that the vector names, as the task writes them, and no other, in any order
+// (format/README.md, sections 9 and 20). The vector is read by its schema and its type of formatv0.
+func leaks(v vector) error {
+	var lv formatv0.LeakVector
+	if _, err := readVector(v.fsys, v.path, "leak-vector.schema.json", &lv); err != nil {
+		return err
+	}
+	search, err := leak.For(lv.Task)
+	if err != nil {
+		return err
+	}
+	for n, text := range lv.Texts {
+		var found []string
+		for _, l := range search.In(text.Text) {
+			if !slices.Contains(found, l.Written) {
+				found = append(found, l.Written)
+			}
+		}
+		slices.Sort(found)
+		if want := slices.Sorted(slices.Values(text.Leaks)); !slices.Equal(found, want) {
+			return fmt.Errorf("text %d, %q: the leak check finds %q, and the vector gives %q", n+1, text.Text, found, want)
+		}
+	}
+	return nil
+}
+
 // tiers passes a case of tiers: the tiers of skill_graph are skill_tiers (format/README.md, section
 // 9), the vector read by its schema and its type of formatv0.
 func tiers(v vector) error {
@@ -407,7 +435,7 @@ var runners = map[string]func(vector) error{
 	"rules":     rule,     // refused with the ID of the rule the case is filed under
 	"open-view": openView, // the open view of part.yaml is open-view.yaml
 	"verdicts":  verdicts, // each reading gets its verdicts, reasons and traps
-	"leaks":     noCode,   // each text gives the keys and leak phrases it names
+	"leaks":     leaks,    // each text gives the keys and leak phrases it names
 	"random":    noCode,   // each draw gives its value
 	"templates": noCode,   // the count, and each seed's numbers and instance
 	"tiers":     tiers,    // the tier of each skill
