@@ -1,6 +1,7 @@
 package module
 
 import (
+	"context"
 	"encoding/json"
 	"io/fs"
 	"maps"
@@ -232,7 +233,7 @@ func TestChecksTheFormat(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		report, err := Check(folder)
+		report, err := Check(context.Background(), folder)
 		if err != nil {
 			t.Fatalf("%s: %v", name, err)
 		}

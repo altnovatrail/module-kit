@@ -3,7 +3,11 @@ package module
 import (
 	"context"
 	"fmt"
+	"runtime"
 	"slices"
+	"strings"
+	"sync"
+	"sync/atomic"
 
 	"github.com/altnovatrail/spec/types/formatv0"
 
@@ -34,26 +38,24 @@ type instance struct {
 
 // What the check of a module reads of a template: the breaches of its own rules, and, when it breaks
 // none, its instances, in their order, with the results of its solver among their numbers
-// (format/README.md, sections 23 and 24).
+// (format/README.md, sections 23 and 24): numbers as template.Instances gives them, and each
+// instance as the rules read it.
 type expansion struct {
 	breaches  []template.Breach
+	numbers   []formatv0.Numbers
 	instances []instance
 }
 
-// expand counts the instances of a template, running its solver, and builds each one, the task with
-// its numbers in place, against the schema of a task. A template whose placeholders break no rule has
-// an instance for its numbers, so an error of template.Instance is a fault of module-kit.
-//
-// The check of a module counts its templates one after another, with a context that is never done:
-// Check and CheckFile take none yet, and a solver that runs long stops only by its budget or its
-// clock. The CLI's solvers one on each CPU, and a context that stops them, come with its commands,
-// T37 of RUN.md (architecture 3.4).
-func expand(task formatv0.Task) *expansion {
-	numbers, breaches, err := template.Instances(context.Background(), task)
+// expand counts the instances of a template, running its solver with ctx, and builds each one, the
+// task with its numbers in place, against the schema of a task. The error is that of ctx, once it is
+// done. A template whose placeholders break no rule has an instance for its numbers, so an error of
+// template.Instance is a fault of module-kit.
+func expand(ctx context.Context, task formatv0.Task) (*expansion, error) {
+	numbers, breaches, err := template.Instances(ctx, task)
 	if err != nil {
-		panic(fmt.Sprintf("module: the instances of a template, with a context that is never done: %v", err))
+		return nil, err
 	}
-	e := &expansion{breaches: breaches}
+	e := &expansion{breaches: breaches, numbers: numbers}
 	for _, n := range numbers {
 		t, err := template.Instance(task, n)
 		if err != nil {
@@ -65,7 +67,64 @@ func expand(task formatv0.Task) *expansion {
 			invalid: causes(schema.Validate("task.schema.json", schema.ValueOf(t))),
 		})
 	}
-	return e
+	return e, nil
+}
+
+// expandAll expands every template among the tasks of parts, one on each CPU that the process may use
+// at once, runtime.GOMAXPROCS(0), each solver on a Starlark thread of its own, and puts each
+// expansion under the path of its task, whatever order they end in (architecture 3.4). The solvers
+// share the wall time of their clocks and the memory of the process, so no more run at once than the
+// CPUs that serve them. The error is that of ctx, once it is done; the templates that have not begun
+// then do not run.
+func (p *parts) expandAll(ctx context.Context) error {
+	var paths []string
+	for path, task := range p.tasks {
+		if task.Template != nil {
+			paths = append(paths, path)
+		}
+	}
+	slices.Sort(paths)
+	expansions := make([]*expansion, len(paths))
+	errs := make([]error, len(paths))
+	var next atomic.Int64
+	var wg sync.WaitGroup
+	for range min(runtime.GOMAXPROCS(0), len(paths)) {
+		wg.Go(func() {
+			for {
+				i := int(next.Add(1)) - 1
+				if i >= len(paths) {
+					return
+				}
+				if err := ctx.Err(); err != nil {
+					errs[i] = err
+					continue
+				}
+				expansions[i], errs[i] = expand(ctx, p.tasks[paths[i]])
+			}
+		})
+	}
+	wg.Wait()
+	for i, path := range paths {
+		if errs[i] != nil {
+			return errs[i]
+		}
+		p.templates[path] = expansions[i]
+	}
+	return nil
+}
+
+// instancesOf gives the numbers of the instances of each template of a module by the local ID of its
+// task, as the canonical view holds them (format/README.md, section 25).
+func (p *parts) instancesOf() map[string][]formatv0.Numbers {
+	if len(p.templates) == 0 {
+		return nil
+	}
+	before, after, _ := strings.Cut(taskRow.path, anyID)
+	instances := make(map[string][]formatv0.Numbers, len(p.templates))
+	for path, e := range p.templates {
+		instances[strings.TrimSuffix(strings.TrimPrefix(path, before), after)] = e.numbers
+	}
+	return instances
 }
 
 // causes gives the keywords that an instance of a template fails but those of unevaluatedProperties,

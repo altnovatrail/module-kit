@@ -48,7 +48,8 @@ func (r *Refusal) Error() string {
 // Build builds the package of the module whose folder is the root of fsys, by the format version
 // its manifest names (format/README.md, section 25; R62 spec). It checks the module first, and a
 // module that breaks the format gives a *Refusal with the report of its check (R45 spec). The
-// solver of each template runs with ctx, and an error of ctx comes back as it is. Any other error is
+// solver of each template runs once, in the check, with ctx and one on each CPU, as module.Check runs
+// them, and an error of ctx comes back as it is. Any other error is
 // a file that could not be read, or a fault of module-kit: of a module that passed its check, the
 // canonical text refuses nothing (R09).
 //
@@ -56,7 +57,7 @@ func (r *Refusal) Error() string {
 // folders whose names begin with ".", the eval set, eval/, and the comments of its files of parts
 // stay out, and nothing is added — no version of module-kit, no time, no path.
 func Build(ctx context.Context, fsys fs.FS) (*Package, error) {
-	report, err := module.Check(fsys)
+	report, instances, err := module.CheckModule(ctx, fsys)
 	if err != nil {
 		return nil, err
 	}
@@ -67,7 +68,7 @@ func Build(ctx context.Context, fsys fs.FS) (*Package, error) {
 	if err != nil {
 		return nil, err
 	}
-	view, err := canonicalView(ctx, fsys, files)
+	view, err := canonicalView(fsys, files, instances)
 	if err != nil {
 		return nil, err
 	}

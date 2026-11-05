@@ -1,6 +1,7 @@
 package module
 
 import (
+	"context"
 	"maps"
 	"slices"
 	"strings"
@@ -79,7 +80,7 @@ func TestCheckRules(t *testing.T) {
 
 // Check runs them on each task of a module too, as a rule within a part.
 func TestCheckRulesOfAModule(t *testing.T) {
-	report, err := Check(module(fstest.MapFS{
+	report, err := Check(context.Background(), module(fstest.MapFS{
 		campDays: edit(campDays, `check: {kind: number, key: "9", units: [day, days]}`,
 			`check: {kind: number, key: "9", units: [day, days], trap_values: [{value: "9.0", trap: off-by-one}]}`),
 	}))

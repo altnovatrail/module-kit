@@ -1,13 +1,10 @@
 package modulepackage
 
 import (
-	"context"
 	"fmt"
 	"io/fs"
-	"maps"
 	"math"
 	"path"
-	"slices"
 	"strings"
 
 	"github.com/altnovatrail/spec/types/formatv0"
@@ -16,7 +13,6 @@ import (
 	"github.com/altnovatrail/module-kit/internal/schema"
 	"github.com/altnovatrail/module-kit/internal/yaml"
 	"github.com/altnovatrail/module-kit/module"
-	"github.com/altnovatrail/module-kit/template"
 )
 
 // The members of the canonical view that the code names, and the field of the format version
@@ -46,8 +42,9 @@ var (
 // canonicalView builds the canonical view of a module that passed its check: each part under its
 // member, as the JSON value of its file is, with an integer that the reader of YAML gave as a
 // double as an integer; skill_tiers, when it has a skill graph; and instances, when a task is a
-// template, with the results of its solver (format/README.md, sections 12, 23, 24 and 25).
-func canonicalView(ctx context.Context, fsys fs.FS, files []string) (map[string]any, error) {
+// template, with the results of its solver, as the check of the module counted them
+// (format/README.md, sections 12, 23, 24 and 25).
+func canonicalView(fsys fs.FS, files []string, instances map[string][]formatv0.Numbers) (map[string]any, error) {
 	view := map[string]any{}
 	for _, file := range files {
 		member, id, ok := memberOf(file)
@@ -81,12 +78,12 @@ func canonicalView(ctx context.Context, fsys fs.FS, files []string) (map[string]
 		}
 		view[skillTiersMember] = schema.ValueOf(tiers)
 	}
-	instances, err := instancesOf(ctx, view)
-	if err != nil {
-		return nil, err
-	}
 	if len(instances) > 0 {
-		view[instancesMember] = instances
+		member := make(map[string]any, len(instances))
+		for id, numbers := range instances {
+			member[id] = schema.ValueOf(numbers)
+		}
+		view[instancesMember] = member
 	}
 	return view, nil
 }
@@ -102,30 +99,6 @@ func memberOf(file string) (member, id string, ok bool) {
 		return member, strings.TrimSuffix(name, ".yaml"), true
 	}
 	return "", "", false
-}
-
-// instancesOf counts the instances of each template among the tasks, in the order of their IDs,
-// running its solver with ctx, and gives their numbers by the ID of the template
-// (format/README.md, sections 23 and 24). A template of a module that passed its check breaks no
-// rule of templates, so a breach is a fault of module-kit.
-func instancesOf(ctx context.Context, view map[string]any) (map[string]any, error) {
-	tasks, _ := view[tasksMember].(map[string]any)
-	instances := map[string]any{}
-	for _, id := range slices.Sorted(maps.Keys(tasks)) {
-		task := decode[formatv0.Task](tasks[id])
-		if task.Template == nil {
-			continue
-		}
-		numbers, breaches, err := template.Instances(ctx, task)
-		if err != nil {
-			return nil, err
-		}
-		if len(breaches) > 0 {
-			return nil, fmt.Errorf("modulepackage: the template %s, which passed the check, breaks %s: %s", id, breaches[0].Rule, breaches[0].Message)
-		}
-		instances[id] = schema.ValueOf(numbers)
-	}
-	return instances, nil
 }
 
 // integers gives a JSON value of the reader of YAML with every double that is an integer within

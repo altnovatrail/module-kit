@@ -92,7 +92,7 @@ func refuse(v vector, id string) (rules []string, refusal string, err error) {
 		if err != nil {
 			return nil, "", err
 		}
-		report, err := module.Check(folder)
+		report, err := module.Check(context.Background(), folder)
 		return reportRules(report), report.String(), err
 	}
 	data, err := fs.ReadFile(v.fsys, v.path)
@@ -302,7 +302,7 @@ func moduleExample(v vector) error {
 	if err != nil {
 		return err
 	}
-	report, err := module.Check(folder)
+	report, err := module.Check(context.Background(), folder)
 	if err != nil {
 		return err
 	}

@@ -2,12 +2,15 @@ package module
 
 import (
 	"cmp"
+	"context"
 	"errors"
 	"fmt"
 	"io/fs"
 	"regexp"
 	"slices"
 	"strings"
+
+	"github.com/altnovatrail/spec/types/formatv0"
 
 	"github.com/altnovatrail/module-kit/internal/schema"
 	"github.com/altnovatrail/module-kit/internal/semver"
@@ -124,12 +127,32 @@ func (r Report) String() string {
 // and 10–17). A manifest that names a version the library does not read gives a report of that
 // breach alone, since the rest of the module is written by rules the library does not know. The
 // error is for a folder or file that could not be read, and then there is no report.
-func Check(fsys fs.FS) (Report, error) {
+//
+// The solvers of the module's templates run with ctx, one on each CPU that the process may use at
+// once, runtime.GOMAXPROCS(0), and the report holds their breaches in the order of their places, as
+// it holds every other (architecture 3.4). Once ctx is done the check stops, and its error is that
+// of ctx.
+func Check(ctx context.Context, fsys fs.FS) (Report, error) {
+	report, _, err := CheckModule(ctx, fsys)
+	return report, err
+}
+
+// CheckModule is Check, and gives besides the numbers of the instances of each template of a module
+// that breaks no rule, by the local ID of its task, in the order of section 23 with the results of
+// its solver, as the canonical view holds them (format/README.md, section 25); none when the module
+// has no template or is refused. The build of a package takes them, so that a solver runs once for
+// the check and the package together.
+func CheckModule(ctx context.Context, fsys fs.FS) (Report, map[string][]formatv0.Numbers, error) {
 	c := checker{fsys: fsys, parts: map[string]any{}}
-	if err := c.check(); err != nil {
-		return Report{}, err
+	p, err := c.check(ctx)
+	if err != nil {
+		return Report{}, nil, err
 	}
-	return c.report(), nil
+	report := c.report()
+	if len(report.Breaches) > 0 || p == nil {
+		return report, nil, nil
+	}
+	return report, p.instancesOf(), nil
 }
 
 // CheckFile checks a file of a part on its own, as an example of the part and a test vector of a
@@ -150,6 +173,11 @@ func CheckFile(part string, data []byte) (Report, error) {
 	if read && c.conform("", part, value) {
 		p := newParts(true)
 		p.add("", part, value)
+		// A file on its own is an example or a test vector, whose solver runs with a context that is
+		// never done: it stops by its budget or its clock.
+		if err := p.expandAll(context.Background()); err != nil {
+			panic(fmt.Sprintf("module: the instances of a template, with a context that is never done: %v", err))
+		}
 		c.withinPart(p)
 	}
 	return c.report(), nil
@@ -200,34 +228,34 @@ func (c *checker) report() Report {
 }
 
 // check runs the rules of a whole module in the order of section 10, with the format version that
-// the manifest names before them.
-func (c *checker) check() error {
+// the manifest names before them, and gives the parts that the rules read: none when the manifest
+// stops the check.
+func (c *checker) check(ctx context.Context) (*parts, error) {
 	if err := c.list(); err != nil {
-		return err
+		return nil, err
 	}
 	switch stop, err := c.readManifest(); {
 	case err != nil:
-		return err
+		return nil, err
 	case stop:
-		return nil
+		return nil, nil
 	}
 	if err := c.place(); err != nil {
-		return err
+		return nil, err
 	}
 	if err := c.media(); err != nil {
-		return err
+		return nil, err
 	}
 	if err := c.texts(); err != nil {
-		return err
+		return nil, err
 	}
-	c.rules()
-	return nil
+	return c.rules(ctx)
 }
 
 // rules checks the rules of the parts on the files of a part that passed, read into their types
-// once: those within a part on each, and then, when every file of a part passed, those between
-// parts (rules.go).
-func (c *checker) rules() {
+// once, with the templates among them expanded with ctx: those within a part on each, and then, when
+// every file of a part passed, those between parts (rules.go). It gives the parts it read.
+func (c *checker) rules(ctx context.Context) (*parts, error) {
 	p := newParts(false)
 	for path, value := range c.parts {
 		r, _, _ := rowOf(path)
@@ -238,10 +266,14 @@ func (c *checker) rules() {
 			p.media[file] = true
 		}
 	}
+	if err := p.expandAll(ctx); err != nil {
+		return nil, err
+	}
 	c.withinPart(p)
 	if c.allParts() {
 		c.betweenParts(p)
 	}
+	return &p, nil
 }
 
 // read reads a file of a part by the YAML rules, and gives its value, or nil and false when they

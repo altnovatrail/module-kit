@@ -49,10 +49,54 @@ release-files version:
             -ldflags "-s -w -X main.version=${version}" -o "dist/${name}" ./cmd/module-kit
     done
     # Apache-2.0 asks a copy of itself to go with the work, and Go's BSD license asks a binary
-    # that holds its standard library to reproduce its notice.
+    # that holds its standard library to reproduce its notice; so do the licenses of the modules
+    # the binaries are built from, which release-licenses names (R38).
     cp LICENSE dist/LICENSE
     cp "$(go env GOROOT)/LICENSE" dist/LICENSE-go
-    (cd dist && sha256sum -- module-kit_* LICENSE LICENSE-go > SHA256SUMS)
+    just release-licenses dist
+    (cd dist && sha256sum -- module-kit_* LICENSE LICENSE-* NOTICE-* > SHA256SUMS)
+
+# The modules besides the standard library that the CLI is built from, on any of the six platforms
+# of a release, each with the name its license takes in a release: LICENSE-<name>, and NOTICE-<name>
+# beside it when the module has a NOTICE. spec's LICENSE is this repository's own, Apache-2.0 word
+# for word, so LICENSE stands for it, and the recipe checks that it still is (R38; Д15 in RUN.md).
+THIRD_PARTY := "go.yaml.in/yaml/v4=go-yaml github.com/santhosh-tekuri/jsonschema/v6=jsonschema go.starlark.net=starlark golang.org/x/text=x-text golang.org/x/sys=x-sys"
+SAME_LICENSE := "github.com/altnovatrail/spec"
+
+# Copy into a folder the licenses and notices of the modules that the CLI is built from, and fail
+# when the modules are not those THIRD_PARTY and SAME_LICENSE name.
+release-licenses folder:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    folder={{ quote(folder) }}
+    export GOENV=off GOFLAGS= GOEXPERIMENT= CGO_ENABLED=0
+    unset GOAMD64 GOARM64
+    built="$(for platform in linux/amd64 linux/arm64 darwin/amd64 darwin/arm64 windows/amd64 windows/arm64; do
+        GOOS="${platform%/*}" GOARCH="${platform#*/}" go list -deps -f '{{{{with .Module}}{{{{.Path}}{{{{end}}' ./cmd/module-kit
+    done | sort -u | grep -v -x -F 'github.com/altnovatrail/module-kit' || true)"
+    named="$(for entry in {{ THIRD_PARTY }} {{ SAME_LICENSE }}; do echo "${entry%%=*}"; done | sort -u)"
+    if [ "$built" != "$named" ]; then
+        echo "release-licenses: the CLI is built from these modules besides the standard library:" >&2
+        echo "${built:-none}" >&2
+        echo "and the justfile names these, whose licenses go with a release:" >&2
+        echo "$named" >&2
+        echo "Name each module the CLI is built from in THIRD_PARTY, with its license (R38)." >&2
+        exit 1
+    fi
+    for module in {{ SAME_LICENSE }}; do
+        if ! cmp -s LICENSE "$(go list -m -f '{{{{.Dir}}' "$module")/LICENSE"; then
+            echo "release-licenses: the LICENSE of ${module} is no longer this repository's own; name it in THIRD_PARTY (R38)." >&2
+            exit 1
+        fi
+    done
+    mkdir -p "$folder"
+    for entry in {{ THIRD_PARTY }}; do
+        dir="$(go list -m -f '{{{{.Dir}}' "${entry%%=*}")"
+        cp "$dir/LICENSE" "$folder/LICENSE-${entry#*=}"
+        if [ -f "$dir/NOTICE" ]; then
+            cp "$dir/NOTICE" "$folder/NOTICE-${entry#*=}"
+        fi
+    done
 
 # Fail on code gofmt would rewrite, on what go vet reports, on a gopls lock file that names
 # another version than GOPLS_VERSION in the Dockerfile, and on a version of spec's Go modules that
@@ -82,6 +126,11 @@ ci-lint:
             ".devcontainer/Dockerfile has GOPLS_VERSION ${arg:-unset}; raise them together (R19)" >&2
         exit 1
     fi
+    # A module that the CLI comes to be built from, without its license in a release, fails here,
+    # on its pull request, rather than at the release (R38).
+    licenses="$(mktemp -d)"
+    trap 'rm -rf "$licenses"' EXIT
+    just release-licenses "$licenses"
     # The code takes spec's files from its Go modules, and the documents from the submodule spec/,
     # and the two move together, to one tag (R64 spec; R20): the commit the index records for the
     # submodule is the one the Go module proxy names as the origin of each module's version, and

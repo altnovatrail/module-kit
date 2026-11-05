@@ -1,6 +1,7 @@
 package module
 
 import (
+	"context"
 	"maps"
 	"slices"
 	"strings"
@@ -78,7 +79,7 @@ var leakCases = []struct {
 func TestLeakRules(t *testing.T) {
 	for _, c := range leakCases {
 		t.Run(c.name, func(t *testing.T) {
-			report, err := Check(c.fsys)
+			report, err := Check(context.Background(), c.fsys)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -114,7 +115,7 @@ func TestLeakRulesOfAFile(t *testing.T) {
 func TestLeakRuleMessages(t *testing.T) {
 	messages := map[string]bool{}
 	for _, c := range leakCases {
-		report, err := Check(c.fsys)
+		report, err := Check(context.Background(), c.fsys)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -146,7 +147,7 @@ func TestLeakRuleMessages(t *testing.T) {
 // A breach of lesson.no-leaks names the task's file by the path the lesson finds it at, even when the
 // task's id is another, which breaks module.file-ids.
 func TestLeakRuleNamesTheTasksFile(t *testing.T) {
-	report, err := Check(module(fstest.MapFS{
+	report, err := Check(context.Background(), module(fstest.MapFS{
 		gapsLadder: edit(gapsLadder, "id: gaps-ladder-1", "id: gaps-ladder-2"),
 		gapsLesson: edit(gapsLesson, gapsAfter, gapsAfter+" Seven rungs."),
 	}))

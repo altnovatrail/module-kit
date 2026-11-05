@@ -1,6 +1,7 @@
 package module
 
 import (
+	"context"
 	"io/fs"
 	"maps"
 	"slices"
@@ -154,7 +155,7 @@ func TestPartRules(t *testing.T) {
 		}), []string{"skill-graph.yaml #/skills/a/prerequisites skill-graph.acyclic", "tasks/a.yaml # schema required"}},
 	} {
 		t.Run(c.name, func(t *testing.T) {
-			report, err := Check(c.fsys)
+			report, err := Check(context.Background(), c.fsys)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -227,7 +228,7 @@ func TestPartRuleMessages(t *testing.T) {
 		module(fstest.MapFS{"traps.yaml": nil, "techniques.yaml": nil}),
 		smallest(fstest.MapFS{"traps.yaml": base["traps.yaml"]}),
 	} {
-		report, err := Check(fsys)
+		report, err := Check(context.Background(), fsys)
 		if err != nil {
 			t.Fatal(err)
 		}

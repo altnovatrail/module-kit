@@ -1,11 +1,17 @@
 package module
 
 import (
+	"context"
+	"errors"
 	"maps"
+	"reflect"
+	"runtime"
 	"slices"
 	"strings"
 	"testing"
 	"testing/fstest"
+
+	"github.com/altnovatrail/spec/types/formatv0"
 
 	"github.com/altnovatrail/module-kit/internal/schema"
 )
@@ -96,7 +102,7 @@ func TestTemplateRulesOfAModule(t *testing.T) {
 		}), []string{templatePath + " #/band task.known-band"}},
 	} {
 		t.Run(c.name, func(t *testing.T) {
-			report, err := Check(c.fsys)
+			report, err := Check(context.Background(), c.fsys)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -120,7 +126,7 @@ func TestTemplateRuleMessages(t *testing.T) {
 			messages[b.Rule+": "+b.Message] = true
 		}
 	}
-	report, err := Check(with(withTemplates, fstest.MapFS{
+	report, err := Check(context.Background(), with(withTemplates, fstest.MapFS{
 		templateTraps:  file(replaced(string(withTemplates[templateTraps].Data), sayTheTimesTable, "Say the times table aloud, as far as 7 times.")),
 		templateLesson: file(replaced(string(withTemplates[templateLesson].Data), "and stop at the product the line gives.", "and stop at 8.")),
 	}))
@@ -171,5 +177,55 @@ func TestInstancesByKeyword(t *testing.T) {
 	}
 	if !slices.Equal(got, want) {
 		t.Errorf("%q, want %q", got, want)
+	}
+}
+
+// The templates of a module run one on each CPU, and the report and the numbers of the instances
+// are the same however many run at once and in whatever order they end: of with-templates with five
+// more copies of its template, one of them broken, under GOMAXPROCS 1 and 4.
+func TestTemplatesOnEachCPU(t *testing.T) {
+	more := fstest.MapFS{}
+	for _, id := range []string{"copy-a", "copy-b", "copy-c", "copy-d"} {
+		more["tasks/"+id+".yaml"] = file(replaced(missingFactor, "id: missing-factor", "id: "+id))
+	}
+	broken := with(withTemplates, maps.Clone(more))
+	broken["tasks/copy-e.yaml"] = file(replaced(missingFactor, "id: missing-factor", "id: copy-e", `- value: "{one_more}"`, `- value: "{second}"`))
+	accepted := with(withTemplates, more)
+	run := func(procs int, fsys fstest.MapFS) (Report, map[string][]formatv0.Numbers) {
+		defer runtime.GOMAXPROCS(runtime.GOMAXPROCS(procs))
+		report, instances, err := CheckModule(context.Background(), fsys)
+		if err != nil {
+			t.Fatal(err)
+		}
+		return report, instances
+	}
+	oneReport, one := run(1, accepted)
+	fourReport, four := run(4, accepted)
+	if len(oneReport.Breaches)+len(fourReport.Breaches) > 0 || !reflect.DeepEqual(one, four) {
+		t.Errorf("under GOMAXPROCS 1 and 4, the reports\n%s\n%s\nand the instances differ, or a breach is found", oneReport, fourReport)
+	}
+	if got := slices.Sorted(maps.Keys(one)); !slices.Equal(got, []string{"copy-a", "copy-b", "copy-c", "copy-d", "missing-factor"}) || len(one["copy-a"]) != 64 {
+		t.Errorf("the instances are of %q, %d of copy-a; want five templates of 64", got, len(one["copy-a"]))
+	}
+	oneReport, one = run(1, broken)
+	fourReport, four = run(4, broken)
+	want := []string{"tasks/copy-e.yaml #/items/0/line/1/check/trap_values/0/value task.trap-values"}
+	if got := shortReport(fourReport); !slices.Equal(got, want) || !slices.Equal(oneReport.Breaches, fourReport.Breaches) || one != nil || four != nil {
+		t.Errorf("under GOMAXPROCS 4, refused by %q, want %q, and the same under 1, with no instances:\n%s\n%s", got, want, fourReport, oneReport)
+	}
+}
+
+// A context that is done stops the check before any template runs, and Check gives its error and no
+// report.
+func TestCheckContext(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+	report, err := Check(ctx, withTemplates)
+	if !errors.Is(err, context.Canceled) || report.Breaches != nil {
+		t.Errorf("Check = %v, %v; want context.Canceled", report, err)
+	}
+	// A module with no template runs no solver, so a done context does not stop it.
+	if report, err := Check(ctx, example("smallest")); err != nil || len(report.Breaches) > 0 {
+		t.Errorf("Check of smallest = %v, %v; want an empty report", report, err)
 	}
 }
