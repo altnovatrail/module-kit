@@ -1126,7 +1126,7 @@
 - **Сделано (2026-11-05):**
   - работа — в ветке `t41-transparent-pictures` от `main` (239d675: мерж T37 #54). Ветку, коммит, push и pull request делает исполнитель, а мержит автор («Общее для задач эпика»);
   - находки по прошлой задаче, T37 (правило 12): у SonarCloud новых нет — анализ 239d675, 0 находок, quality gate — OK; у CodeQL открытых нет; у Scorecard — те же пять из R33 spec. Править нечего;
-  - релиз, который даст мерж T37 (v0.1.25), к началу задачи не вышел: CI на 239d675 ещё шёл, а «Release» ждёт его. Его сверка — первым шагом следующей задачи, вместе с релизом этой;
+  - релиз v0.1.25, который дал мерж T37, вышел, пока шла задача, — первый со сторонними модулями. `just -f spec/justfile release-verify module-kit v0.1.25 <файл>` пустил все 15 файлов: шесть бинарников, `LICENSE`, `LICENSE-go`, `LICENSE-go-yaml`, `LICENSE-jsonschema`, `LICENSE-starlark`, `LICENSE-x-sys`, `LICENSE-x-text`, `NOTICE-go-yaml` и `SHA256SUMS`. `sha256sum -c SHA256SUMS` сошёлся. `module-kit_v0.1.25_linux_amd64 --version` — `module-kit v0.1.25` и `Unicode 17.0.0`, а `check` примера `with-templates` — код 0;
   - пакет `picture` (R39):
     - `Warnings(ctx, fsys)`, `Check(name, data)`, `Warning{Path, Message}`, `MaxPixels = 1 << 25`, `doc.go`;
     - файл без сигнатуры своего формата предупреждения не получает: его отвергает `module.media`, и отчёт сказал бы одно дважды. Это выяснилось на векторах `module.media/png-holding-jpeg` и `webp-holding-wave`, которые `TestCheckRefuses` CLI проверяет строкой отчёта;
@@ -1138,7 +1138,7 @@
   - `/code-review high` не шёл: исполнитель — Cline, а команды Claude Code у него нет. По AGENTS.md ревью запускает автор, один круг, по pull request до мержа.
 - **Открыто:**
   - `/code-review high` — шаг автора до мержа (AGENTS.md): его находки исполнитель исправит одним кругом;
-  - сверка релизов: v0.1.25 мержа T37 — 15 файлов, первый со сторонними лицензиями, — и релиза этой задачи, с `LICENSE-x-image`, 16 файлов. Это первый шаг T38;
+  - мерж даст релиз — `picture/*.go`, `cmd/module-kit/*.go`, `go.mod`, `go.sum` и `justfile` в перечне `paths`, — 16 файлов, с `LICENSE-x-image`. Его сверит следующая задача первым делом;
   - анимированный WebP `x/image` v0.47.0 не декодирует, и о нём `check` говорит «could not check». Если формат захочет такие картинки проверять, нужен другой декодер; пока формат его не просит.
 
 #### T38. Команды `index` и `diff`, запуск CLI на каждой ОС
