@@ -1,8 +1,8 @@
 // Command module-kit is the authors' CLI of NovaTrail's module format (architecture 3.7 in spec;
-// architecture 3.6): check checks a module, and warns of a picture that is not opaque, and build
-// builds its package as files, by the library of
-// this module. The index of modules, the comparison of versions and the open views come with their
-// tasks of RUN.md.
+// architecture 3.6): check checks a module, and warns of a picture that is not opaque; build
+// builds its package as files; index builds the module index of a release of modules; and diff
+// compares a new version of a module with the published ones, by the library of
+// this module. The open views come with their task of RUN.md.
 //
 // Every command exits with 0 when it did what was asked, 1 when the format refuses its input, with
 // the ID of each rule broken, and 2 when it could not do its work: a call it does not take, a file it
@@ -39,6 +39,9 @@ const (
 
 const usage = `usage: module-kit check <module>
        module-kit build <module> <folder>
+       module-kit index (--previous <module-index.json> | --first) --tag vX.Y.Z
+           (--withdrawals <withdrawals.yaml> | --no-withdrawals) --out <file> <package>...
+       module-kit diff [--json] (--index <module-index.json> | --first) [--published <package>]... <module>
        module-kit --version
 `
 
@@ -61,6 +64,10 @@ func run(ctx context.Context, args []string, stdout, stderr io.Writer) int {
 		return check(ctx, args[1], stdout, stderr)
 	case len(args) == 3 && args[0] == "build":
 		return build(ctx, args[1], args[2], stdout, stderr)
+	case len(args) > 0 && args[0] == "index":
+		return index(ctx, args[1:], stdout, stderr)
+	case len(args) > 0 && args[0] == "diff":
+		return diff(ctx, args[1:], stdout, stderr)
 	}
 	fmt.Fprint(stderr, usage)
 	return statusFailed
