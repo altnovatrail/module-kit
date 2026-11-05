@@ -705,8 +705,19 @@ func versions(v vector) error {
 	if err != nil {
 		return err
 	}
+	var rules []string
+	for _, b := range c.Breaches {
+		rules = append(rules, b.Rule)
+	}
 	if vv.Refusal != nil {
-		return fmt.Errorf("not refused by %s: the comparison finds a %s change", *vv.Refusal, c.Part)
+		// A refusal breaks its rule and no other (format/README.md, section 9).
+		if len(rules) == 0 || slices.ContainsFunc(rules, func(r string) bool { return r != string(*vv.Refusal) }) {
+			return fmt.Errorf("refused by %v, and the vector gives %s alone:\n%s", rules, *vv.Refusal, c)
+		}
+		return nil
+	}
+	if len(rules) > 0 {
+		return fmt.Errorf("refused by %v, and the vector gives the part %s:\n%s", rules, *vv.VersionPart, c)
 	}
 	if c.Part.String() != string(*vv.VersionPart) {
 		return fmt.Errorf("the comparison finds a %s change, and the vector gives %s:\n%s", c.Part, *vv.VersionPart, c)

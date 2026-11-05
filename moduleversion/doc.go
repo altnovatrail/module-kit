@@ -8,7 +8,9 @@
 // changes of two packages of one module and one version of the format, each row of the table at its
 // place and anything else that differs as a patch. Steps, StepPart and SameMajor give the rule of
 // 0.y.z: the next versions after a version, the part a step raises, and whether two versions are of
-// the same major, as diff and api read it. The rules module-version.* and the reading of a package
-// of an earlier version of the format by the places every version keeps are not here yet: the epic
-// of code brings them (R16).
+// the same major, as diff and api read it. Compare holds the rules module-version.*, Rules, each a
+// Breach of the Comparison: above against every published version, step against the newest, and the
+// others by the places that every version keeps (format/README.md, section 2), so that they hold
+// through a move of the format too; a published package of an earlier version of the format is read
+// by those places alone, and the part of a move is major while the format is v0 (R37).
 package moduleversion
