@@ -29,7 +29,7 @@ func build(ctx context.Context, dir, out string, stdout, stderr io.Writer) int {
 	pkg, err := modulepackage.Build(ctx, fsys)
 	var refusal *modulepackage.Refusal
 	if errors.As(err, &refusal) {
-		writeReport(stdout, dir, refusal.Report)
+		writeReport(stdout, dir, refusal.Report, nil)
 		return statusRefused
 	}
 	if err != nil {

@@ -121,7 +121,7 @@
 | [x] | T35 | Сравнение версий: часть версии | Claude, проверяю я | да | T34 |
 | [x] | T36 | Сравнение версий: правила `module-version.*` и переход формата | Claude, проверяю я | — | T35 |
 | [x] | T37 | Команды `check` и `build` | Claude, проверяю я | да | T33 |
-| [ ] | T41 | Предупреждение о картинке с прозрачными пикселями | Claude, проверяю я | — | T37 |
+| [x] | T41 | Предупреждение о картинке с прозрачными пикселями | Claude, проверяю я | — | T37 |
 | [ ] | T38 | Команды `index` и `diff`, запуск CLI на каждой ОС | я + Claude | да | T36, T37, T41 |
 | [ ] | T39 | Первый релиз линии 0.2 | я + Claude | — | T28, T38 |
 | [ ] | T40 | Команда `open` | Claude, проверяю я | да | T39 |
@@ -1123,6 +1123,23 @@
 - **Мой шаг:** мерж pull request. Ветку, коммит, push и pull request делает исполнитель: правило 7 в задачах эпика не действует («Общее для задач эпика»).
 - **Как проверить:** предупреждения на картинках тестов, а на верных примерах `spec` их нет; `just ci-licenses`; `just ci-lint` с новой лицензией в перечне; `just -f spec/justfile docs-check-repo`; `/code-review high`.
 - **Разделы:** [текст формата](spec/format/README.md), разделы 10, 14 и 21; R51 spec; R38; architecture 3.6.
+- **Сделано (2026-11-05):**
+  - работа — в ветке `t41-transparent-pictures` от `main` (239d675: мерж T37 #54). Ветку, коммит, push и pull request делает исполнитель, а мержит автор («Общее для задач эпика»);
+  - находки по прошлой задаче, T37 (правило 12): у SonarCloud новых нет — анализ 239d675, 0 находок, quality gate — OK; у CodeQL открытых нет; у Scorecard — те же пять из R33 spec. Править нечего;
+  - релиз v0.1.25, который дал мерж T37, вышел, пока шла задача, — первый со сторонними модулями. `just -f spec/justfile release-verify module-kit v0.1.25 <файл>` пустил все 15 файлов: шесть бинарников, `LICENSE`, `LICENSE-go`, `LICENSE-go-yaml`, `LICENSE-jsonschema`, `LICENSE-starlark`, `LICENSE-x-sys`, `LICENSE-x-text`, `NOTICE-go-yaml` и `SHA256SUMS`. `sha256sum -c SHA256SUMS` сошёлся. `module-kit_v0.1.25_linux_amd64 --version` — `module-kit v0.1.25` и `Unicode 17.0.0`, а `check` примера `with-templates` — код 0;
+  - пакет `picture` (R39):
+    - `Warnings(ctx, fsys)`, `Check(name, data)`, `Warning{Path, Message}`, `MaxPixels = 1 << 25`, `doc.go`;
+    - файл без сигнатуры своего формата предупреждения не получает: его отвергает `module.media`, и отчёт сказал бы одно дважды. Это выяснилось на векторах `module.media/png-holding-jpeg` и `webp-holding-wave`, которые `TestCheckRefuses` CLI проверяет строкой отчёта;
+    - тесты: `picture_test.go` (`TestTestFiles`, `TestCheck` — 19 случаев, `TestCheckTooLarge`), `warnings_test.go` (`TestWarnings`, `TestWarningsWithout`, `TestFormatPictures` — 11 картинок `spec`, все 1 × 1 и непрозрачные), `webp_test.go` — WebP, собранные по RFC 9649 без файлов в `testdata/`, `fuzz_test.go` — `FuzzCheck`, 60 с, около 23 млн запусков, без находок. Покрытие пакета — 96,3 %;
+  - `cmd/module-kit`: `check` зовёт `picture.Warnings` и пишет предупреждения после нарушений и перед итогом; `writeReport` берёт их тоже, а `build` — нет. Тесты — `warnings_test.go`: `TestCheckWarns` — у принятого модуля код 0, у отвергнутого 1, с предупреждением в обоих, — и `TestCheckWarningsFail` — папку `media/` не прочесть, код 2;
+  - `golang.org/x/image` v0.47.0 — прямая зависимость в `go.mod`, `go.sum` — две строки; `x/sys` и `x/text` он требует тех же версий. `go list -deps` пакетов, которые берёт `api`, его не называет. В `THIRD_PARTY` justfile — `golang.org/x/image=x-image`: `just release-licenses` кладёт `LICENSE-x-image`;
+  - журнал — R39, начало журнала — «Следующий номер — R40». [docs/architecture.md](docs/architecture.md): статус, вступление раздела 3, раздел 3.1 — сторонние модули и файлы релиза, раздел 3.6 — таблица пакетов и «Команды `check` и `build`». README — статус. Таблица 1 — T41 `[x]`;
+  - проверки: `just ci-lint`, `just ci-test`, `just ci-vuln` — «No vulnerabilities found» — и `just ci-licenses` с `ALLOWED_LICENSES` из `go.yml` `.github` v0.1.15 — зелёные; `just -f spec/justfile docs-check-repo` — ok;
+  - `/code-review high` не шёл: исполнитель — Cline, а команды Claude Code у него нет. По AGENTS.md ревью запускает автор, один круг, по pull request до мержа.
+- **Открыто:**
+  - `/code-review high` — шаг автора до мержа (AGENTS.md): его находки исполнитель исправит одним кругом;
+  - мерж даст релиз — `picture/*.go`, `cmd/module-kit/*.go`, `go.mod`, `go.sum` и `justfile` в перечне `paths`, — 16 файлов, с `LICENSE-x-image`. Его сверит следующая задача первым делом;
+  - анимированный WebP `x/image` v0.47.0 не декодирует, и о нём `check` говорит «could not check». Если формат захочет такие картинки проверять, нужен другой декодер; пока формат его не просит.
 
 #### T38. Команды `index` и `diff`, запуск CLI на каждой ОС
 
