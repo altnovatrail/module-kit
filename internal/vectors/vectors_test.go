@@ -14,6 +14,7 @@ import (
 	"reflect"
 	"regexp"
 	"slices"
+	"strconv"
 	"strings"
 	"testing"
 
@@ -21,6 +22,7 @@ import (
 	"github.com/altnovatrail/spec/contracts"
 	"github.com/altnovatrail/spec/types/formatv0"
 
+	"github.com/altnovatrail/module-kit/internal/random"
 	"github.com/altnovatrail/module-kit/internal/schema"
 	"github.com/altnovatrail/module-kit/internal/yaml"
 	"github.com/altnovatrail/module-kit/leak"
@@ -341,6 +343,91 @@ func leaks(v vector) error {
 	return nil
 }
 
+// randomDraws passes a case of the generator: the seed and the names, when given, derive the words
+// of state, and the stream that the words start gives each draw's value, in order
+// (format/README.md, sections 9 and 22; R10). The vector is read by its schema and its type of
+// formatv0, and its integers, written as strings, by strconv; a fraction is compared as a double. A
+// draw with no field the runner knows fails it.
+func randomDraws(v vector) error {
+	var rv formatv0.RandomVector
+	if _, err := readVector(v.fsys, v.path, "random-vector.schema.json", &rv); err != nil {
+		return err
+	}
+	high, err := unsigned(rv.State.High)
+	if err != nil {
+		return err
+	}
+	low, err := unsigned(rv.State.Low)
+	if err != nil {
+		return err
+	}
+	if rv.Seed != nil {
+		seed, err := unsigned(*rv.Seed)
+		if err != nil {
+			return err
+		}
+		h, l, err := random.Words(seed, rv.Names)
+		if err != nil {
+			return err
+		}
+		if h != high || l != low {
+			return fmt.Errorf("the seed %d and the names %q derive the words %d and %d, and the vector gives %d and %d", seed, rv.Names, h, l, high, low)
+		}
+	}
+	stream := random.New(high, low)
+	for n, d := range rv.Draws {
+		got, want, err := draw(stream, d)
+		if err != nil {
+			return fmt.Errorf("draw %d: %w", n+1, err)
+		}
+		if got != want {
+			return fmt.Errorf("draw %d gives %s, and the vector gives %s", n+1, got, want)
+		}
+	}
+	return nil
+}
+
+// draw calls on a stream the function that a draw of a vector names, with its arguments, and gives
+// the value it gives and the one the draw gives, each written as text.
+func draw(s *random.Stream, d formatv0.Draw) (got, want string, err error) {
+	switch {
+	case d.Integer != nil:
+		return strconv.FormatUint(s.Integer(), 10), string(d.Integer.Value), nil
+	case d.Below != nil:
+		bound, err := unsigned(d.Below.Bound)
+		if err != nil {
+			return "", "", err
+		}
+		value, err := s.Below(bound)
+		return strconv.FormatUint(value, 10), string(d.Below.Value), err
+	case d.Between != nil:
+		from, err := strconv.ParseInt(string(d.Between.From), 10, 64)
+		if err != nil {
+			return "", "", err
+		}
+		to, err := strconv.ParseInt(string(d.Between.To), 10, 64)
+		if err != nil {
+			return "", "", err
+		}
+		value, err := s.Between(from, to)
+		return strconv.FormatInt(value, 10), string(d.Between.Value), err
+	case d.Fraction != nil:
+		value := s.Fraction()
+		// strconv writes each double the shortest text that reads back to it, so two doubles are one
+		// when it writes them alike.
+		return strconv.FormatFloat(value, 'g', -1, 64), strconv.FormatFloat(d.Fraction.Value, 'g', -1, 64), nil
+	case d.Permutation != nil:
+		order, err := s.Permutation(int(d.Permutation.Count))
+		return fmt.Sprint(order), fmt.Sprint(d.Permutation.Value), err
+	}
+	return "", "", errors.New("it names no function the runner knows")
+}
+
+// unsigned reads an unsigned integer of 64 bits that a vector writes in decimal digits.
+func unsigned(text formatv0.Unsigned) (uint64, error) {
+	return strconv.ParseUint(string(text), 10, 64)
+}
+
 // tiers passes a case of tiers: the tiers of skill_graph are skill_tiers (format/README.md, section
 // 9), the vector read by its schema and its type of formatv0.
 func tiers(v vector) error {
@@ -432,16 +519,16 @@ var runners = map[string]func(vector) error{
 	"examples/invalid": invalidExample,
 	"examples/module":  moduleExample,
 	// The test vectors (format/README.md, section 9).
-	"rules":     rule,     // refused with the ID of the rule the case is filed under
-	"open-view": openView, // the open view of part.yaml is open-view.yaml
-	"verdicts":  verdicts, // each reading gets its verdicts, reasons and traps
-	"leaks":     leaks,    // each text gives the keys and leak phrases it names
-	"random":    noCode,   // each draw gives its value
-	"templates": noCode,   // the count, and each seed's numbers and instance
-	"tiers":     tiers,    // the tier of each skill
-	"packages":  noCode,   // the package of module/ is package.yaml
-	"indexes":   noCode,   // the index the release builds, or the rule that refuses it
-	"versions":  noCode,   // the part of the version found, or the rule that refuses it
+	"rules":     rule,        // refused with the ID of the rule the case is filed under
+	"open-view": openView,    // the open view of part.yaml is open-view.yaml
+	"verdicts":  verdicts,    // each reading gets its verdicts, reasons and traps
+	"leaks":     leaks,       // each text gives the keys and leak phrases it names
+	"random":    randomDraws, // each draw gives its value
+	"templates": noCode,      // the count, and each seed's numbers and instance
+	"tiers":     tiers,       // the tier of each skill
+	"packages":  noCode,      // the package of module/ is package.yaml
+	"indexes":   noCode,      // the index the release builds, or the rule that refuses it
+	"versions":  noCode,      // the part of the version found, or the rule that refuses it
 	// The validity of an observation, the joining of two readings and the verdict on the observation
 	// (contracts/README.md, section 10).
 	"observation/v1": observations,
