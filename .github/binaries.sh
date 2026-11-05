@@ -16,7 +16,7 @@
 # (format/README.md, sections 25 and 26).
 set -euo pipefail
 
-if [ "$#" -ne 4 ]; then
+if (($# != 4)); then
     echo "usage: $0 <dist> <binary> <samples> <reference>" >&2
     exit 2
 fi
@@ -52,7 +52,7 @@ run() {
     shift 2
     local status=0
     "$binary" "$@" > "$work/$name.out" 2> "$work/$name.err" || status=$?
-    if [ "$status" -ne "$want" ]; then
+    if ((status != want)); then
         fail "$name: exit status $status, want $want: $(cat "$work/$name.out" "$work/$name.err")"
         return 1
     fi
@@ -64,7 +64,9 @@ chmod +x "$binary"
 # 1. The binary is the one the build wrote.
 want=$(grep "  $name\$" "$dist/SHA256SUMS" | cut -d' ' -f1)
 got=$(sha256 "$binary" | cut -d' ' -f1)
-[ -n "$want" ] && [ "$want" = "$got" ] || fail "$name has the sha256 $got, and SHA256SUMS names ${want:-none}"
+if [[ -z $want || $want != "$got" ]]; then
+    fail "$name has the sha256 $got, and SHA256SUMS names ${want:-none}"
+fi
 
 # 2. It starts, and tells its release and its version of Unicode.
 if run version 0 --version; then
@@ -98,7 +100,7 @@ done
 run index 0 index --first --tag v0.1.0 --no-withdrawals --out "$work/module-index.json" "${packages[@]}" || true
 
 # 6. diff: a module of that release against its index and packages, which has not changed.
-if [ -f "$work/module-index.json" ]; then
+if [[ -f "$work/module-index.json" ]]; then
     published=()
     for p in "${packages[@]}"; do published+=(--published "$p"); done
     run diff 0 diff --index "$work/module-index.json" "${published[@]}" "$samples/first-release/modules/smallest" || true
@@ -106,18 +108,18 @@ fi
 
 # 7. What the binary built, against the reference or as the reference.
 mkdir -p "$work/built"
-[ -d "$work/package" ] && manifest "$work/package" > "$work/built/package.sha256"
-[ -f "$work/module-index.json" ] && cp "$work/module-index.json" "$work/built/module-index.json"
-if [ -d "$reference" ]; then
+if [[ -d "$work/package" ]]; then manifest "$work/package" > "$work/built/package.sha256"; fi
+if [[ -f "$work/module-index.json" ]]; then cp "$work/module-index.json" "$work/built/module-index.json"; fi
+if [[ -d "$reference" ]]; then
     for f in package.sha256 module-index.json; do
         cmp -s "$work/built/$f" "$reference/$f" || fail "$f differs from the reference of linux/amd64: $(diff "$reference/$f" "$work/built/$f" || true)"
     done
-elif [ "$failures" -eq 0 ]; then
+elif ((failures == 0)); then
     mkdir -p "$reference"
     cp "$work/built/package.sha256" "$work/built/module-index.json" "$reference/"
 fi
 
-if [ "$failures" -gt 0 ]; then
+if ((failures > 0)); then
     echo "$name: $failures of its checks failed" >&2
     exit 1
 fi

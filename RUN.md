@@ -1225,6 +1225,7 @@
   - justfile — рецепт `binaries-samples`;
   - actionlint v1.7.12 — `ci.yml` без находок;
   - pull request #57: «Binaries / build» — 96 с, `linux_amd64` — 5 с, `linux_arm64` — 6 с, `darwin_amd64` — 20 с, `darwin_arm64` — 13 с (раннер ждали около 6 минут), `windows_amd64.exe` — 18 с, `windows_arm64.exe` — 32 с. Каждый написал «--version, check, build, index and diff as they ought», и «Binaries» зелёная;
+  - SonarCloud на #57 отметил в `.github/binaries.sh` десять мест `[ … ]` правилом `shell:S7688` — «Use '[[' instead of '[' for conditional tests». Quality gate это не роняло, но находки исправлены кодом: сравнения чисел стали `(( … ))`, проверки — `[[ … ]]`, а `a && b || c` — `if`. Так же исправлен шаг «Binaries» в `ci.yml`, теперь с `shell: bash`. Скрипт снова проверен здесь: прошёл, а с подменённым эталоном, с подменённым бинарником и с неверным вызовом упал;
   - журнал — R41, начало журнала — «Следующий номер — R42». [docs/architecture.md](docs/architecture.md): статус, вступление раздела 3, раздел 3.1 — CLI и «Бинарники на каждой ОС». Таблица 1 — T42 `[x]`; таблица 4 — Д6 закрыт;
   - проверки: `just ci-lint` и `just -f spec/justfile docs-check-repo` — зелёные; Go-кода задача не меняла, а CI #57 прошёл все проверки;
   - `/code-review high` не шёл: исполнитель — Cline, а команды Claude Code у него нет. По AGENTS.md ревью запускает автор, один круг, по pull request до мержа.

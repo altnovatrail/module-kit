@@ -126,8 +126,9 @@ jobs:
         env:
           BUILD: ${{ needs.binaries-build.result }}
           RUN: ${{ needs.binaries-run.result }}
+        shell: bash
         run: |
-          if [ "$BUILD" != success ] || [ "$RUN" != success ]; then
+          if [[ $BUILD != success || $RUN != success ]]; then
               echo "::error::The build gave ${BUILD}, and the runs of the binaries ${RUN}: the jobs above say which."
               exit 1
           fi
