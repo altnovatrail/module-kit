@@ -1,5 +1,6 @@
 // Command module-kit is the authors' CLI of NovaTrail's module format (architecture 3.7 in spec;
-// architecture 3.6): check checks a module and build builds its package as files, by the library of
+// architecture 3.6): check checks a module, and warns of a picture that is not opaque, and build
+// builds its package as files, by the library of
 // this module. The index of modules, the comparison of versions and the open views come with their
 // tasks of RUN.md.
 //
@@ -21,6 +22,7 @@ import (
 	"syscall"
 
 	"github.com/altnovatrail/module-kit/module"
+	"github.com/altnovatrail/module-kit/picture"
 	"github.com/altnovatrail/module-kit/verdict"
 )
 
@@ -65,8 +67,9 @@ func run(ctx context.Context, args []string, stdout, stderr io.Writer) int {
 }
 
 // check checks the module whose folder is dir and writes its report to stdout: a line for each
-// breach, its place from dir, the ID of its rule and what breaks it, in the order of their places,
-// and a last line that says whether the format accepts the module.
+// breach, its place from dir, the ID of its rule and what breaks it, in the order of their places;
+// then a line for each warning of a picture, which refuses nothing (R39); and a last line that says
+// whether the format accepts the module. The warnings change no exit status.
 func check(ctx context.Context, dir string, stdout, stderr io.Writer) int {
 	fsys, err := moduleFolder(dir)
 	if err != nil {
@@ -76,12 +79,32 @@ func check(ctx context.Context, dir string, stdout, stderr io.Writer) int {
 	if err != nil {
 		return failed(stderr, "check", err)
 	}
+	warnings, err := picture.Warnings(ctx, fsys)
+	if err != nil {
+		return failed(stderr, "check", err)
+	}
 	if len(report.Breaches) > 0 {
-		writeReport(stdout, dir, report)
+		writeReport(stdout, dir, report, warnings)
 		return statusRefused
 	}
+	writeWarnings(stdout, dir, warnings)
 	fmt.Fprintf(stdout, "%s: the module breaks no rule of the format %s\n", dir, module.FormatVersion)
 	return statusAccepted
+}
+
+// writeWarnings writes the warnings of the pictures, each with its path from dir as the command line
+// gave it.
+func writeWarnings(w io.Writer, dir string, warnings []picture.Warning) {
+	for _, warning := range warnings {
+		warning.Path = slashed(dir, warning.Path)
+		fmt.Fprintln(w, warning)
+	}
+}
+
+// slashed gives the path of a file of the module from dir as the command line gave it, with /
+// between names.
+func slashed(dir, name string) string {
+	return filepath.ToSlash(filepath.Join(dir, filepath.FromSlash(name)))
 }
 
 // moduleFolder gives the folder dir as an fs.FS, and an error when it is no folder.
@@ -97,12 +120,14 @@ func moduleFolder(dir string) (fs.FS, error) {
 }
 
 // writeReport writes the breaches of a report, each with its path from dir as the command line gave
-// it, and a last line that counts them. A breach of the module's folder itself has the path dir.
-func writeReport(w io.Writer, dir string, report module.Report) {
+// it, then the warnings, and a last line that counts the breaches. A breach of the module's folder
+// itself has the path dir.
+func writeReport(w io.Writer, dir string, report module.Report, warnings []picture.Warning) {
 	for _, b := range report.Breaches {
-		b.Path = filepath.ToSlash(filepath.Join(dir, filepath.FromSlash(b.Path)))
+		b.Path = slashed(dir, b.Path)
 		fmt.Fprintln(w, b)
 	}
+	writeWarnings(w, dir, warnings)
 	noun := "breaches"
 	if len(report.Breaches) == 1 {
 		noun = "breach"

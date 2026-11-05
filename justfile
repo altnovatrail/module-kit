@@ -60,7 +60,7 @@ release-files version:
 # of a release, each with the name its license takes in a release: LICENSE-<name>, and NOTICE-<name>
 # beside it when the module has a NOTICE. spec's LICENSE is this repository's own, Apache-2.0 word
 # for word, so LICENSE stands for it, and the recipe checks that it still is (R38; Д15 in RUN.md).
-THIRD_PARTY := "go.yaml.in/yaml/v4=go-yaml github.com/santhosh-tekuri/jsonschema/v6=jsonschema go.starlark.net=starlark golang.org/x/text=x-text golang.org/x/sys=x-sys"
+THIRD_PARTY := "go.yaml.in/yaml/v4=go-yaml github.com/santhosh-tekuri/jsonschema/v6=jsonschema go.starlark.net=starlark golang.org/x/text=x-text golang.org/x/sys=x-sys golang.org/x/image=x-image"
 SAME_LICENSE := "github.com/altnovatrail/spec"
 
 # Copy into a folder the licenses and notices of the modules that the CLI is built from, and fail
