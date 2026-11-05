@@ -200,6 +200,7 @@ func TestClockAndCancel(t *testing.T) {
 // change its error either.
 func TestFirstCauseWins(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
 	_, err := run(ctx, Limits{Clock: time.Nanosecond}, func(thread *starlark.Thread) (starlark.Value, error) {
 		time.Sleep(10 * time.Millisecond)
 		cancel()
@@ -213,6 +214,7 @@ func TestFirstCauseWins(t *testing.T) {
 		t.Errorf("the clock and then ctx give %v", err)
 	}
 	ctx, cancel = context.WithCancel(context.Background())
+	defer cancel()
 	_, err = run(ctx, Predicate, func(thread *starlark.Thread) (starlark.Value, error) {
 		expr, err := parse("1 // 0")
 		if err != nil {
