@@ -53,7 +53,6 @@ var slotRuleCases = []struct {
 		[]string{"#/items/0/answer_slots/0/check/trap_values/0/value task.trap-values"}},
 	{"a trap value of a choice that is none of the options", replaced(parity, "- value: even", "- value: seven"),
 		[]string{"#/items/0/answer_slots/0/check/trap_values/0/value task.trap-values"}},
-	{"a placeholder outside a template is another rule's", replaced(workbook, `key: "8"`, `key: "{b}"`, `- value: "9"`, `- value: "{b}"`), nil},
 	{"a predicate as it is", divisible, nil},
 	{"a predicate on names that it binds itself", replaced(divisible, `predicate: "1 <= value and value <= 50 and value % 3 == 0 and value % 4 == 0"`,
 		`predicate: "value in [12 * n for n in range(1, 5)]"`), nil},

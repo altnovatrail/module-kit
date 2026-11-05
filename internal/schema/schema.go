@@ -181,3 +181,43 @@ func Decode[T any](value any) (T, error) {
 	}
 	return t, nil
 }
+
+// ValueOf gives a Go value, such as a part as its type of formatv0 holds it, as the reader of YAML
+// gives a JSON value, the other way from Decode: map[string]any, []any, string, int64 for a number
+// without a fraction or an exponent, float64 for another, bool or nil. A part of formatv0 holds only
+// strings, integers, booleans and lists and maps of them, so it is always JSON; a value that
+// encoding/json does not write, such as a NaN, is a fault of module-kit, and ValueOf panics.
+func ValueOf(value any) any {
+	data, err := json.Marshal(value)
+	if err != nil {
+		panic(fmt.Sprintf("schema: %T is no JSON: %v", value, err))
+	}
+	decoder := json.NewDecoder(bytes.NewReader(data))
+	decoder.UseNumber()
+	var v any
+	// The text is what json.Marshal has just written.
+	_ = decoder.Decode(&v)
+	return numbers(v)
+}
+
+// numbers puts int64 or float64 in the place of each json.Number in v.
+func numbers(v any) any {
+	switch v := v.(type) {
+	case map[string]any:
+		for key, member := range v {
+			v[key] = numbers(member)
+		}
+	case []any:
+		for i, element := range v {
+			v[i] = numbers(element)
+		}
+	case json.Number:
+		if i, err := v.Int64(); err == nil {
+			return i
+		}
+		// json.Marshal writes a float64 that it can read back.
+		f, _ := v.Float64()
+		return f
+	}
+	return v
+}

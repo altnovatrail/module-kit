@@ -35,7 +35,8 @@ func (t searchedText) said() string {
 
 // searchOf gives the leak check of the task at path, a task that is no template, built once for
 // every rule that searches for its keys and leak phrases. The check of a module reads a template
-// through its instances (format/README.md, section 20), so a template here is a fault of module-kit.
+// through its instances (format/README.md, section 20), each on a checker of its own, so a template
+// here is a fault of module-kit.
 func (c *checker) searchOf(path string, task formatv0.Task) *leak.Search {
 	if s, ok := c.searches[path]; ok {
 		return s
@@ -146,10 +147,10 @@ func namedTraps(task formatv0.Task) []trapAt {
 
 // taskLeaks checks task.no-leaks on texts of a module: none of them holds a key or a leak phrase of
 // the task, as the leak check finds them (format/README.md, section 20). A breach for each text that
-// holds one, naming each it holds. A template is searched through its instances, which come with the
-// templates (section 23), and is not searched here.
+// holds one, naming each it holds. It reads a task that is no template: a template is searched
+// through its instances, each a task of its own (section 23; templates.go).
 func (c *checker) taskLeaks(path string, task formatv0.Task, texts []searchedText) {
-	if task.Template != nil || len(texts) == 0 {
+	if len(texts) == 0 {
 		return
 	}
 	search := c.searchOf(path, task)
@@ -195,23 +196,34 @@ func lessonShown(lesson formatv0.Lesson) []searchedText {
 // the module that it names, as the leak check finds them, after the task's segment too, since the
 // open view of a lesson reaches the learner's app whole (format/README.md, sections 20 and 21). A
 // breach for each text and each task whose keys or leak phrases it holds. A task that the module does
-// not have breaks lesson.known-tasks instead, and a template is searched through its instances,
-// which come with the templates (section 23).
-func (c *checker) lessonLeaks(path string, lesson formatv0.Lesson, tasks map[string]formatv0.Task) {
-	named := lessonTasks(lesson, tasks)
+// not have breaks lesson.known-tasks instead, and a template is searched through its instances, for
+// the keys and leak phrases of each (section 23).
+func (c *checker) lessonLeaks(path string, lesson formatv0.Lesson, p parts) {
+	named := lessonTasks(lesson, p.tasks)
 	texts := lessonShown(lesson)
 	for _, i := range slices.Sorted(maps.Keys(named)) {
-		task := named[i]
-		if task.Template != nil {
+		file := taskPath(string(*lesson.Segments[i].Task))
+		e, ok := p.templates[file]
+		if !ok {
+			c.lessonTaskLeaks(path, i, file, named[i], texts)
 			continue
 		}
-		file := taskPath(string(*lesson.Segments[i].Task))
-		search := c.searchOf(file, task)
-		for _, t := range texts {
-			if found := search.In(t.text); len(found) > 0 {
-				c.add(RuleLessonNoLeaks, path, 0, 0, t.place,
-					fmt.Sprintf("the text holds %s, of the task that #/segments/%d/task names, and the learner sees the whole lesson before the task is solved", leaksSaid(task, file, found), i))
+		c.onInstances(e, func(sub *checker, inst instance) {
+			if len(inst.invalid) == 0 {
+				sub.lessonTaskLeaks(path, i, file, inst.task, texts)
 			}
+		})
+	}
+}
+
+// lessonTaskLeaks checks lesson.no-leaks on the texts of a lesson for one task that it names, at the
+// segment segment, a task of the file file that is no template: an instance, for a template.
+func (c *checker) lessonTaskLeaks(path string, segment int, file string, task formatv0.Task, texts []searchedText) {
+	search := c.searchOf(file, task)
+	for _, t := range texts {
+		if found := search.In(t.text); len(found) > 0 {
+			c.add(RuleLessonNoLeaks, path, 0, 0, t.place,
+				fmt.Sprintf("the text holds %s, of the task that #/segments/%d/task names, and the learner sees the whole lesson before the task is solved", leaksSaid(task, file, found), segment))
 		}
 	}
 }

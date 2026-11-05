@@ -7,6 +7,7 @@
 //
 // The validator is github.com/santhosh-tekuri/jsonschema/v6. It collects no annotations, so Open
 // walks the schemas by section 6 itself and asks the validator only whether a subschema passes, as
-// spec's format-check asks ajv (R23). The check of a module, the open view and the test of vectors
-// call it.
+// spec's format-check asks ajv (R23). Decode reads a JSON value into a type of formatv0, and ValueOf
+// gives the JSON value of one back. The check of a module, the open view, the templates and the test
+// of vectors call it.
 package schema

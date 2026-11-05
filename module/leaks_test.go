@@ -97,7 +97,8 @@ func TestLeakRulesOfAFile(t *testing.T) {
 	}{
 		{string(base[gapsLadder].Data), nil},
 		{replaced(string(base[gapsLadder].Data), gapsGiven, "There are 7 rungs."), []string{"#/givens/1 task.no-leaks"}},
-		{replaced(string(examplePart("task", "fraction-template").Data), "statement:\n", "givens: [\"3/8\"]\nstatement:\n"), nil},
+		{replaced(string(examplePart("task", "fraction-template").Data), "statement:\n", "givens: [\"3/8\"]\nstatement:\n"),
+			[]string{"#/givens/0 task.no-leaks"}},
 	} {
 		report, err := CheckFile("task", []byte(c.data))
 		if err != nil {
@@ -106,19 +107,6 @@ func TestLeakRulesOfAFile(t *testing.T) {
 		if got := shortReport(report); !slices.Equal(got, c.refused) {
 			t.Errorf("refused by %q, want %q\n%s", got, c.refused, report)
 		}
-	}
-}
-
-// A lesson that names a template searches it through its instances, which come with the templates,
-// and not yet here.
-func TestLeakRulesSkipTemplates(t *testing.T) {
-	template := taskValue(t, replaced(string(examplePart("task", "fraction-template").Data), "statement:\n", "givens: [\"3/8\"]\nstatement:\n"))
-	lesson := formatv0.Lesson{ID: "pizza", Title: "3/8 of a pizza", Segments: []formatv0.Segment{{Task: new(template.ID)}}}
-	c := checker{}
-	c.lessonLeaks("lessons/pizza.yaml", lesson, map[string]formatv0.Task{taskPath(string(template.ID)): template})
-	c.taskLeaks(taskPath(string(template.ID)), template, ownShown(template))
-	if len(c.breaches) > 0 {
-		t.Errorf("a template breaks %v", c.report())
 	}
 }
 

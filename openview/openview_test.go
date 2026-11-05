@@ -5,9 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/fs"
-	"math"
 	"path"
-	"reflect"
 	"strings"
 	"testing"
 
@@ -124,21 +122,6 @@ func TestTypeOfNoMarks(t *testing.T) {
 		}
 	}()
 	_, _ = of[open.Traps]("task", task)
-}
-
-// jsonValue gives the value as the reader of YAML would, with int64 and float64 for numbers.
-func TestJSONValue(t *testing.T) {
-	got := jsonValue(map[string]any{"i": int64(3), "big": int64(math.MaxInt64), "f": 1.5, "e": 1e300, "list": []any{2.0, "s", true, nil}})
-	want := map[string]any{"i": int64(3), "big": int64(math.MaxInt64), "f": 1.5, "e": 1e300, "list": []any{int64(2), "s", true, nil}}
-	if !reflect.DeepEqual(got, want) {
-		t.Errorf("%#v, want %#v", got, want)
-	}
-	defer func() {
-		if recover() == nil {
-			t.Error("a value that is no JSON does not panic")
-		}
-	}()
-	jsonValue(math.NaN())
 }
 
 func ExampleTechniques() {

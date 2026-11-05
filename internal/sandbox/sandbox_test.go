@@ -303,3 +303,82 @@ func FuzzCheckExpr(f *testing.F) {
 		}
 	})
 }
+
+// Compile compiles an expression once on its names, in their order, and Call evaluates it on each
+// binding of them, with the steps that Eval counts: the predicates of the vectors at the limit stop
+// as they stop in Eval. A name that the program would assign is no name of the expression.
+func TestCompile(t *testing.T) {
+	ints := func(ns ...int) []starlark.Value {
+		values := make([]starlark.Value, len(ns))
+		for i, n := range ns {
+			values[i] = starlark.MakeInt(n)
+		}
+		return values
+	}
+	for _, c := range []struct {
+		src    string
+		names  []string
+		limits Limits
+		args   []starlark.Value
+		want   string
+		err    string
+	}{
+		{"a * b + 1", []string{"a", "b"}, Limits{}, ints(6, 7), "43", ""},
+		{"a - b", []string{"b", "a"}, Limits{}, ints(1, 10), "9", ""},
+		{"_result + 1", []string{"_result"}, Limits{}, ints(1), "2", ""},
+		{"_result + _result_", []string{"_result", "_result_"}, Limits{}, ints(1, 2), "3", ""},
+		{"(a +\n b) # a comment", []string{"a", "b"}, Limits{}, ints(1, 2), "3", ""},
+		{"\na", []string{"a"}, Limits{}, ints(1), "1", ""},
+		{"# a comment\na", []string{"a"}, Limits{}, ints(1), "1", ""},
+		{"a, b", []string{"a", "b"}, Limits{}, ints(1, 2), "(1, 2)", ""},
+		{"a // b", []string{"a", "b"}, Limits{}, ints(1, 0), "", "sandbox: floored division by zero"},
+		{"value in [n * n for n in range(99997)]", []string{"value"}, Predicate, ints(49), "True", ""},
+		{"value in [n * n for n in range(99998)]", []string{"value"}, Predicate, ints(49), "", "sandbox: " + ErrSteps.Error()},
+		{"a + b", []string{"a", "b"}, Limits{}, ints(1), "", "sandbox: 1 values for the 2 names [a b]"},
+	} {
+		f, err := Compile(c.src, c.names...)
+		if err != nil {
+			t.Fatalf("%q: %v", c.src, err)
+		}
+		got, err := f.Call(context.Background(), c.limits, c.args...)
+		if c.err == "" && (err != nil || got.String() != c.want) || c.err != "" && (err == nil || err.Error() != c.err) {
+			t.Errorf("%q on %v: %v, %v; want %s, %q", c.src, c.args, got, err, c.want, c.err)
+		}
+	}
+	for _, c := range []struct{ src, err string }{
+		{"c", "1:1: undefined: c"},
+		{" a", "1:2: got indent, want primary expression"},
+		{"a = 1", "1:4: got '=' after expression, want EOF"},
+	} {
+		if _, err := Compile(c.src, "a"); err == nil || err.Error() != c.err {
+			t.Errorf("%q: %v, want %q", c.src, err, c.err)
+		}
+	}
+	f, err := Compile(endless)
+	if err != nil {
+		t.Fatal(err)
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Millisecond)
+	defer cancel()
+	if _, err := f.Call(ctx, Limits{}); !errors.Is(err, context.DeadlineExceeded) {
+		t.Errorf("a deadline gives %v", err)
+	}
+}
+
+// One Func is called from many goroutines at once, each with its own binding.
+func TestConcurrentCall(t *testing.T) {
+	f, err := Compile("a * a", "a")
+	if err != nil {
+		t.Fatal(err)
+	}
+	var wg sync.WaitGroup
+	for n := range 64 {
+		wg.Go(func() {
+			got, err := f.Call(context.Background(), Limits{}, starlark.MakeInt(n))
+			if err != nil || got.String() != fmt.Sprint(n*n) {
+				t.Errorf("%d: %v, %v", n, got, err)
+			}
+		})
+	}
+	wg.Wait()
+}
