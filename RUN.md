@@ -113,7 +113,7 @@
 | [x] | T27 | Песочница Starlark и условие проверки | Claude, проверяю я | — | T26 |
 | [x] | T28 | Сведение двух чтений и вердикт по наблюдению | Claude, проверяю я | да | T27 |
 | [x] | T29 | Проверка утечки | Claude, проверяю я | — | T26 |
-| [ ] | T30 | Генератор и экземпляр попытки | Claude, проверяю я | — | T19 |
+| [x] | T30 | Генератор и экземпляр попытки | Claude, проверяю я | — | T19 |
 | [ ] | T31 | Шаблоны задач | Claude, проверяю я | — | T23, T27, T29, T30 |
 | [ ] | T32 | Решатели шаблонов | Claude, проверяю я | — | T31 |
 | [ ] | T33 | Пакет, канонический текст и чтение пакета | Claude, проверяю я | — | T24, T32 |
@@ -783,6 +783,33 @@
 - **Мой шаг:** мерж pull request. Ветку, коммит, push и pull request делает исполнитель: правило 7 в задачах эпика не действует («Общее для задач эпика»).
 - **Как проверить:** векторы `random/` проходят и вышли из списка пропусков; `just -f spec/justfile docs-check-repo`; `/code-review high`.
 - **Разделы:** [текст формата](spec/format/README.md), разделы 22 и 23; R59 spec; R10; architecture 3.3.
+- **Сделано (2026-11-05):**
+  - работа — в ветке `t30-random` от `main` (18f1b06: мерж T29 #46). Ветку, коммит, push и pull request делает исполнитель, а мержит автор («Общее для задач эпика»). Pull request и его проверки идут после коммита с этой записью, и их называет отчёт автору;
+  - находки по прошлой задаче, T29 (правило 12): у SonarCloud новых нет — анализ 18f1b06, quality gate — OK; у CodeQL открытых нет; у Scorecard — те же пять из R33 spec. Править нечего;
+  - релиз v0.1.17, который дал мерж T29: `just -f spec/justfile release-verify module-kit v0.1.17 <файл>` пустил все девять файлов — «signed by the shared release.yml of .github v0.1.15», — `sha256sum -c SHA256SUMS` сошёлся, а `module-kit_v0.1.17_linux_amd64 --version` — `module-kit v0.1.17` и `Unicode 17.0.0`;
+  - `internal/random` (R31): `random.go` — `Stream`, `New`, `Words`, `Place`, `Integer`, `Below`, `Between`, `Fraction`, `Permutation`, `MaxPermutation` и `ErrDomain`; `doc.go`. Тесты — `random_test.go` и `reference_test.go`, сверка с `math/rand/v2` и `hash/fnv`;
+  - `template` (R31): `attempt.go` — `AttemptInstance`, `MaxInstances` и `ErrDomain`; `doc.go`. Тесты — `attempt_test.go`;
+  - тест векторов: исполнитель `random` — `randomDraws` в `internal/vectors/vectors_test.go`, а `TestRandomDrawsRefuse` — в `random_test.go` там же. Из `skipped.txt` ушли 12 строк — все векторы `random/`, — в нём 206. До вычёркивания тест назвал ровно их, «it passes: take it out of testdata/skipped.txt»;
+  - зависимостей задача не добавила, а `go list -deps ./cmd/module-kit` по-прежнему без сторонних модулей: Д15 не меняется;
+  - журнал — R31; начало журнала — «Следующий номер — R32». [docs/architecture.md](docs/architecture.md): статус, раздел 3 — вступление, раздел 3.3 — API пакета, экземпляр попытки и тесты, раздел 3.6 — «Что библиотека даёт», экземпляр попытки. README — статус;
+  - проверки:
+    - `just ci-lint`, `just ci-test`, `just ci-vuln` — «No vulnerabilities found» — и `just ci-licenses` со списком `ALLOWED_LICENSES` общего `go.yml` v0.1.15 — зелёные. `TestVectors` проходит 389 случаев, а 206 пропущены. Покрытие `internal/random` и `template` — 100 %; всего модуля Go — 98,7 %;
+    - `GOARCH=386 go test ./internal/random` — зелёный: на 32 битах `Uint64N` Go идёт путём `uint32n`, а числа те же;
+    - `FuzzReference` — 90 с до ревью, 9 258 946 запусков, и минуту после правок по ревью, 15 950 833 запуска, — без расхождений;
+    - номер экземпляра 16 зёрен всех пяти векторов `templates/` без решателя, выведенный из их чисел, — тот, что даёт `AttemptInstance`;
+    - `just -f spec/justfile docs-check-repo` — ok.
+  - `/code-review high`, один круг, — 8 находок; исправлены шесть, две — нет:
+    - `AttemptInstance` обещал `random.ErrDomain` в цепочке, а вне `module-kit` пакет `internal/random` не импортируется. Теперь — `template.ErrDomain`, это та же ошибка;
+    - count вне области давал ошибку без неё, а ID — с ней. Теперь оба — `template.ErrDomain`, и это держит `TestAttemptInstanceRefuses`;
+    - `TestAttemptInstanceOfTheVectors` пропускал `order-of-names.yaml`, единственный вектор с порядком имён по единицам кода и отрицательной областью. Теперь — все 16 зёрен пяти векторов;
+    - номера экземпляров были копией векторов, которую ничто не сверяло. Теперь тест читает векторы из `spec.Format` и держит те же зёрна, те же числа и что других векторов без решателя нет;
+    - сверка со стандартной библиотекой склеивала имена через перевод строки, и имени с ним fuzz-тест не видел. Теперь — через `|`, как текст места: в имени его нет;
+    - ошибка `place.Below` в `AttemptInstance` не бывает не `nil`, а отдавалась вызывающему. Теперь — `_` и комментарий;
+    - не исправлена: «исполнитель `random` не падает, если векторов нет». Падает: тест векторов называет вид без случая — «no case is of the kind random», — а файл в папке, которой тест не знает, роняет `inventory`;
+    - не исправлена: «вектор с `permutation` на 2^31 − 1 чисел съест память». Такой вектор держал бы 2^31 чисел в `value` — файл в десятки гигабайт, — а `module-kit` ничего не переставляет.
+- **Открыто:**
+  - мерж даст релиз — в перечне `paths` файлы `internal/random/random.go`, `template/attempt.go` и `doc.go` двух пакетов без тестов, — его сверит следующая задача первым делом, как эта — v0.1.17;
+  - векторы `templates/` по зёрнам — T31: экземпляр зерна — номер `AttemptInstance` среди экземпляров, которые она построит.
 
 #### T31. Шаблоны задач
 
