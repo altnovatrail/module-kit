@@ -133,7 +133,13 @@ func TestBuildIntoAnEmptyFolder(t *testing.T) {
 	if entries, _ := os.ReadDir(parent); len(entries) != 1 {
 		t.Errorf("build left %d entries beside the package, want none", len(entries)-1)
 	}
-	if info, err := os.Stat(out); err != nil || info.Mode().Perm() != 0o755 {
-		t.Errorf("the folder of the package is %v, %v; want 0755", info.Mode(), err)
+	// The folder of the package is made as its other folders are, not as the temporary folder that
+	// only its owner may read.
+	inner, err := os.Stat(filepath.Join(out, "device"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if info, err := os.Stat(out); err != nil || info.Mode().Perm() != inner.Mode().Perm() {
+		t.Errorf("the folder of the package is %v, %v; want %v, as device/", info.Mode(), err, inner.Mode())
 	}
 }

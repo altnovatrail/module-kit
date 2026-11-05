@@ -1101,8 +1101,9 @@
     - таблица 1 — T37 `[x]` и новая T41, от которой зависит T38; таблица 4 — Д15 закрыт;
   - проверки:
     - `just ci-lint`, `just ci-test`, `just ci-vuln` — «No vulnerabilities found» — и `just ci-licenses` с `ALLOWED_LICENSES` из `go.yml` `.github` v0.1.15 — зелёные;
-    - покрытие `cmd/module-kit` — 88,8 %: не дошли `main` и ветки ошибок файловой системы в `writePackage` и `writeFiles`; новые функции `module` — 80–100 %;
+    - покрытие `cmd/module-kit` — 89,8 %: не дошли `main` и ветки ошибок файловой системы в `writePackage` и `writeFiles`; новые функции `module` — 80–100 %;
     - `just -f spec/justfile docs-check-repo` — ok;
+  - SonarCloud на pull request #54 отметил `os.Chmod(temp, 0o755)` в `writePackage` правилом `go:S2612` (Security rating C). Исправлено кодом: пакет пишется в папку `package` внутри временной, а временная папка остаётся только у владельца и удаляется (R38);
   - `/code-review high` не шёл: исполнитель — Cline, а команды Claude Code у него нет. По AGENTS.md ревью запускает автор, один круг, по pull request до мержа.
 - **Открыто:**
   - `/code-review high` — шаг автора до мержа (AGENTS.md): его находки исполнитель исправит одним кругом;

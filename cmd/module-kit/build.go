@@ -56,29 +56,28 @@ func emptyOrAbsent(out string) error {
 	return nil
 }
 
-// writePackage writes the files of a package, by their paths in its folder, into a new folder beside
-// out, and moves that folder to out, in place of an empty folder there.
-func writePackage(out string, files map[string][]byte) error {
+// writePackage writes the files of a package, by their paths in its folder, into a folder of its own
+// within a new temporary folder beside out, and moves it to out, in place of an empty folder there.
+// The temporary folder, which only its owner may read, is removed whatever happens; the package's
+// folder is made as every folder of it is, under the process's umask.
+func writePackage(out string, files map[string][]byte) (err error) {
 	out = filepath.Clean(out)
 	temp, err := os.MkdirTemp(filepath.Dir(out), "."+filepath.Base(out)+".")
 	if err != nil {
 		return err
 	}
-	undo := func(err error) error { return errors.Join(err, os.RemoveAll(temp)) }
-	if err := writeFiles(temp, files); err != nil {
-		return undo(err)
+	defer func() { err = errors.Join(err, os.RemoveAll(temp)) }()
+	built := filepath.Join(temp, "package")
+	if err := os.MkdirAll(built, 0o755); err != nil {
+		return err
 	}
-	// MkdirTemp makes a folder that only its owner reads; a package is for everyone to read.
-	if err := os.Chmod(temp, 0o755); err != nil {
-		return undo(err)
+	if err := writeFiles(built, files); err != nil {
+		return err
 	}
 	if err := os.Remove(out); err != nil && !errors.Is(err, fs.ErrNotExist) {
-		return undo(err)
+		return err
 	}
-	if err := os.Rename(temp, out); err != nil {
-		return undo(err)
-	}
-	return nil
+	return os.Rename(built, out)
 }
 
 // writeFiles writes each file under root, by its path with / between names, making its folders.
