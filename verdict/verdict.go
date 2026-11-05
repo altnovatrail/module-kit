@@ -284,7 +284,7 @@ func (s AnswerSlot) predicateVerdict(ctx context.Context, limits sandbox.Limits,
 	}
 	result, err := sandbox.Eval(ctx, limits, *c.Predicate, starlark.StringDict{valueName: starlark.MakeBigInt(read.Value.Num())})
 	switch {
-	case errors.Is(err, context.Canceled), errors.Is(err, context.DeadlineExceeded):
+	case sandbox.ContextDone(err):
 		return SlotVerdict{}, err
 	case err != nil:
 		return SlotVerdict{Verdict: Unchecked}, nil

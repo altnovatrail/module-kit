@@ -44,16 +44,19 @@ func wellFormed(t *testing.T, report Report) {
 
 // On any file at any path of a module, and on any file of a part on its own, the check gives a
 // report without an error or a panic, and the report is in form. The corpus is the files of the
-// vectors of the rules that the check holds but the YAML rules, whose vectors FuzzRead takes, each
-// at its path in its case or, for a case in a file, at a path of its part, and the examples of the
-// parts of the layout, each at a path of its part.
+// vectors of the rules that the check holds but the YAML rules, whose vectors FuzzRead takes, and
+// task.template-solver, each at its path in its case or, for a case in a file, at a path of its part,
+// and the examples of the parts of the layout, each at a path of its part. The vectors of
+// task.template-solver are left out because four of them run a solver to its budget of 100 000 000
+// steps, a second under the race detector, and each run of the fuzz test runs it twice; the example
+// number-thought-of-template brings a solver into the corpus.
 func FuzzCheck(f *testing.F) {
 	err := fs.WalkDir(spec.Format, "vectors/rules", func(name string, entry fs.DirEntry, err error) error {
 		if err != nil || entry.IsDir() {
 			return err
 		}
 		parts := strings.SplitN(name, "/", 5)
-		if !slices.Contains(knownRules, parts[2]) || slices.Contains(yaml.Rules, parts[2]) {
+		if !slices.Contains(knownRules, parts[2]) || slices.Contains(yaml.Rules, parts[2]) || parts[2] == RuleTaskTemplateSolver {
 			return nil
 		}
 		data, err := fs.ReadFile(spec.Format, name)

@@ -36,7 +36,8 @@ var partRules = []string{
 	RuleTaskZones, RuleTaskAssessability, RuleLessonKnownSkills, RuleLessonKnownTasks, RuleLessonTaskSkills,
 	RuleLessonKnownPictures, RuleLessonAreas, RuleLessonAgeCategories, RuleLessonOrder, RuleTaskChoiceKey, RuleTaskChoiceOptions,
 	RuleTaskFractionKey, RuleTaskTrapValues, RuleTaskPredicateExpression, RuleTaskNoLeaks, RuleLessonNoLeaks,
-	RuleTaskTemplateNames, RuleTaskTemplateExpressions, RuleTaskPlaceholders, RuleTaskTemplateInstances, RuleTaskInstances,
+	RuleTaskTemplateNames, RuleTaskTemplateExpressions, RuleTaskPlaceholders, RuleTaskTemplateInstances, RuleTaskTemplateSolver,
+	RuleTaskInstances,
 }
 
 // typed reads the value of a file of a part that passed its schema into the type of formatv0 that

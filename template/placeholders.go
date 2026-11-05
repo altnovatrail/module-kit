@@ -95,6 +95,11 @@ type stringAt struct {
 func stringsOf(task formatv0.Task) []stringAt {
 	value := schema.ValueOf(task).(map[string]any)
 	delete(value, "template")
+	return stringsIn(value)
+}
+
+// stringsIn gives every string of a JSON value, as stringsOf does of a task.
+func stringsIn(value any) []stringAt {
 	var found []stringAt
 	var walk func(v any, tokens []string)
 	walk = func(v any, tokens []string) {
