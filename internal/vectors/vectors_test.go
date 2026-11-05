@@ -414,9 +414,9 @@ var runners = map[string]func(vector) error{
 	"packages":  noCode,   // the package of module/ is package.yaml
 	"indexes":   noCode,   // the index the release builds, or the rule that refuses it
 	"versions":  noCode,   // the part of the version found, or the rule that refuses it
-	// The joining of two readings and the verdict on the observation (contracts/README.md,
-	// section 10).
-	"observation/v1": noCode,
+	// The validity of an observation, the joining of two readings and the verdict on the observation
+	// (contracts/README.md, section 10).
+	"observation/v1": observations,
 }
 
 // The parts of a module's layout, whose open views have vectors (format/README.md, section 10).

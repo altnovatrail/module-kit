@@ -444,13 +444,14 @@ func TestItemOf(t *testing.T) {
 		{[]Verdict{Unchecked, Unreadable}, Unreadable},
 		{[]Verdict{Correct, Unchecked}, Unchecked},
 		{[]Verdict{Unchecked}, Unchecked},
+		{nil, Unchecked},
 	} {
 		var slots []SlotVerdict
 		for _, v := range c.slots {
 			slots = append(slots, SlotVerdict{Verdict: v})
 		}
-		if got := itemOf(slots); got != c.want {
-			t.Errorf("itemOf(%v) = %s, want %s", c.slots, got, c.want)
+		if got := ItemOf(slots); got != c.want {
+			t.Errorf("ItemOf(%v) = %s, want %s", c.slots, got, c.want)
 		}
 	}
 }
@@ -479,6 +480,39 @@ func TestSame(t *testing.T) {
 	} {
 		if got := Same(c.slot, c.a, c.b); got != c.want {
 			t.Errorf("Same(%s, %q, %q) = %t, want %t", c.slot.Check.Kind, c.a, c.b, got, c.want)
+		}
+	}
+}
+
+// NormalForm gives a value as the kind normalizes it, and whether it is in the kind's notation.
+func TestNormalForm(t *testing.T) {
+	brokenKey := byHand("none", "even", "odd")
+	for _, c := range []struct {
+		slot     AnswerSlot
+		value    string
+		form     string
+		notation bool
+	}{
+		{number("7", "rungs"), "= 7 Rungs.", "7", true},
+		{number("7", "rungs"), "rungs", "rungs", false},
+		{number("7"), "7²", "7�", false},
+		{number("7"), "=", "", false},
+		{fraction("3/4", formatv0.CheckFormReduced), "6 / 8", "6 / 8", true},
+		{fraction("3/4", formatv0.CheckFormAny), "0.75", "0.75", false},
+		{predicate(divisibleBy3), "-0", "-0", true},
+		{predicate(divisibleBy3), "012", "012", false},
+		{byHand("odd", "even", "odd"), " EVEN ", "even", true},
+		{byHand("odd", "even", "odd"), "seven", "seven", false},
+		{byHand("odd", "even", "odd"), " ", "", false},
+		{byHand("=", "<", ">", "="), "=", "=", true},
+		{tapped("yes", "yes", "no"), "No", "no", true},
+		{brokenKey, "NONE", "none", true},
+		{rubric(), " An essay. ", " An essay. ", false},
+		{byHand("odd", "even", "odd\uFFFD"), "odd\xff", "odd\xff", false},
+	} {
+		form, notation := NormalForm(c.slot, c.value)
+		if form != c.form || notation != c.notation {
+			t.Errorf("NormalForm(%s, %q) = %q, %t, want %q, %t", c.slot.Check.Kind, c.value, form, notation, c.form, c.notation)
 		}
 	}
 }
