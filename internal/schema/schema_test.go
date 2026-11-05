@@ -2,6 +2,7 @@ package schema
 
 import (
 	"bytes"
+	"cmp"
 	"encoding/json"
 	"fmt"
 	"io/fs"
@@ -292,4 +293,16 @@ func TestValueOf(t *testing.T) {
 		}
 	}()
 	ValueOf(math.NaN())
+}
+
+// Places in a file go member by member, and two indices of an array by their numbers.
+func TestOrderOfPointers(t *testing.T) {
+	ordered := []string{"", "#", "#/a", "#/a/0", "#/a/2", "#/a/10", "#/a/10/x", "#/a/01", "#/a/9b", "#/b"}
+	for i, a := range ordered {
+		for j, b := range ordered {
+			if got, want := ComparePointers(a, b), cmp.Compare(i, j); got != want {
+				t.Errorf("ComparePointers(%q, %q) is %d, want %d", a, b, got, want)
+			}
+		}
+	}
 }

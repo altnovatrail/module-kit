@@ -31,6 +31,7 @@ import (
 	"github.com/altnovatrail/module-kit/module"
 	"github.com/altnovatrail/module-kit/moduleindex"
 	"github.com/altnovatrail/module-kit/modulepackage"
+	"github.com/altnovatrail/module-kit/moduleversion"
 	"github.com/altnovatrail/module-kit/openview"
 	"github.com/altnovatrail/module-kit/template"
 	"github.com/altnovatrail/module-kit/verdict"
@@ -649,6 +650,70 @@ func indexes(v vector) error {
 	return readsBack(text, *iv.Index)
 }
 
+// versions passes a case of versions of a module: the new version, module/, compared with every
+// published version, published/X.Y.Z/, gives the part of the version that version.yaml gives, or is
+// refused by the rule it names (format/README.md, sections 9 and 27). A published version laid out as
+// a module is built into its package, which goes to the comparison as files, without device/, as
+// the CI of modules gives it; one of an earlier version of the format is its files as they are, by
+// the digest of inventory.json. Each folder is named by the version its package names.
+func versions(v vector) error {
+	var vv formatv0.VersionVector
+	if _, err := readVector(v.fsys, path.Join(v.path, "version.yaml"), "version-vector.schema.json", &vv); err != nil {
+		return err
+	}
+	folder, err := fs.Sub(v.fsys, path.Join(v.path, "module"))
+	if err != nil {
+		return err
+	}
+	next, err := modulepackage.Build(context.Background(), folder)
+	if err != nil {
+		return fmt.Errorf("module: %w", err)
+	}
+	entries, err := fs.ReadDir(v.fsys, path.Join(v.path, "published"))
+	if err != nil {
+		return err
+	}
+	var published []moduleversion.Published
+	for _, e := range entries {
+		dir := path.Join(v.path, "published", e.Name())
+		files, err := fs.Sub(v.fsys, dir)
+		if err != nil {
+			return err
+		}
+		if _, err := fs.Stat(files, "manifest.yaml"); err != nil {
+			inventory, err := fs.ReadFile(files, modulepackage.InventoryFile)
+			if err != nil {
+				return err
+			}
+			published = append(published, moduleversion.Published{Digest: canonical.Digest(inventory), Files: files})
+			continue
+		}
+		pkg, err := modulepackage.Build(context.Background(), files)
+		if err != nil {
+			return fmt.Errorf("published/%s: %w", e.Name(), err)
+		}
+		if string(pkg.Inventory.Version) != e.Name() {
+			return fmt.Errorf("published/%s holds the version %s", e.Name(), pkg.Inventory.Version)
+		}
+		parts := map[string][]byte{}
+		for _, name := range []string{modulepackage.InventoryFile, modulepackage.ServerFile, modulepackage.DeviceFile} {
+			parts[name] = pkg.Files[name]
+		}
+		published = append(published, moduleversion.Published{Digest: pkg.Digest, Files: fstest.MapFS(asFiles(parts))})
+	}
+	c, err := moduleversion.Compare(next, published)
+	if err != nil {
+		return err
+	}
+	if vv.Refusal != nil {
+		return fmt.Errorf("not refused by %s: the comparison finds a %s change", *vv.Refusal, c.Part)
+	}
+	if c.Part.String() != string(*vv.VersionPart) {
+		return fmt.Errorf("the comparison finds a %s change, and the vector gives %s:\n%s", c.Part, *vv.VersionPart, c)
+	}
+	return nil
+}
+
 // readsBack reads the text of an index as a reader does, and gives an error when it does not read
 // as the index the vector gives.
 func readsBack(text []byte, want formatv0.ModuleIndex) error {
@@ -771,7 +836,7 @@ var runners = map[string]func(vector) error{
 	"tiers":     tiers,       // the tier of each skill
 	"packages":  packages,    // the package of module/ is package.yaml
 	"indexes":   indexes,     // the index the release builds, or the rule that refuses it
-	"versions":  noCode,      // the part of the version found, or the rule that refuses it
+	"versions":  versions,    // the part of the version found, or the rule that refuses it
 	// The validity of an observation, the joining of two readings and the verdict on the observation
 	// (contracts/README.md, section 10).
 	"observation/v1": observations,

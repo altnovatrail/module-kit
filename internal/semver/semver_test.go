@@ -97,3 +97,23 @@ func mustParse(t *testing.T, s string) Version {
 	}
 	return v
 }
+
+// Raise raises one number by one, with a carry of any length, and sets every lower one to 0.
+func TestRaise(t *testing.T) {
+	for _, c := range []struct {
+		from  string
+		place int
+		want  string
+	}{
+		{"1.2.3", Patch, "1.2.4"}, {"1.2.3", Minor, "1.3.0"}, {"1.2.3", Major, "2.0.0"},
+		{"0.0.9", Patch, "0.0.10"}, {"0.9.9", Minor, "0.10.0"}, {"9.9.9", Major, "10.0.0"},
+		{"1.0.99999999999999999999", Patch, "1.0.100000000000000000000"}, {"18446744073709551615.0.0", Major, "18446744073709551616.0.0"},
+	} {
+		if got := mustParse(t, c.from).Raise(c.place).String(); got != c.want {
+			t.Errorf("Raise(%s, %d) = %s, want %s", c.from, c.place, got, c.want)
+		}
+	}
+	if v := mustParse(t, "0.3.0"); !v.Zero(Major) || v.Zero(Minor) || !v.Zero(Patch) {
+		t.Errorf("Zero of 0.3.0 is %t, %t, %t", v.Zero(Major), v.Zero(Minor), v.Zero(Patch))
+	}
+}

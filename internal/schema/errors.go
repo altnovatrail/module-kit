@@ -1,6 +1,7 @@
 package schema
 
 import (
+	"cmp"
 	"fmt"
 	"net/url"
 	"slices"
@@ -79,4 +80,45 @@ func Pointer(tokens []string) string {
 		b.WriteString(escapeToken.Replace(token))
 	}
 	return "#" + (&url.URL{Fragment: b.String()}).EscapedFragment()
+}
+
+// ComparePointers orders two places in a file, JSON Pointers in URI fragment form, member by member:
+// an index of an array by its number, so that #/items/2 comes before #/items/10, before any other
+// token, and other tokens as text. A place comes before the places within it.
+func ComparePointers(a, b string) int {
+	as, bs := strings.Split(a, "/"), strings.Split(b, "/")
+	for i := range min(len(as), len(bs)) {
+		if n := compareTokens(as[i], bs[i]); n != 0 {
+			return n
+		}
+	}
+	return cmp.Compare(len(as), len(bs))
+}
+
+func compareTokens(a, b string) int {
+	switch ai, bi := isIndex(a), isIndex(b); {
+	case ai && bi:
+		return cmp.Or(cmp.Compare(len(a), len(b)), strings.Compare(a, b))
+	case ai != bi:
+		// Indices first, so that the order is one whatever tokens meet.
+		if ai {
+			return -1
+		}
+		return 1
+	}
+	return strings.Compare(a, b)
+}
+
+// isIndex says whether a token is the index of an element of an array, as a JSON Pointer writes it:
+// decimal digits, with no leading zero (RFC 6901, section 4).
+func isIndex(token string) bool {
+	if token == "" || token[0] == '0' && len(token) > 1 {
+		return false
+	}
+	for _, c := range []byte(token) {
+		if c < '0' || c > '9' {
+			return false
+		}
+	}
+	return true
 }

@@ -118,7 +118,7 @@
 | [x] | T32 | Решатели шаблонов | Claude, проверяю я | — | T31 |
 | [x] | T33 | Пакет, канонический текст и чтение пакета | Claude, проверяю я | — | T24, T32 |
 | [x] | T34 | Индекс модулей и версия новой попытки | Claude, проверяю я | — | T33 |
-| [ ] | T35 | Сравнение версий: часть версии | Claude, проверяю я | да | T34 |
+| [x] | T35 | Сравнение версий: часть версии | Claude, проверяю я | да | T34 |
 | [ ] | T36 | Сравнение версий: правила `module-version.*` и переход формата | Claude, проверяю я | — | T35 |
 | [ ] | T37 | Команды `check` и `build` | Claude, проверяю я | да | T33 |
 | [ ] | T38 | Команды `index` и `diff`, запуск CLI на каждой ОС | я + Claude | да | T36, T37 |
@@ -993,9 +993,34 @@
   - правило 0.y.z и допустимые следующие версии;
   - отчёт: часть, путь JSON Pointer и что изменилось, у экземпляров — значения параметров.
 - **Решить при планировании:** как поделить векторы `versions/` между T35 и T36; форма отчёта и его данных для `--json`.
+- **Решено автором (2026-11-05)**, при планировании:
+  - делёж векторов `versions/` — 119 / 33: T35 — 119 случаев с `version_part`, у которых все опубликованные версии — модули формата 0.3; T36 — 30 отказов и три перехода формата с частью: `format-transition`, `format-transition-zero-y` и `earlier-format-older-version`. Отвергнуто: 122/30 — переход тогда в T35; 129/23 — `module-version.above` и `step` тогда в T35;
+  - отчёт — по местам: каждая строка таблицы — у своего точного места, всё прочее — патч у каждого места, где виды разошлись, а патч у места, которое уже назвала строка таблицы, не повторяется. Порядок — по части от мажорной, затем по месту. Тип библиотеки несёт `String()` и теги JSON, а печатает его T38. Отвергнуто: одна строка патча `#`, как в `versions.mjs`, — автор не видел бы, что дало патч;
+  - вход — пакеты файлами уже в T35: `Compare(next, []Published{Digest, Files})`, опубликованный пакет читается по цепочке дайджестов без файлов `device/` ([docs/architecture.md](docs/architecture.md), раздел 3.5). Пункт T36 «опубликованные пакеты сверены по цепочке» переходит сюда, а T36 дописывает чтение пакета 0.2 по местам и правила. Отвергнуто: `*modulepackage.Package` в памяти — T36 меняла бы вход и тесты.
+- **Выяснилось при планировании:**
+  - векторов `versions/` на v0.9.2 — 152: 122 с `version_part` и 30 с `refusal`. У шести опубликованная версия — формата 0.2, только `inventory.json` и `server.json`: три с частью и три отказа;
+  - `version_part` вектора — найденная часть, а не поднятая: `zero-zero-to-zero-one` и `raised-higher-than-found` дают `patch`;
+  - строки «no part of their own» — `dependencies`, `skill_tiers`, `instances`, выражения шаблона — у `versions.mjs` всё равно дают патч, если вид разошёлся: `derived-rewritten-same-numbers` — `patch`;
+  - `skill_tiers` и `instances` `modulepackage.Read` не пересчитывает: пакет другого сборщика может разойтись только в них, и тогда это патч — опускать их из сравнения нельзя;
+  - `comparedBy` и `unitsOf` в `verdict` не экспортированы, а номер ячейки в строке тетради `verdict.AnswerSlots` теряет: места ячеек `moduleversion` считает сам.
 - **Мой шаг:** мерж pull request. Ветку, коммит, push и pull request делает исполнитель: правило 7 в задачах эпика не действует («Общее для задач эпика»).
 - **Как проверить:** векторы с найденной частью внутри одной версии формата проходят и вышли из списка пропусков; `just -f spec/justfile docs-check-repo`; `/code-review high`.
 - **Разделы:** [текст формата](spec/format/README.md), разделы 15 и 27; R89 spec, R101 spec; R13; architecture 3.5.
+- **Сделано (2026-11-05):**
+  - работа — в ветке `t35-version-part` от `main` (85816f3: мерж T34 #51). Задачу начала сессия Claude Code и довела до записи R36; на лимите подписки её доделал Cline — RUN.md, таблица пакетов, проверки, коммит и pull request;
+  - находки по прошлой задаче, T34 (правило 12): у SonarCloud новых нет — анализ 85816f3, 0 находок, quality gate — OK; у CodeQL открытых нет; у Scorecard — те же пять из R33 spec. Править нечего;
+  - релиз v0.1.22, который дал мерж T34: `release-verify` пустил все девять файлов — «signed by the shared release.yml of .github v0.1.15», — `sha256sum -c SHA256SUMS` сошёлся, а `--version` бинарника linux amd64 — `module-kit v0.1.22` и `Unicode 17.0.0`;
+  - `moduleversion` (R36): `part.go` — `Part` со словами схемы вектора, `Steps`, `StepPart`, `SameMajor`; `changes.go` — `Changes`, порт `foundPartOf` `versions.mjs` на типы `formatv0`, с местами строк таблицы; `diff.go` — патч у каждого места, где JSON-значения `server.json` и `device.json` разошлись; `compare.go` — `Compare`, `Published`, `Comparison` со `String()` и тегами JSON; `doc.go`. Тесты — `moduleversion_test.go`, `helpers_test.go` и `fuzz_test.go` с `FuzzDiff`;
+  - `internal/semver` — `Version.Raise` и `Zero`, `TestRaise`; `internal/normal/compared.go` — `Units` и `Compared`, перенесённые из `verdict` без смены его API, `TestCompared`; `internal/schema` — `ComparePointers`, перенесённый из `module` вместе с `TestOrderOfPointers`; `modulepackage.ReadParts` — чтение по цепочке без файлов `device/`, общее с `Read`, `TestReadParts`;
+  - тест векторов: исполнитель `versions` вместо `noCode`. Тест назвал прошедшими ровно 119 случаев с частью внутри одной версии формата, и они ушли из `skipped.txt`: в нём 33 строки — 30 отказов и три перехода формата;
+  - зависимостей задача не добавила, `go list -deps ./cmd/module-kit` по-прежнему без сторонних модулей: Д15 не меняется;
+  - журнал — R36, «Следующий номер — R37». [docs/architecture.md](docs/architecture.md): статус, вступление раздела 3, раздел 3.2 — `ReadParts`, раздел 3.5 — код, отчёт и тесты, раздел 3.6 — таблица пакетов и 33 строки пропусков. README — статус. T36 — 33 вектора, пункт о цепочке дайджестов сделан здесь;
+  - проверки: `just ci-lint`, `just ci-test` и `just ci-vuln` — «No vulnerabilities found» — зелёные; покрытие нового кода — 90–100 % по функциям, модуля Go — 98,2 %. `FuzzDiff` — минута, 4 143 264 запуска, без падений. `just -f spec/justfile docs-check-repo` — ok;
+  - `/code-review high` не шёл: на лимите подписки задачу доделал Cline, а команды Claude Code у него нет. По AGENTS.md ревью запускает автор, один круг, — по pull request, до мержа.
+- **Открыто:**
+  - `/code-review high` — шаг автора до мержа (AGENTS.md): его находки исполнитель исправит одним кругом;
+  - мерж даст релиз — в перечне `paths` новые `moduleversion/*.go` и `internal/normal/compared.go` и правки `internal/semver`, `internal/schema`, `modulepackage`, `verdict` и `module`, — его сверит следующая задача первым делом;
+  - правила `module-version.*`, пакет 0.2 по местам и 33 вектора — T36; печать отчёта командой `diff` — T38.
 
 #### T36. Сравнение версий: правила `module-version.*` и переход формата
 
@@ -1003,8 +1028,8 @@
 - **Сделать:**
   - правила `module-version.above` — та же версия с тем же дайджестом: модуль не изменился, — `module-version.step`, `module-version.retired-complete`, `module-version.retired-kept`, `module-version.retired-known`, `module-version.ids-kept`, `module-version.languages-kept` и `module-version.bands-kept`;
   - с какими версиями: часть и `module-version.retired-kept` — по новейшей, остальные правила — по каждой; снятая версия — опубликованная;
-  - переход формата: прошлый пакет — только `inventory.json` и `server.json` по местам, которые держит [текст формата](spec/format/README.md), раздел 2; часть — мажорная, правила — через эти места;
-  - опубликованные пакеты сверены по цепочке дайджестов (T33).
+  - переход формата: прошлый пакет — только `inventory.json` и `server.json` по местам, которые держит [текст формата](spec/format/README.md), раздел 2; часть — мажорная, правила — через эти места. Его читает `moduleversion.Compare`, которая с T35 даёт на нём `ErrFormatVersion`;
+  - векторы — 33 строки `skipped.txt` после T35: 30 отказов и три перехода формата с частью. Сверку опубликованных пакетов по цепочке дайджестов сделала T35 (R36).
 - **Мой шаг:** мерж pull request. Ветку, коммит, push и pull request делает исполнитель: правило 7 в задачах эпика не действует («Общее для задач эпика»).
 - **Как проверить:** все векторы `versions/` проходят и вышли из списка пропусков; `just -f spec/justfile docs-check-repo`; `/code-review high`.
 - **Разделы:** [текст формата](spec/format/README.md), разделы 2, 25–27; R89 spec, R101 spec; R13; architecture 3.5.

@@ -5,6 +5,7 @@ import (
 	"errors"
 	"io/fs"
 	"reflect"
+	"strings"
 	"testing"
 	"testing/fstest"
 )
@@ -43,6 +44,34 @@ func TestRead(t *testing.T) {
 		if !reflect.DeepEqual(got, pkg) {
 			t.Errorf("%s: the package reads back as another package", name)
 		}
+	}
+}
+
+// ReadParts reads a package as files without device/ as the package with its three texts alone,
+// and refuses a listing that the inventory does not name, as Read does.
+func TestReadParts(t *testing.T) {
+	pkg := built(t, "with-media-and-notice")
+	folder := asFolder(pkg.Files)
+	for name := range folder {
+		if strings.HasPrefix(name, DeviceFolder) {
+			delete(folder, name)
+		}
+	}
+	got, err := ReadParts(folder, pkg.Digest)
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := *pkg
+	want.Files = map[string][]byte{InventoryFile: pkg.Files[InventoryFile], ServerFile: pkg.Files[ServerFile], DeviceFile: pkg.Files[DeviceFile]}
+	if !reflect.DeepEqual(got, &want) {
+		t.Errorf("the package reads as %+v, want %+v", got, want)
+	}
+	if _, err := Read(folder, pkg.Digest); !errors.Is(err, ErrChain) {
+		t.Errorf("Read without device/ = %v; want ErrChain", err)
+	}
+	folder[DeviceFile] = &fstest.MapFile{Data: []byte(`{}`)}
+	if _, err := ReadParts(folder, pkg.Digest); !errors.Is(err, ErrChain) {
+		t.Errorf("ReadParts with another listing = %v; want ErrChain", err)
 	}
 }
 

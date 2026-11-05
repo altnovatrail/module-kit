@@ -36,6 +36,21 @@ var (
 // module; of another, it gives ErrFormatVersion as soon as the inventory names it. Its errors wrap
 // ErrChain, ErrFormatVersion or ErrNotCanonical, with the file they are of, or are those of fsys.
 func Read(fsys fs.FS, digest formatv0.Digest) (*Package, error) {
+	return read(fsys, digest, true)
+}
+
+// ReadParts reads a package as files as Read does, by the chain of digests from the digest of the
+// package, but without the files of device/: its inventory, its canonical view and the listing of its
+// device part, which names each of those files by its digest and size. So the comparison of the
+// versions of a module reads a published package, whose device part it compares by its listing
+// (format/README.md, section 27). Files then holds InventoryFile, ServerFile and DeviceFile alone. Its
+// errors are those of Read.
+func ReadParts(fsys fs.FS, digest formatv0.Digest) (*Package, error) {
+	return read(fsys, digest, false)
+}
+
+// read reads a package as files, and the files of device/ when withDevice is true.
+func read(fsys fs.FS, digest formatv0.Digest, withDevice bool) (*Package, error) {
 	files := map[string][]byte{}
 	inventoryValue, err := readPart(fsys, InventoryFile, formatv0.Descriptor{Digest: digest, Size: anySize}, "inventory.schema.json", files)
 	if err != nil {
@@ -56,6 +71,9 @@ func Read(fsys fs.FS, digest formatv0.Digest) (*Package, error) {
 			inventory.ID, inventory.Version, inventory.ModuleFormatVersion, m.ID, m.Version, m.ModuleFormatVersion, ErrNotCanonical)
 	}
 	listing := decode[formatv0.DeviceListing](listingValue)
+	if !withDevice {
+		return &Package{Digest: digest, Inventory: inventory, View: view, Listing: listing, Files: files}, nil
+	}
 	named := map[string]formatv0.Descriptor{licenseFile: listing.License}
 	if listing.Notice != nil {
 		named[noticeFile] = *listing.Notice

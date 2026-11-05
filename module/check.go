@@ -193,51 +193,10 @@ func (c *checker) add(rule, path string, line, column int, pointer, message stri
 func (c *checker) report() Report {
 	slices.SortStableFunc(c.breaches, func(a, b Breach) int {
 		return cmp.Or(strings.Compare(a.Path, b.Path), cmp.Compare(a.Line, b.Line), cmp.Compare(a.Column, b.Column),
-			comparePointers(a.Pointer, b.Pointer), strings.Compare(a.Rule, b.Rule), strings.Compare(a.Keyword, b.Keyword),
+			schema.ComparePointers(a.Pointer, b.Pointer), strings.Compare(a.Rule, b.Rule), strings.Compare(a.Keyword, b.Keyword),
 			strings.Compare(a.Message, b.Message))
 	})
 	return Report{Breaches: c.breaches}
-}
-
-// comparePointers orders two places in a file, JSON Pointers in URI fragment form, member by member:
-// an index of an array by its number, so that #/items/2 comes before #/items/10, before any other
-// token, and other tokens as text. A place comes before the places within it.
-func comparePointers(a, b string) int {
-	as, bs := strings.Split(a, "/"), strings.Split(b, "/")
-	for i := range min(len(as), len(bs)) {
-		if n := compareTokens(as[i], bs[i]); n != 0 {
-			return n
-		}
-	}
-	return cmp.Compare(len(as), len(bs))
-}
-
-func compareTokens(a, b string) int {
-	switch ai, bi := isIndex(a), isIndex(b); {
-	case ai && bi:
-		return cmp.Or(cmp.Compare(len(a), len(b)), strings.Compare(a, b))
-	case ai != bi:
-		// Indices first, so that the order is one whatever tokens meet.
-		if ai {
-			return -1
-		}
-		return 1
-	}
-	return strings.Compare(a, b)
-}
-
-// isIndex says whether a token is the index of an element of an array, as a JSON Pointer writes it:
-// decimal digits, with no leading zero (RFC 6901, section 4).
-func isIndex(token string) bool {
-	if token == "" || token[0] == '0' && len(token) > 1 {
-		return false
-	}
-	for _, c := range []byte(token) {
-		if c < '0' || c > '9' {
-			return false
-		}
-	}
-	return true
 }
 
 // check runs the rules of a whole module in the order of section 10, with the format version that
