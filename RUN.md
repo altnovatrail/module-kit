@@ -1213,6 +1213,26 @@
 - **Мой шаг:** мерж pull request — ветку, коммит, push и pull request делает исполнитель («Общее для задач эпика»); «Binaries» — в ruleset `main` (правило 4).
 - **Как проверить:** «Binaries» зелёная на всех шести раннерах; `just -f spec/justfile docs-check-repo`; `/code-review high`.
 - **Разделы:** R07, R16, R40; Д6; architecture 3.1 и 3.6; architecture 3.3 .github.
+- **Сделано (2026-11-05):**
+  - работа — в ветке `t42-binaries` от `main` (b727b87: мерж T38 #56). Ветку, коммит, push и pull request делает исполнитель, а мержит автор («Общее для задач эпика»);
+  - находки по прошлой задаче, T38 (правило 12): у SonarCloud новых нет — анализ b727b87, 0 находок, quality gate — OK; у CodeQL открытых нет; у Scorecard — те же пять из R33 spec. Править нечего;
+  - релиз мержа T38 к началу задачи не вышел: CI на b727b87 ещё шёл, а «Release» ждёт его. Его сверка — первым шагом следующей задачи, вместе с релизом этой;
+  - `.github/workflows/ci.yml` (R41):
+    - «Binaries / build» — стадия `toolchain`, `just release-files v0.0.0-ci` и `just binaries-samples`, эталон linux/amd64, артефакт `binaries`;
+    - «Binaries / <платформа>» — матрица на шести раннерах, `sparse-checkout` одного скрипта, `shell: bash`;
+    - «Binaries» — `if: always()`, ждёт обе;
+  - `.github/binaries.sh` — сумма по `SHA256SUMS`, `--version`, `check` принятого и отвергнутого модуля, `build` с дайджестом вектора, `index --first`, `diff`, побайтная сверка с эталоном. Перед коммитом проверен здесь на linux/amd64: прошёл, а с подменённым эталоном и с подменённым бинарником упал, назвав что;
+  - justfile — рецепт `binaries-samples`;
+  - actionlint v1.7.12 — `ci.yml` без находок;
+  - pull request #57: «Binaries / build» — 96 с, `linux_amd64` — 5 с, `linux_arm64` — 6 с, `darwin_amd64` — 20 с, `darwin_arm64` — 13 с (раннер ждали около 6 минут), `windows_amd64.exe` — 18 с, `windows_arm64.exe` — 32 с. Каждый написал «--version, check, build, index and diff as they ought», и «Binaries» зелёная;
+  - журнал — R41, начало журнала — «Следующий номер — R42». [docs/architecture.md](docs/architecture.md): статус, вступление раздела 3, раздел 3.1 — CLI и «Бинарники на каждой ОС». Таблица 1 — T42 `[x]`; таблица 4 — Д6 закрыт;
+  - проверки: `just ci-lint` и `just -f spec/justfile docs-check-repo` — зелёные; Go-кода задача не меняла, а CI #57 прошёл все проверки;
+  - `/code-review high` не шёл: исполнитель — Cline, а команды Claude Code у него нет. По AGENTS.md ревью запускает автор, один круг, по pull request до мержа.
+- **Открыто:**
+  - «Binaries» — в ruleset `main`, `integration_id` 15368, — шаг автора (правило 4);
+  - `/code-review high` — шаг автора до мержа (AGENTS.md);
+  - мерж даст релиз — `justfile` в перечне `paths`; сверка релизов мержей T38 и T42 — первый шаг T39;
+  - метки `macos-15-intel` и `windows-11-arm` GitHub может перенастроить — тогда job упадёт с названием метки, а метку поменяет задача.
 
 #### T39. Первый релиз линии 0.2
 
