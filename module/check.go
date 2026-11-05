@@ -11,6 +11,7 @@ import (
 
 	"github.com/altnovatrail/module-kit/internal/schema"
 	"github.com/altnovatrail/module-kit/internal/yaml"
+	"github.com/altnovatrail/module-kit/leak"
 )
 
 // FormatVersion is the version of the module format that this library reads: the version of the
@@ -149,6 +150,8 @@ type checker struct {
 	// file of a part passed (allParts), as format-check of spec has it: a file that its schema
 	// refuses breaks the schema and nothing more (R23).
 	parts map[string]any
+	// The leak check of each task that a rule of the leak check searches for, by its path (leaks.go).
+	searches map[string]*leak.Search
 }
 
 // allParts says whether every file of a part passed, the manifest among them: a rule between parts

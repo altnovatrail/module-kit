@@ -35,7 +35,7 @@ var partRules = []string{
 	RuleTaskKnownSkills, RuleTaskSkillRoles, RuleTaskOwnAnchors, RuleTaskKnownBand, RuleTaskKnownPictures, RuleTaskAgeCategories,
 	RuleTaskZones, RuleTaskAssessability, RuleLessonKnownSkills, RuleLessonKnownTasks, RuleLessonTaskSkills,
 	RuleLessonKnownPictures, RuleLessonAreas, RuleLessonAgeCategories, RuleLessonOrder, RuleTaskChoiceKey, RuleTaskChoiceOptions,
-	RuleTaskFractionKey, RuleTaskTrapValues, RuleTaskPredicateExpression,
+	RuleTaskFractionKey, RuleTaskTrapValues, RuleTaskPredicateExpression, RuleTaskNoLeaks, RuleLessonNoLeaks,
 }
 
 // typed reads the value of a file of a part that passed its schema into the type of formatv0 that
@@ -118,6 +118,7 @@ func (c *checker) withinPart(p parts) {
 		c.skillRoles(path, task)
 		c.zones(path, task)
 		c.checkRules(path, task)
+		c.taskLeaks(path, task, ownShown(task))
 	}
 	for path, lesson := range p.lessons {
 		c.areas(path, lesson)
@@ -135,9 +136,11 @@ func (c *checker) betweenParts(p parts) {
 		c.knownTraps(path, task, p.traps)
 		c.knownTechniques(path, task, p.techniques)
 		c.taskRules(path, task, p)
+		c.taskLeaks(path, task, partsShown(task, p))
 	}
 	for path, lesson := range p.lessons {
 		c.lessonRules(path, lesson, p)
+		c.lessonLeaks(path, lesson, p.tasks)
 	}
 	c.order(p.lessons, p.skillGraph)
 }

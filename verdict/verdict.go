@@ -9,8 +9,8 @@ import (
 
 	"github.com/altnovatrail/spec/types/formatv0"
 	"go.starlark.net/starlark"
-	"golang.org/x/text/unicode/norm"
 
+	"github.com/altnovatrail/module-kit/internal/normal"
 	"github.com/altnovatrail/module-kit/internal/sandbox"
 )
 
@@ -51,7 +51,7 @@ const (
 // NFKC the library is built with, which its tests hold equal to those of the standard library's
 // package unicode. The format leaves the version to the reader's release, and this is where a
 // release of module-kit names it (format/README.md, section 15; R27).
-const UnicodeVersion = norm.Version
+const UnicodeVersion = normal.UnicodeVersion
 
 // ErrNoVerdict is what the check of a rubric gives: a rubric gives feedback by its criteria, and the
 // item it checks has no verdict.
@@ -205,22 +205,22 @@ func NormalForm(slot AnswerSlot, value string) (form string, inNotation bool) {
 	c := slot.Check
 	switch c.Kind {
 	case formatv0.CheckKindChoice:
-		form = choiceForm(value)
+		form = normal.Choice(value)
 		if form == "" {
 			return form, false
 		}
-		if c.Key != nil && choiceForm(*c.Key) == form {
+		if c.Key != nil && normal.Choice(*c.Key) == form {
 			return form, true
 		}
 		for _, option := range slot.ChoiceOptions() {
-			if choiceForm(string(option)) == form {
+			if normal.Choice(string(option)) == form {
 				return form, true
 			}
 		}
 		return form, false
 	case formatv0.CheckKindNumber, formatv0.CheckKindFraction, formatv0.CheckKindPredicate:
-		form = numberText(value, unitsOf(c))
-		_, ok := notation(form, c.Kind)
+		form = normal.Number(value, unitsOf(c))
+		_, ok := normal.Notation(form, c.Kind)
 		return form, ok
 	}
 	return value, false
@@ -232,10 +232,10 @@ func NormalForm(slot AnswerSlot, value string) (form string, inNotation bool) {
 func comparedBy(c formatv0.Check, units []string, text string) (string, bool) {
 	switch c.Kind {
 	case formatv0.CheckKindChoice:
-		return choiceForm(text), true
+		return normal.Choice(text), true
 	case formatv0.CheckKindNumber, formatv0.CheckKindFraction, formatv0.CheckKindPredicate:
-		if w, ok := notation(numberText(text, units), c.Kind); ok {
-			return w.value.RatString(), true
+		if w, ok := normal.Notation(normal.Number(text, units), c.Kind); ok {
+			return w.Value.RatString(), true
 		}
 	}
 	return "", false
@@ -274,15 +274,15 @@ func (s AnswerSlot) predicateVerdict(ctx context.Context, limits sandbox.Limits,
 	if value == nil {
 		return SlotVerdict{Verdict: Unreadable, Reason: Blank}, nil
 	}
-	text := numberText(*value, nil)
+	text := normal.Number(*value, nil)
 	if text == "" {
 		return SlotVerdict{Verdict: Unreadable, Reason: Blank}, nil
 	}
-	read, ok := notation(text, c.Kind)
+	read, ok := normal.Notation(text, c.Kind)
 	if !ok {
 		return SlotVerdict{Verdict: Unreadable, Reason: Notation}, nil
 	}
-	result, err := sandbox.Eval(ctx, limits, *c.Predicate, starlark.StringDict{valueName: starlark.MakeBigInt(read.value.Num())})
+	result, err := sandbox.Eval(ctx, limits, *c.Predicate, starlark.StringDict{valueName: starlark.MakeBigInt(read.Value.Num())})
 	switch {
 	case errors.Is(err, context.Canceled), errors.Is(err, context.DeadlineExceeded):
 		return SlotVerdict{}, err
@@ -322,22 +322,22 @@ func (s AnswerSlot) numberVerdict(value *string) (SlotVerdict, error) {
 			return SlotVerdict{}, fmt.Errorf("%w: %q", ErrPlaceholder, w)
 		}
 	}
-	key, ok := notation(*c.Key, c.Kind)
+	key, ok := normal.Notation(*c.Key, c.Kind)
 	if !ok {
 		return SlotVerdict{}, fmt.Errorf("the key %q is not in the notation of %s", *c.Key, c.Kind)
 	}
 	if value == nil {
 		return SlotVerdict{Verdict: Unreadable, Reason: Blank}, nil
 	}
-	text := numberText(*value, unitsOf(c))
+	text := normal.Number(*value, unitsOf(c))
 	if text == "" {
 		return SlotVerdict{Verdict: Unreadable, Reason: Blank}, nil
 	}
-	read, ok := notation(text, c.Kind)
+	read, ok := normal.Notation(text, c.Kind)
 	switch {
 	case !ok:
 		return SlotVerdict{Verdict: Unreadable, Reason: Notation}, nil
-	case read.value.Cmp(key.value) != 0, c.Kind == formatv0.CheckKindFraction && reducedForm(c) && !read.lowest:
+	case read.Value.Cmp(key.Value) != 0, c.Kind == formatv0.CheckKindFraction && reducedForm(c) && !read.Lowest:
 		return s.notYet(*value), nil
 	}
 	return SlotVerdict{Verdict: Correct}, nil
@@ -357,15 +357,15 @@ func (s AnswerSlot) choiceVerdict(value *string) (SlotVerdict, error) {
 	if value == nil {
 		return SlotVerdict{Verdict: Unreadable, Reason: Blank}, nil
 	}
-	read := choiceForm(*value)
+	read := normal.Choice(*value)
 	switch {
 	case read == "":
 		return SlotVerdict{Verdict: Unreadable, Reason: Blank}, nil
-	case read == choiceForm(*c.Key):
+	case read == normal.Choice(*c.Key):
 		return SlotVerdict{Verdict: Correct}, nil
 	}
 	for _, option := range options {
-		if choiceForm(string(option)) == read {
+		if normal.Choice(string(option)) == read {
 			return s.notYet(*value), nil
 		}
 	}
@@ -392,6 +392,21 @@ func (s AnswerSlot) notYet(value string) SlotVerdict {
 		}
 	}
 	return SlotVerdict{Verdict: NotYet}
+}
+
+// unitsOf gives the forms of the units of a number, those that are not empty: a check of another
+// kind has none.
+func unitsOf(c formatv0.Check) []string {
+	if c.Kind != formatv0.CheckKindNumber {
+		return nil
+	}
+	var forms []string
+	for _, unit := range c.Units {
+		if form := normal.Unit(string(unit)); form != "" {
+			forms = append(forms, form)
+		}
+	}
+	return forms
 }
 
 // reducedForm says whether a fraction check takes only a fraction in lowest terms.
