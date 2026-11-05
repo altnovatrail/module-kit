@@ -9,6 +9,7 @@ require (
 	go.starlark.net v0.0.0-20261021141710-4f4267fb140d
 	go.yaml.in/yaml/v4 v4.0.0-rc.9
 	golang.org/x/text v0.43.0
+	google.golang.org/protobuf v1.36.12
 )
 
 require golang.org/x/sys v0.49.0 // indirect
