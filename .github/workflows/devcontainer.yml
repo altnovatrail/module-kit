@@ -1,0 +1,61 @@
+# The image of the devcontainer, built whole on amd64 and on arm64, each on a standard runner of its
+# own architecture, and its tools held to the versions that the Dockerfile pins (Д12 and Д14 in
+# RUN.md; R44 in docs/decisions.md). The checks of ci.yml build the toolchain stage alone, on amd64:
+# the sums of arm64 and the steps of the devcontainer stage — gopls from its lock file among them —
+# are built here. It runs when what the image is built from changes, and by the button. The ruleset
+# of main does not require it: a check that a filter of paths skips would never report.
+name: Devcontainer
+
+on:
+  pull_request:
+    paths:
+      - .devcontainer/**
+      - .github/devcontainer.sh
+      - .github/workflows/devcontainer.yml
+  push:
+    branches: [main]
+    paths:
+      - .devcontainer/**
+      - .github/devcontainer.sh
+      - .github/workflows/devcontainer.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# A new push to a pull request cancels its older run; every commit to main is checked.
+concurrency:
+  group: devcontainer-${{ github.event_name == 'pull_request' && github.ref || github.sha }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  image:
+    name: Devcontainer / ${{ matrix.arch }}
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 40
+    strategy:
+      # Each architecture reports on its own, rather than the first one to fail cancelling the other.
+      fail-fast: false
+      matrix:
+        include:
+          - { runner: ubuntu-24.04, arch: amd64 }
+          - { runner: ubuntu-24.04-arm, arch: arm64 }
+    steps:
+      # The folder the image is built from and the script that checks it, and nothing else.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          sparse-checkout: |
+            .devcontainer
+            .github/devcontainer.sh
+          sparse-checkout-cone-mode: false
+
+      # As Rebuild Container builds it: the stage devcontainer, from the folder .devcontainer, as
+      # devcontainer.json names them.
+      - name: Image
+        run: docker build --target devcontainer --tag devcontainer .devcontainer
+
+      - name: Versions
+        env:
+          ARCH: ${{ matrix.arch }}
+        run: .github/devcontainer.sh devcontainer .devcontainer/Dockerfile "$ARCH"
