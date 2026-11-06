@@ -45,10 +45,7 @@ func suiteCases() ([]suiteCase, error) {
 
 // The cases of the suite the reader does not pass, each with why. A case in the list that passes
 // fails the test, so the list only shrinks (R21).
-var suiteUnpassed = map[string]string{
-	"2SXE": "go-yaml scans no anchor named a: and refuses the file as not YAML, though it breaks yaml.no-anchors",
-	"W5VH": "go-yaml scans no anchor named :@*!$\"<foo>: and refuses the file as not YAML, though it breaks yaml.no-anchors",
-}
+var suiteUnpassed = map[string]string{}
 
 // Each case of the YAML test suite, data-2022-01-17, that YAML 1.2.2 refuses, the reader refuses
 // too. Each case it reads, the reader reads to the value its JSON holds, or refuses by a rule
