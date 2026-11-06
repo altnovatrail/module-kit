@@ -1837,6 +1837,8 @@
 
 — *Поправка 2026-11-06:* `.github/binaries.sh` запускает и `open`: седьмым шагом — `index --first` над пакетами вектора `indexes/first-release` и пакетом вектора `packages/with-solver`, затем `open` над ними с зёрнами 1 и 2^64 − 1. Суммы всего, что `open` написал, сверяются с эталоном linux/amd64, как пакет и индекс (R43). — RUN.md, T40.
 
+— *Вторая поправка 2026-11-06:* «Binaries» стоит в ruleset `main` (25488826) — проверкой GitHub Actions, `integration_id` 15368, как остальные. Её поставил исполнитель по поручению автора 2026-11-06 через API GitHub, `PUT repos/altnovatrail/module-kit/rulesets/25488826`. Остальное в ruleset не изменилось: сверено побайтно до и после. Шаг автора из «Что не закрыто» выше исполнен.
+
 ## Первый релиз линии 0.2
 
 **R42. Тест векторов не пропускает ни одного случая: список `internal/vectors/testdata/skipped.txt`, его разбор и заглушка `noCode` убраны, и случай, который не проходит, роняет `TestVectors`. `RELEASE_LINE` — `0.2`: правка `release.yml` в перечне `paths` даёт v0.2.0 — первый релиз `module-kit`, который берут другие. CI `modules` и `canvas` берут бинарник CLI, который пустил `release-verify`, а `api` и eval-раннер `tutor` — модуль Go по тегу.**
