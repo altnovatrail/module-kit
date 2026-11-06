@@ -53,6 +53,22 @@ func Task(part formatv0.Task) (open.Task, error) {
 // back strictly into its type: a field that the type does not know is a fault, since the type is
 // what the marks of the same schemas give (R72 spec).
 func of[O any](part string, value any) (O, error) {
+	v, err := viewOf(part, value)
+	if err != nil {
+		var none O
+		return none, err
+	}
+	view, err := schema.Decode[O](v)
+	if err != nil {
+		panic(fmt.Sprintf("openview: the open view of the %s: %v", part, err))
+	}
+	return view, nil
+}
+
+// viewOf gives the open view of a part as the JSON value that the walk of its schema gives, before
+// any type holds it, so that a field is in it exactly when the open view has it. It fails when the
+// part is not valid against its schema.
+func viewOf(part string, value any) (any, error) {
 	file := part + ".schema.json"
 	v := schema.ValueOf(value)
 	if errs := schema.Validate(file, v); len(errs) > 0 {
@@ -60,12 +76,7 @@ func of[O any](part string, value any) (O, error) {
 		for i, e := range errs {
 			lines[i] = e.String()
 		}
-		var none O
-		return none, fmt.Errorf("openview: the %s is not valid against %s:\n%s", part, file, strings.Join(lines, "\n"))
+		return nil, fmt.Errorf("openview: the %s is not valid against %s:\n%s", part, file, strings.Join(lines, "\n"))
 	}
-	view, err := schema.Decode[O](schema.Open(file, v))
-	if err != nil {
-		panic(fmt.Sprintf("openview: the open view of the %s: %v", part, err))
-	}
-	return view, nil
+	return schema.Open(file, v), nil
 }

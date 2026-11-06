@@ -10,6 +10,7 @@
 // rules of the index. Read reads an index by its members at their places alone, gives every entry
 // of whatever format version, and takes a version as withdrawn whatever its reason. Newest picks
 // the version of a new attempt, skipping an entry whose format version module-kit does not read.
-// Versions are ordered by internal/semver. It checks no signature: spec's release-verify does,
-// where a file enters NovaTrail (R77 spec; R35).
+// WithLatest marks in the index of a release the withdrawals that the index of the newest release
+// knows, for the CLI's open (R15; R43). Versions are ordered by internal/semver. It checks no
+// signature: spec's release-verify does, where a file enters NovaTrail (R77 spec; R35).
 package moduleindex

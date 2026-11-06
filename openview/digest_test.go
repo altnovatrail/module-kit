@@ -2,12 +2,17 @@ package openview
 
 import (
 	"context"
+	"io/fs"
 	"path"
+	"reflect"
 	"strings"
 	"testing"
 
+	"github.com/altnovatrail/spec"
 	"github.com/altnovatrail/spec/types/formatv0"
 
+	"github.com/altnovatrail/module-kit/internal/canonical"
+	"github.com/altnovatrail/module-kit/internal/yaml"
 	"github.com/altnovatrail/module-kit/template"
 )
 
@@ -69,5 +74,60 @@ func TestInstanceDigest(t *testing.T) {
 func TestTaskDigestOfAnInvalidTask(t *testing.T) {
 	if got, err := TaskDigest(formatv0.Task{ID: "no-items"}); err == nil || !strings.Contains(err.Error(), "not valid") || got != "" {
 		t.Errorf("TaskDigest = %q, %v; want an error", got, err)
+	}
+}
+
+// The open view that TaskView and ManifestView give as a JSON value is the open view of the vector,
+// and the digest that TaskView gives beside it is of its canonical text: a reader that digests the
+// task that the CLI's open writes finds the digest written beside it.
+func TestViews(t *testing.T) {
+	cases, err := fs.Glob(spec.Format, "vectors/open-view/*/*/part.yaml")
+	if err != nil || len(cases) == 0 {
+		t.Fatalf("no vectors of the open view: %v", err)
+	}
+	for _, name := range cases {
+		dir := path.Dir(name)
+		var view any
+		switch path.Base(path.Dir(dir)) {
+		case "task":
+			var task formatv0.Task
+			readPart(t, name, &task)
+			var digest formatv0.Digest
+			if view, digest, err = TaskView(task); err != nil {
+				t.Fatalf("%s: %v", dir, err)
+			}
+			text, err := canonical.Text(view)
+			if err != nil || canonical.Digest(text) != digest {
+				t.Errorf("%s: the digest %s is not of the view's text: %v", dir, digest, err)
+			}
+			if want, err := TaskDigest(task); err != nil || want != digest {
+				t.Errorf("%s: TaskView gives %s, and TaskDigest %s, %v", dir, digest, want, err)
+			}
+		case "manifest":
+			var manifest formatv0.Manifest
+			readPart(t, name, &manifest)
+			if view, err = ManifestView(manifest); err != nil {
+				t.Fatalf("%s: %v", dir, err)
+			}
+		default:
+			continue
+		}
+		data, err := fs.ReadFile(spec.Format, path.Join(dir, "open-view.yaml"))
+		if err != nil {
+			t.Fatal(err)
+		}
+		want, err := yaml.Read(data)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if !reflect.DeepEqual(view, want) {
+			t.Errorf("%s: the view is %v, not the vector's %v", dir, view, want)
+		}
+	}
+	if _, err := ManifestView(formatv0.Manifest{}); err == nil || !strings.Contains(err.Error(), "not valid") {
+		t.Errorf("ManifestView of an empty manifest: %v; want an error", err)
+	}
+	if view, digest, err := TaskView(formatv0.Task{ID: "no-items"}); err == nil || view != nil || digest != "" {
+		t.Errorf("TaskView of an invalid task = %v, %q, %v; want an error", view, digest, err)
 	}
 }

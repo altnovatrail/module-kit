@@ -8,9 +8,10 @@
 # <dist> is what `just release-files` wrote, <binary> the file of it to run, <samples> what `just
 # binaries-samples` wrote: examples and test vectors of the module format from spec's Go module.
 # With a <reference> folder that does not exist, a run that passes writes there what the binary
-# built — the files of the package, each by its sha256, and the index; with one that exists, what
-# the binary builds must be the same, byte for byte, as the reference's. The test vectors hold the
-# package by its digest here, and the index by the tests of the commands (TestIndexVectors).
+# built — the files of the package and of the open views, each by its sha256, and the index; with
+# one that exists, what the binary builds must be the same, byte for byte, as the reference's. The
+# test vectors hold the package by its digest here, and the index and the open views by the tests
+# of the commands (TestIndexVectors, TestOpenPackages).
 # The build job writes the reference by the binary of linux/amd64, and each runner holds its own to
 # it: the package and the index depend on the module's files alone, wherever they are built
 # (format/README.md, sections 25 and 26).
@@ -106,21 +107,31 @@ if [[ -f "$work/module-index.json" ]]; then
     run diff 0 diff --index "$work/module-index.json" "${published[@]}" "$samples/first-release/modules/smallest" || true
 fi
 
-# 7. What the binary built, against the reference or as the reference.
+# 7. open: the open views of a release of those packages and the one with a solver, whose template
+#    gives an instance for each seed, and the files of their device parts.
+if [[ -d "$work/package" ]] && ((${#packages[@]} > 0)); then
+    if run open-index 0 index --first --tag v0.1.0 --no-withdrawals --out "$work/open-index.json" "${packages[@]}" "$work/package"; then
+        run open 0 open --index "$work/open-index.json" --latest "$work/open-index.json" --seed 1 --seed 18446744073709551615 \
+            --out "$work/open" "${packages[@]}" "$work/package" || true
+    fi
+fi
+
+# 8. What the binary built, against the reference or as the reference.
 mkdir -p "$work/built"
 if [[ -d "$work/package" ]]; then manifest "$work/package" > "$work/built/package.sha256"; fi
 if [[ -f "$work/module-index.json" ]]; then cp "$work/module-index.json" "$work/built/module-index.json"; fi
+if [[ -d "$work/open" ]]; then manifest "$work/open" > "$work/built/open.sha256"; fi
 if [[ -d "$reference" ]]; then
-    for f in package.sha256 module-index.json; do
+    for f in package.sha256 module-index.json open.sha256; do
         cmp -s "$work/built/$f" "$reference/$f" || fail "$f differs from the reference of linux/amd64: $(diff "$reference/$f" "$work/built/$f" || true)"
     done
 elif ((failures == 0)); then
     mkdir -p "$reference"
-    cp "$work/built/package.sha256" "$work/built/module-index.json" "$reference/"
+    cp "$work/built/package.sha256" "$work/built/module-index.json" "$work/built/open.sha256" "$reference/"
 fi
 
 if ((failures > 0)); then
     echo "$name: $failures of its checks failed" >&2
     exit 1
 fi
-echo "$name: --version, check, build, index and diff as they ought"
+echo "$name: --version, check, build, index, diff and open as they ought"
