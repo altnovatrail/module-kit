@@ -10,5 +10,7 @@
 // passes, and no list of fields is kept here (R45 spec). The open view of an instance of a template
 // is the open view of a task: Task of what template.Instance gives (format/README.md, section 23;
 // R32). TaskDigest gives the digest of the open view of a task or of an instance: sha256: of its
-// canonical text, by internal/canonical (R34).
+// canonical text, by internal/canonical (R34). TaskView and ManifestView give the open view as the
+// JSON value before any type holds it, TaskView with the digest of its canonical text, for the
+// CLI's open, which writes the value whose text the digest is of (R43).
 package openview

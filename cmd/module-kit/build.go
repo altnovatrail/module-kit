@@ -51,15 +51,16 @@ func emptyOrAbsent(out string) error {
 	case err != nil:
 		return err
 	case len(entries) > 0:
-		return fmt.Errorf("%s is not empty: a package is built into a folder that does not exist yet, or an empty one", out)
+		return fmt.Errorf("%s is not empty: the command writes into a folder that does not exist yet, or an empty one", out)
 	}
 	return nil
 }
 
-// writePackage writes the files of a package, by their paths in its folder, into a folder of its own
-// within a new temporary folder beside out, and moves it to out, in place of an empty folder there.
-// The temporary folder, which only its owner may read, is removed whatever happens; the package's
-// folder is made as every folder of it is, under the process's umask.
+// writePackage writes the files of a package — or of the open views, which open writes alike — by
+// their paths in its folder, into a folder of its own within a new temporary folder beside out, and
+// moves it to out, in place of an empty folder there. The temporary folder, which only its owner may
+// read, is removed whatever happens; the package's folder is made as every folder of it is, under
+// the process's umask.
 func writePackage(out string, files map[string][]byte) (err error) {
 	out = filepath.Clean(out)
 	temp, err := os.MkdirTemp(filepath.Dir(out), "."+filepath.Base(out)+".")
@@ -84,7 +85,7 @@ func writePackage(out string, files map[string][]byte) (err error) {
 func writeFiles(root string, files map[string][]byte) error {
 	for name, data := range files {
 		if !fs.ValidPath(name) || strings.Contains(name, `\`) {
-			return fmt.Errorf("the package holds a file at %q, which is no path in its folder", name)
+			return fmt.Errorf("a file at %q is no path in the folder", name)
 		}
 		file := filepath.Join(root, filepath.FromSlash(name))
 		if err := os.MkdirAll(filepath.Dir(file), 0o755); err != nil {

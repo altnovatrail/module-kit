@@ -29,13 +29,9 @@ func publishedOf(indexFile string, id formatv0.ModuleID, folders []string) ([]mo
 	if err != nil {
 		return nil, fmt.Errorf("the index, %s: %w", indexFile, err)
 	}
-	byDigest := map[formatv0.Digest]string{}
-	for _, dir := range folders {
-		inventory, err := os.ReadFile(filepath.Join(dir, modulepackage.InventoryFile))
-		if err != nil {
-			return nil, fmt.Errorf("%s holds no package: %w", dir, err)
-		}
-		byDigest[canonical.Digest(inventory)] = dir
+	byDigest, err := packagesByDigest(folders)
+	if err != nil {
+		return nil, err
 	}
 	entries := index.Modules[id]
 	var versions []moduleversion.Published
@@ -49,4 +45,20 @@ func publishedOf(indexFile string, id formatv0.ModuleID, folders []string) ([]mo
 		versions = append(versions, moduleversion.Published{Digest: entry.PackageDigest, Files: os.DirFS(dir)})
 	}
 	return versions, nil
+}
+
+// packagesByDigest gives each package folder by its digest, the digest of the bytes of its
+// inventory.json (format/README.md, section 25), so that an entry of an index finds its package by
+// package_digest. A folder with no inventory.json is no package. The package is not read yet: whoever
+// takes one reads it by the chain of digests from that digest.
+func packagesByDigest(folders []string) (map[formatv0.Digest]string, error) {
+	byDigest := map[formatv0.Digest]string{}
+	for _, dir := range folders {
+		inventory, err := os.ReadFile(filepath.Join(dir, modulepackage.InventoryFile))
+		if err != nil {
+			return nil, fmt.Errorf("%s holds no package: %w", dir, err)
+		}
+		byDigest[canonical.Digest(inventory)] = dir
+	}
+	return byDigest, nil
 }
