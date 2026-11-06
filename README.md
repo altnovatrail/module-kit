@@ -6,6 +6,7 @@
 [![Latest release](https://img.shields.io/github/v/release/altnovatrail/module-kit)](https://github.com/altnovatrail/module-kit/releases/latest)
 [![Go version](https://img.shields.io/github/go-mod/go-version/altnovatrail/module-kit)](go.mod)
 [![Coverage](https://codecov.io/gh/altnovatrail/module-kit/branch/main/graph/badge.svg)](https://codecov.io/gh/altnovatrail/module-kit)
+[![OpenSSF Best Practices](https://www.bestpractices.dev/projects/16385/badge)](https://www.bestpractices.dev/projects/16385)
 [![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/altnovatrail/module-kit/badge)](https://scorecard.dev/viewer/?uri=github.com/altnovatrail/module-kit)
 [![License](https://img.shields.io/github/license/altnovatrail/module-kit)](LICENSE)
 
