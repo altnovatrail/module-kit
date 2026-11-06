@@ -9,7 +9,6 @@ import (
 	"io/fs"
 	"maps"
 	"net/url"
-	"os"
 	"path"
 	"reflect"
 	"regexp"
@@ -41,7 +40,7 @@ import (
 // in spec's repository, such as format/vectors/rules/yaml.encoding/byte-order-mark.yaml. The word
 // case is Go's own, so the type takes the other one.
 type vector struct {
-	name string // its path in spec: the name of its subtest and of its line in testdata/skipped.txt
+	name string // its path in spec: the name of its subtest
 	kind string // what passing it means: a key of runners
 	fsys fs.FS  // spec.Format or contracts.Vectors
 	path string // the file or the folder within fsys
@@ -52,11 +51,6 @@ const (
 	formatRoot    = "format/"
 	contractsRoot = "contracts/vectors/"
 )
-
-// errNoCode is what a kind gives until the task of the epic of code that brings the code for it.
-var errNoCode = errors.New("module-kit has no code for this kind yet")
-
-func noCode(vector) error { return errNoCode }
 
 // rule passes a case of a format rule: refused with the ID of the rule its folder names and with no
 // other, since a case breaks its rule and nothing else (format/README.md, section 9). The reader
@@ -828,8 +822,7 @@ func quoted(value *string) string {
 }
 
 // runners passes a case of each kind: nil when module-kit gives what the case says, and an error
-// that says why not otherwise. A task of the epic of code puts the code it brings in place of
-// noCode, and takes the cases it passes out of testdata/skipped.txt (architecture 3.6; R20).
+// that says why not otherwise (architecture 3.6; R20).
 var runners = map[string]func(vector) error{
 	// A part's valid example is valid against its schema and meets every rule within its part; an
 	// invalid one gives the error its first line names; a whole module breaks no rule
@@ -1025,64 +1018,11 @@ func kindsWithoutCase(cases []vector) []string {
 	return missing
 }
 
-// parseSkipped reads the list of the cases module-kit does not pass yet: the name of a case on each
-// line, in byte order, each once, every line ending in a newline.
-func parseSkipped(data []byte) (map[string]bool, error) {
-	if len(data) == 0 {
-		return nil, nil
-	}
-	if !bytes.HasSuffix(data, []byte("\n")) {
-		return nil, errors.New("the last line ends in no newline")
-	}
-	lines := strings.Split(strings.TrimSuffix(string(data), "\n"), "\n")
-	for n, line := range lines {
-		if line == "" || strings.TrimSpace(line) != line {
-			return nil, fmt.Errorf("line %d is %q, not the name of a case", n+1, line)
-		}
-		if n > 0 && line <= lines[n-1] {
-			return nil, fmt.Errorf("line %d, %s, does not come after %s: the cases go in byte order, each once", n+1, line, lines[n-1])
-		}
-	}
-	skipped := make(map[string]bool, len(lines))
-	for _, line := range lines {
-		skipped[line] = true
-	}
-	return skipped, nil
-}
-
-// unknownSkips names each skipped case that spec does not have, in order.
-func unknownSkips(cases []vector, skipped map[string]bool) []string {
-	names := map[string]bool{}
-	for _, c := range cases {
-		names[c.name] = true
-	}
-	var unknown []string
-	for _, name := range slices.Sorted(maps.Keys(skipped)) {
-		if !names[name] {
-			unknown = append(unknown, name)
-		}
-	}
-	return unknown
-}
-
-// outcome says what the run of a case means: a failure to report, or that the case is skipped. A
-// skipped case is run too, so that one which passes leaves the list rather than stay in it.
-func outcome(skipped bool, err error) (failure string, skip bool) {
-	switch {
-	case skipped && err == nil:
-		return "it passes: take it out of testdata/skipped.txt", false
-	case skipped:
-		return "", true
-	case err != nil:
-		return err.Error(), false
-	}
-	return "", false
-}
-
 // Every example and test vector of spec.Format, and every vector of the observation in
-// contracts.Vectors, passes, but those testdata/skipped.txt names, which do not pass yet. A file of
-// a kind the test does not know fails it, and so does a skipped case that spec does not have or
-// that passes (R16; R20).
+// contracts.Vectors, passes, and none is skipped: the first release of the line 0.2 passes them
+// all, and so does each release after it, so a vector a new tag of spec brings comes with its code.
+// A file of a kind the test does not know fails it, and so does a kind left with no case (R16;
+// R20; R42).
 func TestVectors(t *testing.T) {
 	cases, err := inventory(spec.Format, contracts.Vectors)
 	if err != nil {
@@ -1091,25 +1031,14 @@ func TestVectors(t *testing.T) {
 	for _, kind := range kindsWithoutCase(cases) {
 		t.Errorf("no case is of the kind %s", kind)
 	}
-	data, err := os.ReadFile("testdata/skipped.txt")
-	if err != nil {
-		t.Fatal(err)
-	}
-	skipped, err := parseSkipped(data)
-	if err != nil {
-		t.Fatalf("testdata/skipped.txt: %v", err)
-	}
-	for _, name := range unknownSkips(cases, skipped) {
-		t.Errorf("testdata/skipped.txt names %s, which spec does not have", name)
-	}
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
-			failure, skip := outcome(skipped[c.name], runners[c.kind](c))
-			if failure != "" {
-				t.Fatal(failure)
+			run, ok := runners[c.kind]
+			if !ok {
+				t.Fatalf("no runner passes the kind %s", c.kind)
 			}
-			if skip {
-				t.Skip("in testdata/skipped.txt")
+			if err := run(c); err != nil {
+				t.Fatal(err)
 			}
 		})
 	}

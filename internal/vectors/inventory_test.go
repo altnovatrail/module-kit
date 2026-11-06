@@ -1,7 +1,6 @@
 package vectors
 
 import (
-	"errors"
 	"io/fs"
 	"maps"
 	"slices"
@@ -172,63 +171,6 @@ func TestKindsWithoutCase(t *testing.T) {
 	missing := kindsWithoutCase(nil)
 	if !slices.Equal(missing, slices.Sorted(maps.Keys(runners))) {
 		t.Errorf("with no case, the kinds without one are %v", missing)
-	}
-}
-
-func TestParseSkipped(t *testing.T) {
-	for _, test := range []struct {
-		data  string
-		names []string // nil for a list refused
-	}{
-		{"", []string{}},
-		{"format/a\n", []string{"format/a"}},
-		{"format/a\nformat/b\n", []string{"format/a", "format/b"}},
-		{"format/a", nil},
-		{"format/b\nformat/a\n", nil},
-		{"format/a\nformat/a\n", nil},
-		{"format/a\n\nformat/b\n", nil},
-		{"format/a \n", nil},
-		{"\n", nil},
-	} {
-		skipped, err := parseSkipped([]byte(test.data))
-		switch {
-		case test.names == nil && err == nil:
-			t.Errorf("%q is taken as %v", test.data, skipped)
-		case test.names != nil && err != nil:
-			t.Errorf("%q is refused: %v", test.data, err)
-		case test.names != nil && !slices.Equal(slices.Sorted(maps.Keys(skipped)), test.names):
-			t.Errorf("%q gives %v", test.data, skipped)
-		}
-	}
-}
-
-// A skipped case that spec does not have is named, and one it has is not.
-func TestUnknownSkips(t *testing.T) {
-	cases := []vector{{name: "format/a"}, {name: "format/c"}}
-	unknown := unknownSkips(cases, map[string]bool{"format/a": true, "format/b": true, "format/d": true})
-	if !slices.Equal(unknown, []string{"format/b", "format/d"}) {
-		t.Errorf("the unknown skips are %v", unknown)
-	}
-}
-
-// A case passes, fails, is skipped, or fails for passing while skipped.
-func TestOutcome(t *testing.T) {
-	failed := errors.New("the verdict is not_yet, not correct")
-	for _, test := range []struct {
-		skipped bool
-		err     error
-		failure string
-		skip    bool
-	}{
-		{false, nil, "", false},
-		{false, failed, failed.Error(), false},
-		{true, failed, "", true},
-		{true, nil, "it passes: take it out of testdata/skipped.txt", false},
-	} {
-		failure, skip := outcome(test.skipped, test.err)
-		if failure != test.failure || skip != test.skip {
-			t.Errorf("skipped %v, %v: %q, %v", test.skipped, test.err, failure, skip)
-		}
 	}
 }
 
