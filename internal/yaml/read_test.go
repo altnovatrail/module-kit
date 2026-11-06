@@ -114,6 +114,11 @@ var readCases = []readCase{
 	{name: "an anchor with no name", in: "a: &\n", refused: []string{"not YAML 1:5"}},
 	{name: "an alias with no name", in: "a: *\n", refused: []string{"not YAML 1:5"}},
 	{name: "an anchor with no name in a flow sequence", in: "a: [b, &]\n", refused: []string{"not YAML 1:9"}},
+	{name: "2SXE, an anchor whose name ends in a colon", in: "&a: key: &a value\nfoo:\n  *a:\n", refused: []string{"yaml.no-anchors 1:1"}},
+	{name: "W5VH, such an anchor among other characters", in: "a: &:@*!$\"<foo>: scalar a\nb: *:@*!$\"<foo>:\n", refused: []string{"yaml.no-anchors 1:4"}},
+	{name: "an alias whose name ends in colons in a flow mapping, which go-yaml refuses as an alias with no anchor", in: "a: {b: c, *d:: e}\n", refused: []string{"yaml.no-anchors 1:11"}},
+	{name: "& and a colon inside a plain scalar", in: "a: x &b: y\n", refused: []string{"not YAML 1:8"}},
+	{name: "& and a colon in a comment", in: "a: b # &c:\nd: [\n", refused: []string{"not YAML 3:1"}},
 
 	// yaml.no-tags.
 	{name: "standard tag", in: "a: !!str 1\n", refused: []string{"yaml.no-tags 1:4"}},
