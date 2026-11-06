@@ -13,7 +13,7 @@ permissions:
   contents: read
 
 env:
-  RELEASE_LINE: "0.1"
+  RELEASE_LINE: "0.2"
 
 jobs:
   release:
