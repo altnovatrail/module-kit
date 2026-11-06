@@ -18,7 +18,7 @@
 
 The NovaTrail module format in code: the one Go library that holds the format's semantics, and the authors' CLI on top of it. It reads an author's module and checks it — the schema, a skill graph without cycles, references, the shared taxonomy, keys by solver and fallback texts by leak check — builds the module package and the module index, and compares a new version of a module with every published one by the format's rules of versions. It also fills seeded task templates and runs their solvers in a Starlark sandbox, and for the platform's service it builds the open view of a task, joins two readings of a learner's work into one observation and runs the check kinds on it, admits a verdict only by the provenance of its key and trusts a package by the chain of digests from a pinned index; signatures it leaves to spec's `release-verify`. It never calls an AI model: the library makes no network calls, the CLI only reads and writes a module's files, and neither holds learners' data.
 
-A component of [NovaTrail](https://github.com/altnovatrail/spec/tree/v0.9.2), a universal open platform for adaptive learning, interactive lessons and AI tutoring. It belongs to stage 1, Format and core, with spec, modules, learner-model, engine and sim; together with modules it tries the module format v0 on two unlike subjects at once.
+A component of [NovaTrail](https://github.com/altnovatrail/spec/tree/v0.9.3), a universal open platform for adaptive learning, interactive lessons and AI tutoring. It belongs to stage 1, Format and core, with spec, modules, learner-model, engine and sim; together with modules it tries the module format v0 on two unlike subjects at once.
 
 ## Status
 
@@ -33,7 +33,7 @@ A release comes out by itself once the checks pass on `main`: the next patch of 
 
 ## Contributing
 
-Report a bug or propose a change in an [issue](https://github.com/altnovatrail/module-kit/issues), in English or Russian, and open one before a pull request unless the pull request fixes a typo or a broken link. How a change comes in, with every commit signed off, and what every change keeps to are in the organization's [CONTRIBUTING.md](https://github.com/altnovatrail/.github/blob/main/CONTRIBUTING.md); the rules every NovaTrail repository shares are in spec's [RULES.md](https://github.com/altnovatrail/spec/blob/v0.9.2/RULES.md): code comes with its tests. Report a vulnerability privately, as the [security policy](https://github.com/altnovatrail/module-kit/security/policy) says, never in a public issue.
+Report a bug or propose a change in an [issue](https://github.com/altnovatrail/module-kit/issues), in English or Russian, and open one before a pull request unless the pull request fixes a typo or a broken link. How a change comes in, with every commit signed off, and what every change keeps to are in the organization's [CONTRIBUTING.md](https://github.com/altnovatrail/.github/blob/main/CONTRIBUTING.md); the rules every NovaTrail repository shares are in spec's [RULES.md](https://github.com/altnovatrail/spec/blob/v0.9.3/RULES.md): code comes with its tests. Report a vulnerability privately, as the [security policy](https://github.com/altnovatrail/module-kit/security/policy) says, never in a public issue.
 
 Work in the devcontainer: open the repository in VS Code and choose "Reopen in Container". It holds every tool at the version the repository pins. The checks are recipes of the [justfile](justfile), and `just --list` names each with its arguments:
 
@@ -52,7 +52,7 @@ The documents are in Russian.
 - [docs/decisions.md](docs/decisions.md) — the decision log: what was decided, why, and what was rejected.
 - [RUN.md](RUN.md) — the work plan, in epics.
 
-The working rules, for people and coding agents alike, are in [CLAUDE.md](CLAUDE.md) and [AGENTS.md](AGENTS.md). The platform's shared vocabulary, formats, contracts and decisions are in [spec](https://github.com/altnovatrail/spec/tree/v0.9.2), checked out here as a git submodule at `v0.9.2`: clone this repository with `git clone --recurse-submodules`.
+The working rules, for people and coding agents alike, are in [CLAUDE.md](CLAUDE.md) and [AGENTS.md](AGENTS.md). The platform's shared vocabulary, formats, contracts and decisions are in [spec](https://github.com/altnovatrail/spec/tree/v0.9.3), checked out here as a git submodule at `v0.9.3`: clone this repository with `git clone --recurse-submodules`.
 
 ## License
 
