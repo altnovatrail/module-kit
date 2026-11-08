@@ -21,5 +21,7 @@
 // task.template-solver of section 24, by package template, with the results of a solver among the
 // numbers of every instance that the rules of a task read (R33). Check runs the solvers of a
 // module's templates one on each CPU, with the caller's context, and CheckModule gives the numbers
-// of their instances to the build of a package, so that each solver runs once (R38).
+// of their instances to the build of a package, so that each solver runs once (R38). A report of
+// Check holds besides its warnings, which refuse nothing: one for each text of the whole module — a
+// rung template, a trap's advice, a technique — that holds a number, as section 20 asks (R50).
 package module

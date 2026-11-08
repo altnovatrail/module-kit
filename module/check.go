@@ -108,9 +108,11 @@ func (b Breach) String() string {
 // path, then the line and column, then the value, member by member, with an element of an array by
 // its index —, and at one place in the order of their rules and keywords, so that it does not
 // depend on the order in which the folder lists its files. A report with no breach accepts the
-// module.
+// module. Its warnings, in the order of their places, refuse nothing: a module with warnings and no
+// breach is accepted (R50). Check gives them and CheckFile none, since a warning has no test vectors.
 type Report struct {
 	Breaches []Breach
+	Warnings []Warning
 }
 
 func (r Report) String() string {
@@ -149,6 +151,9 @@ func CheckModule(ctx context.Context, fsys fs.FS) (Report, map[string][]formatv0
 		return Report{}, nil, err
 	}
 	report := c.report()
+	if p != nil {
+		report.Warnings = p.warn()
+	}
 	if len(report.Breaches) > 0 || p == nil {
 		return report, nil, nil
 	}
