@@ -100,6 +100,20 @@ func (s *Search) In(text string) []Leak {
 	return found
 }
 
+// Numbers gives the numbers that the leak check reads in a text, each as it stands in the text's
+// normal form, in the order of the text: a key of a number or a fraction is found where one of them
+// has its value (format/README.md, section 20). A text of the whole module SHOULD hold none, and the
+// check of a module warns of each (R50). A byte of the text that is not UTF-8 counts as U+FFFD, as
+// in Search.In.
+func Numbers(text string) []string {
+	runes := []rune(form(text))
+	var written []string
+	for _, r := range runsIn(runes) {
+		written = append(written, string(runes[r.start:r.end]))
+	}
+	return written
+}
+
 // keyOf gives the needle of the key of a check, and whether the leak check searches for it: a key
 // of a number or a fraction in the notation of its kind, by its magnitude, and a key of a choice, by
 // its normal form. A predicate has no key, and a rubric neither.
@@ -247,6 +261,21 @@ func wordAt(runes []rune, i int) bool {
 // its magnitude.
 func numbersIn(runes []rune) []*big.Rat {
 	var found []*big.Rat
+	for _, r := range runsIn(runes) {
+		found = append(found, r.value)
+	}
+	return found
+}
+
+// A number of a text in its normal form: where its run begins and ends, and its value.
+type run struct {
+	start, end int
+	value      *big.Rat
+}
+
+// runsIn gives the numbers of a text in its normal form with their places, as numbersIn reads them.
+func runsIn(runes []rune) []run {
+	var found []run
 	for at := 0; at < len(runes); {
 		if !isDigit(runes[at]) {
 			at++
@@ -254,7 +283,7 @@ func numbersIn(runes []rune) []*big.Rat {
 		}
 		end, value := longestRun(runes, at)
 		if !wordAt(runes, at-1) && !wordAt(runes, end) {
-			found = append(found, value)
+			found = append(found, run{at, end, value})
 		}
 		at = end
 	}

@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"context"
+	"fmt"
 	"io/fs"
 	"os"
 	"path"
@@ -33,7 +34,9 @@ func TestCheckAccepts(t *testing.T) {
 }
 
 // Each test vector of a rule that is a module's folder is refused with status 1: each line of the
-// report names its place from the folder given and the ID of the rule, and the last counts them.
+// report names its place from the folder given and the ID of the rule, but a warning, which names
+// its place and refuses nothing — a key of task.no-leaks in a text of the whole module is a number
+// there too (R50) —, and the last counts them.
 func TestCheckRefuses(t *testing.T) {
 	rules, err := fs.ReadDir(spec.Format, "vectors/rules")
 	if err != nil {
@@ -59,10 +62,22 @@ func TestCheckRefuses(t *testing.T) {
 				if status != statusRefused || stderr.Len() > 0 || len(lines) < 2 {
 					t.Fatalf("status %d, stdout %q, stderr %q; want 1 and a report", status, stdout.String(), stderr.String())
 				}
+				breaches := 0
 				for _, line := range lines[:len(lines)-1] {
-					if !strings.HasPrefix(line, filepath.ToSlash(dir)) || !strings.Contains(line, ": "+rule.Name()+": ") {
+					warning := strings.Contains(line, ": warning: ")
+					if !warning {
+						breaches++
+					}
+					if !strings.HasPrefix(line, filepath.ToSlash(dir)) || !warning && !strings.Contains(line, ": "+rule.Name()+": ") {
 						t.Errorf("the line %q names no place in %s, or not the rule %s", line, dir, rule.Name())
 					}
+				}
+				noun := "breaches"
+				if breaches == 1 {
+					noun = "breach"
+				}
+				if count := fmt.Sprintf(": %d %s", breaches, noun); breaches == 0 || !strings.HasSuffix(lines[len(lines)-1], count) {
+					t.Errorf("the report %q has %d breaches, and its last line does not end with %q", stdout.String(), breaches, count)
 				}
 				if last := lines[len(lines)-1]; !strings.HasPrefix(last, dir+": the format 0.3 refuses the module: ") {
 					t.Errorf("the last line is %q", last)

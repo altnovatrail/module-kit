@@ -7,5 +7,7 @@
 // the texts of their own items do not show, and its leak phrases — and Search.In what of them a text
 // holds, each a Leak. A template is searched through its instances, so For refuses one,
 // ErrTemplate. The normal form of a text is that of package internal/normal, which follows the
-// version of Unicode of verdict.UnicodeVersion.
+// version of Unicode of verdict.UnicodeVersion. Numbers gives the numbers of a text as the search
+// reads them, for the warning of the check of a module of a number in a text of the whole module
+// (R50).
 package leak

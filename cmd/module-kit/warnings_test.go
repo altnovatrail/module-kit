@@ -55,6 +55,30 @@ func TestCheckWarns(t *testing.T) {
 	}
 }
 
+// A number in a text of the whole module gives a warning too, which changes no exit status: the
+// warnings of the texts come first, then those of the pictures, and the last line after them.
+func TestCheckWarnsOfNumbers(t *testing.T) {
+	dir := fromSpec(t, "examples/module/valid/with-tasks")
+	picture := transparentPicture(t, dir)
+	manifest := filepath.Join(dir, "manifest.yaml")
+	data, err := os.ReadFile(manifest)
+	if err != nil {
+		t.Fatal(err)
+	}
+	numbered := strings.Replace(string(data), "Which step of your work", "Which of your 1000 steps", 1)
+	if err := os.WriteFile(manifest, []byte(numbered), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	var stdout, stderr bytes.Buffer
+	status := run(context.Background(), []string{"check", dir}, &stdout, &stderr)
+	lines := strings.Split(strings.TrimSuffix(stdout.String(), "\n"), "\n")
+	want := filepath.ToSlash(manifest) + ` #/rung_templates/0: warning: the text holds the number "1000": `
+	if status != statusAccepted || stderr.Len() > 0 || len(lines) != 3 || !strings.HasPrefix(lines[0], want) ||
+		!strings.HasPrefix(lines[1], picture+": warning: ") || lines[2] != dir+": the module breaks no rule of the format 0.3" {
+		t.Errorf("status %d, stdout %q, stderr %q; want 0, a warning that begins %q, that of the picture and the last line", status, stdout.String(), stderr.String(), want)
+	}
+}
+
 // A folder of media that cannot be read stops check with status 2, as any other file would.
 func TestCheckWarningsFail(t *testing.T) {
 	dir := fromSpec(t, "examples/module/valid/with-tasks")

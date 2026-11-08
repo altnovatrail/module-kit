@@ -79,8 +79,9 @@ func run(ctx context.Context, args []string, stdout, stderr io.Writer) int {
 
 // check checks the module whose folder is dir and writes its report to stdout: a line for each
 // breach, its place from dir, the ID of its rule and what breaks it, in the order of their places;
-// then a line for each warning of a picture, which refuses nothing (R39); and a last line that says
-// whether the format accepts the module. The warnings change no exit status.
+// then a line for each warning, which refuses nothing: those of the texts of the whole module that
+// hold a number, in the order of their places (R50), and then those of the pictures (R39); and a last
+// line that says whether the format accepts the module. The warnings change no exit status.
 func check(ctx context.Context, dir string, stdout, stderr io.Writer) int {
 	fsys, err := moduleFolder(dir)
 	if err != nil {
@@ -90,26 +91,35 @@ func check(ctx context.Context, dir string, stdout, stderr io.Writer) int {
 	if err != nil {
 		return failed(stderr, "check", err)
 	}
-	warnings, err := picture.Warnings(ctx, fsys)
+	pictures, err := picture.Warnings(ctx, fsys)
 	if err != nil {
 		return failed(stderr, "check", err)
 	}
+	warnings := warningLines(dir, report.Warnings, pictures)
 	if len(report.Breaches) > 0 {
 		writeReport(stdout, dir, report, warnings)
 		return statusRefused
 	}
-	writeWarnings(stdout, dir, warnings)
+	for _, line := range warnings {
+		fmt.Fprintln(stdout, line)
+	}
 	fmt.Fprintf(stdout, "%s: the module breaks no rule of the format %s\n", dir, module.FormatVersion)
 	return statusAccepted
 }
 
-// writeWarnings writes the warnings of the pictures, each with its path from dir as the command line
-// gave it.
-func writeWarnings(w io.Writer, dir string, warnings []picture.Warning) {
-	for _, warning := range warnings {
+// warningLines gives the lines of the warnings of the texts and then of the pictures, each with its
+// path from dir as the command line gave it.
+func warningLines(dir string, texts []module.Warning, pictures []picture.Warning) []string {
+	var lines []string
+	for _, warning := range texts {
 		warning.Path = slashed(dir, warning.Path)
-		fmt.Fprintln(w, warning)
+		lines = append(lines, warning.String())
 	}
+	for _, warning := range pictures {
+		warning.Path = slashed(dir, warning.Path)
+		lines = append(lines, warning.String())
+	}
+	return lines
 }
 
 // slashed gives the path of a file of the module from dir as the command line gave it, with /
@@ -131,14 +141,16 @@ func moduleFolder(dir string) (fs.FS, error) {
 }
 
 // writeReport writes the breaches of a report, each with its path from dir as the command line gave
-// it, then the warnings, and a last line that counts the breaches. A breach of the module's folder
-// itself has the path dir.
-func writeReport(w io.Writer, dir string, report module.Report, warnings []picture.Warning) {
+// it, then the lines of the warnings, and a last line that counts the breaches. A breach of the
+// module's folder itself has the path dir. Only check writes warnings: build and diff give none.
+func writeReport(w io.Writer, dir string, report module.Report, warnings []string) {
 	for _, b := range report.Breaches {
 		b.Path = slashed(dir, b.Path)
 		fmt.Fprintln(w, b)
 	}
-	writeWarnings(w, dir, warnings)
+	for _, line := range warnings {
+		fmt.Fprintln(w, line)
+	}
 	noun := "breaches"
 	if len(report.Breaches) == 1 {
 		noun = "breach"

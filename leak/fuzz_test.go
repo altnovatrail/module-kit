@@ -116,6 +116,16 @@ func FuzzNumbers(f *testing.F) {
 		if want := modelNumbers(normal); !slices.Equal(got, want) {
 			t.Fatalf("the numbers of %q, %q in its normal form, are %q, and the model reads %q", text, normal, got, want)
 		}
+		// Each number that Numbers writes stands in the normal form and has the value the search reads.
+		written := Numbers(text)
+		if len(written) != len(got) {
+			t.Fatalf("Numbers of %q gives %q, and the search reads %q", text, written, got)
+		}
+		for i, w := range written {
+			if modelValue(w) != got[i] || !strings.Contains(normal, w) {
+				t.Fatalf("Numbers of %q writes %q, which is not %s as it stands in %q", text, w, got[i], normal)
+			}
+		}
 		_ = search.In(text)
 	})
 }

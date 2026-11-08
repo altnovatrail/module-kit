@@ -215,6 +215,28 @@ func TestNumbersIn(t *testing.T) {
 	}
 }
 
+// The numbers of a text are written as they stand in its normal form, in its order: NFKC writes ½ and
+// the digits of full width as ASCII, and each number of a time or of a sum is one of its own.
+func TestNumbers(t *testing.T) {
+	for _, c := range []struct {
+		text string
+		want []string
+	}{
+		{"Count on in minutes: an hour has 60 of them, not 100.", []string{"60", "100"}},
+		{"Check parity on small numbers first, such as 1 + 3 and 3 + 5.", []string{"1", "3", "3", "5"}},
+		{"Half is ½, or 2 / 4, at 07:30.", []string{"1/2", "2 / 4", "07", "30"}},
+		{"１２ rungs", []string{"12"}},
+		{"Seven, the 7th, x7 and 1,5", []string{"1", "5"}},
+		{"Draw a clock face and count on in minutes.", nil},
+		{"\xff7\xff", []string{"7"}},
+		{"", nil},
+	} {
+		if got := Numbers(c.text); !slices.Equal(got, c.want) {
+			t.Errorf("the numbers of %q are %q, want %q", c.text, got, c.want)
+		}
+	}
+}
+
 // A phrase is found where it stands, with no character of a word right outside an end that is one.
 func TestHolds(t *testing.T) {
 	for _, c := range []struct {
