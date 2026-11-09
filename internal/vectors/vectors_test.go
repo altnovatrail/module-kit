@@ -312,7 +312,8 @@ func moduleExample(v vector) error {
 // compares them: so a field left out is told from one at its zero value. And the function of the
 // part, which takes part.yaml read by its type of formatv0, gives the type of formatv0/open, which
 // is compared with open-view.yaml read strictly by that type: so the open view the library gives is
-// the one the vector holds, in the type that holds it.
+// the one the vector holds, in the type that holds it. Of a task, the digest of its open view is
+// what digest.yaml holds (format/README.md, section 25; R102 spec).
 func openView(v vector) error {
 	name := strings.Split(v.path, "/")[2]
 	kind := partTypes[name]
@@ -336,7 +337,28 @@ func openView(v vector) error {
 	if !reflect.DeepEqual(got, want) {
 		return differ("the open view of part.yaml is", got, want)
 	}
+	if name != "task" {
+		return nil
+	}
+	var dv digestVector
+	if _, err := readOpenView(v.fsys, path.Join(v.path, "digest.yaml"), &dv); err != nil {
+		return err
+	}
+	digest, err := openview.TaskDigest(*part.(*formatv0.Task))
+	if err != nil {
+		return err
+	}
+	if digest != dv.OpenViewDigest {
+		return fmt.Errorf("the digest of the open view of part.yaml is %s, and digest.yaml holds %s", digest, dv.OpenViewDigest)
+	}
 	return nil
+}
+
+// digestVector is digest.yaml of a case of the open view of a task, which has no schema of its own:
+// the digest of the open view alone, as a sample of the eval protocol names the task it answers
+// (format/README.md, sections 9 and 25).
+type digestVector struct {
+	OpenViewDigest formatv0.Digest `json:"open_view_digest"`
 }
 
 // differ says that an open view is not the one open-view.yaml holds, writing both out.
@@ -462,7 +484,8 @@ func unsigned(text formatv0.Unsigned) (uint64, error) {
 // on its own reads it, on any instance; it has count instances; its solver, when it has one, gets the
 // numbers of inputs, in any order; and each attempt's seed picks the instance of the attempt's
 // numbers, the results of the solver among them as module-kit's own run of the solver finds them,
-// which is the attempt's instance, whatever the order of keys, and has its open view
+// which is the attempt's instance, whatever the order of keys, and has its open view, whose digest is the
+// attempt's open_view_digest
 // (format/README.md, sections 9, 23 and 24). The vector is read by its schema and its type of
 // formatv0.
 func templates(v vector) error {
@@ -522,6 +545,13 @@ func templates(v vector) error {
 		}
 		if _, err := openview.Task(got); err != nil {
 			return fmt.Errorf("attempt %d: %w", n+1, err)
+		}
+		digest, err := openview.TaskDigest(got)
+		if err != nil {
+			return fmt.Errorf("attempt %d: %w", n+1, err)
+		}
+		if digest != attempt.OpenViewDigest {
+			return fmt.Errorf("attempt %d: the digest of the instance's open view is %s, and the vector gives %s", n+1, digest, attempt.OpenViewDigest)
 		}
 	}
 	return nil
@@ -868,8 +898,14 @@ var folderVectors = map[string][]string{
 	"versions": {"module", "published", "version.yaml"},
 }
 
-// The files a case of the open view holds, and nothing else, in order (format/README.md, section 9).
-var openViewFiles = []string{"open-view.yaml", "part.yaml"}
+// The files a case of the open view holds, and nothing else, in order: of a task, digest.yaml too
+// (format/README.md, section 9).
+func openViewFiles(part string) []string {
+	if part == "task" {
+		return []string{"digest.yaml", "open-view.yaml", "part.yaml"}
+	}
+	return []string{"open-view.yaml", "part.yaml"}
+}
 
 // The ID of a format rule: <part>.<name>, in kebab-case (format/README.md, section 7). The rules of
 // the module index and of versions of a module have their vectors among those of indexes and
@@ -910,7 +946,7 @@ func classifyFormat(name string) (casePath, kind string, known bool) {
 			}
 			return path.Join(parts[:4]...), vectors, true
 		case vectors == "open-view" && len(parts) == 5 && slices.Contains(layoutParts, parts[2]) &&
-			slices.Contains(openViewFiles, parts[4]):
+			slices.Contains(openViewFiles(parts[2]), parts[4]):
 			return path.Join(parts[:4]...), vectors, true
 		case vectors == "verdicts" && len(parts) == 4 && slices.Contains(verdictKinds, parts[2]) && yaml:
 			return name, vectors, true
@@ -974,7 +1010,7 @@ func inventory(format, vectors fs.FS) ([]vector, error) {
 	for _, c := range found {
 		want := folderVectors[c.kind]
 		if c.kind == "open-view" {
-			want = openViewFiles
+			want = openViewFiles(strings.Split(c.path, "/")[2])
 		}
 		if want == nil {
 			continue

@@ -18,10 +18,11 @@ updates:
 
   # The Go modules the code is built from (R04). Go itself, in the Dockerfile, and the tools the
   # recipes run by `go run` at an exact version are not among them: those are raised by hand.
-  # Neither is .devcontainer/gopls/, the lock file of gopls: its version updates go together with
-  # GOPLS_VERSION in the Dockerfile, by hand. Dependabot alerts and security updates still read
-  # that go.mod; a security update that raises gopls itself fails ci-lint until GOPLS_VERSION moves
-  # with it (R19 in docs/decisions.md).
+  # Neither is .devcontainer/gopls/, the lock file of gopls: it is the go kind's of spec's
+  # repo-template, and a move to a tag of spec raises it together with GOPLS_VERSION in the
+  # Dockerfile. Dependabot alerts and security updates still read that go.mod; a security update
+  # that raises gopls itself fails ci-lint until GOPLS_VERSION moves with it (R19 and R51 in
+  # docs/decisions.md).
   - package-ecosystem: gomod
     directory: /
     schedule:

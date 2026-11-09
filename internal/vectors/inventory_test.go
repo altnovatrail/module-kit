@@ -36,6 +36,7 @@ func TestInventoryNamesEachCase(t *testing.T) {
 		"vectors/rules/module.layout/unknown-file/notes.txt",
 		"vectors/open-view/task/hints-closed/part.yaml",
 		"vectors/open-view/task/hints-closed/open-view.yaml",
+		"vectors/open-view/task/hints-closed/digest.yaml",
 		"vectors/verdicts/number/negative.yaml",
 		"vectors/leaks/long-number.yaml",
 		"vectors/random/one-name.yaml",
