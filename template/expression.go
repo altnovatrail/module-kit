@@ -1,6 +1,7 @@
 package template
 
 import (
+	"errors"
 	"fmt"
 	"slices"
 	"strings"
@@ -94,11 +95,15 @@ func tokensOf(src string) ([]token, error) {
 // two ints and gives a bool; not, and and or take bools and give a bool. The error says why src is
 // no such expression, at the place of the token where that shows.
 //
-// It reads the subset as spec's second implementation does. go.starlark.net at the version of the
-// format parses less of it, and Instances asks it too: an expression that begins with a space, which
-// it reads as an indent, and one that nests past the depth of its parser — 75 parentheses, or 987
-// unary minus signs in a row — are none of the dialect (В28 in table 3 of RUN.md).
+// An expression begins with a token, not a space, and nests at most maxDepth levels: each
+// parenthesis, unary - and not is a level within the one around it, so -(a - (b)) nests three. The
+// dialect reads a space before an expression as an indent, and go.starlark.net at the version of the
+// format parses no deeper than about 75 parentheses, or 987 unary minus signs in a row, so every
+// expression of the subset is one of the dialect (format/README.md, section 23; R102 spec; R32).
 func typeOf(src string, names []string) (t exprType, err error) {
+	if strings.HasPrefix(src, " ") {
+		return "", errors.New("it begins with a space, where an expression begins with a token")
+	}
 	found, err := tokensOf(src)
 	if err != nil {
 		return "", err
@@ -125,12 +130,25 @@ type problem string
 
 func (p problem) Error() string { return string(p) }
 
+// maxDepth is the most levels an expression of a template nests (format/README.md, section 23).
+const maxDepth = 64
+
 // parser reads the tokens of an expression by the grammar of the subset, and types each part as it
 // reads it.
 type parser struct {
 	tokens []token
 	at     int
 	names  []string // the names that the expression may name
+	depth  int      // the levels of parentheses, unary - and not around the token read
+}
+
+// enter goes a level deeper at the token t, a (, a unary - or a not, and fails past maxDepth; the
+// caller leaves the level when it has read what the token holds.
+func (p *parser) enter(t token) {
+	p.depth++
+	if p.depth > maxDepth {
+		p.fail("%s at %d nests the expression %d levels deep, and it nests at most %d", t.text, t.at, p.depth, maxDepth)
+	}
 }
 
 func (p *parser) fail(format string, args ...any) {
@@ -190,7 +208,9 @@ func (p *parser) negation() exprType {
 		return p.comparison()
 	}
 	op := p.next()
+	p.enter(op)
 	p.want(op, p.negation(), boolType)
+	p.depth--
 	return boolType
 }
 
@@ -222,7 +242,9 @@ func (p *parser) unary() exprType {
 		return p.atom()
 	}
 	op := p.next()
+	p.enter(op)
 	p.want(op, p.unary(), intType)
+	p.depth--
 	return intType
 }
 
@@ -241,7 +263,9 @@ func (p *parser) atom() exprType {
 	case t.text != "(":
 		p.fail("%s at %d stands where an operand is due", t.text, t.at)
 	}
+	p.enter(t)
 	inner := p.disjunction()
+	p.depth--
 	if !p.symbolAhead([]string{")"}) {
 		p.fail("the ( at %d is not closed", t.at)
 	}

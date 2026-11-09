@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://altnovatrail.github.io/spec/format/0.3/index-vector.schema.json",
+  "$id": "https://altnovatrail.github.io/spec/format/0.4/index-vector.schema.json",
   "title": "Index vector",
   "description": "A release of modules that a test vector of the module index gives, index.yaml beside the modules/ it releases (sections 9 and 26 of the format text): the index of the release before it, the release's tag and its withdrawals, and either the index that the release builds or the rule of the index by which the build is refused. An implementation builds the package of each module and the index, and gets exactly these, whatever the order of keys.",
   "type": "object",

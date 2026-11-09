@@ -27,12 +27,14 @@ const (
 	partSkillGraph = "skill-graph"
 	partTraps      = "traps"
 	partTechniques = "techniques"
+	partSteps      = "solving-steps"
 	partTask       = "task"
 	partLesson     = "lesson"
 	manifestPath   = "manifest.yaml"
 	skillGraphPath = "skill-graph.yaml"
 	trapsPath      = "traps.yaml"
 	techniquesPath = "techniques.yaml"
+	stepsPath      = "solving-steps.yaml"
 	licensePath    = "LICENSE"
 	noticePath     = "NOTICE"
 	mediaFolder    = "media/"
@@ -47,7 +49,7 @@ var layout = []row{
 	{skillGraphPath, partSkillGraph},
 	{trapsPath, partTraps},
 	{techniquesPath, partTechniques},
-	{"solving-steps.yaml", "solving-steps"},
+	{stepsPath, partSteps},
 	{"tasks/<id>.yaml", partTask},
 	{"lessons/<id>.yaml", partLesson},
 	{mediaFolder + "<path>", ""},

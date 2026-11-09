@@ -470,15 +470,16 @@ func slotsOf(item formatv0.Item) []slot {
 // A meaning is what decides the verdict and the trap of an answer slot, as its check kind reads it
 // (format/README.md, sections 15 and 27): the kind; for number, the key as a rational number and the
 // set of the forms of its units; for fraction, the key as a rational number and the form, any when
-// absent; for choice, the key and the set of options — the check's own, or the answer slot's when it
-// is bound choice — each as a choice normalizes it; for predicate, the predicate as it is written;
-// and the set of trap values, each the value as the check compares it, with its trap. A value out of
-// a number's notation compares as "", as none of its values does.
+// absent; for choice, the notation, options when absent, and the key and the set of options — the
+// check's own, or the answer slot's when it is bound choice — each as a choice of that notation
+// normalizes it; for time, the key by its hours and minutes; for predicate, the predicate as it is
+// written; and the set of trap values, each the value as the check compares it, with its trap. A
+// value out of a number's notation compares as "", as none of its values does.
 type meaning struct {
-	kind                 formatv0.CheckKind
-	key, form, predicate string
-	units, options       []string
-	traps                [][2]string
+	kind                           formatv0.CheckKind
+	key, form, notation, predicate string
+	units, options                 []string
+	traps                          [][2]string
 }
 
 func meaningOf(s verdict.AnswerSlot) meaning {
@@ -490,7 +491,7 @@ func meaningOf(s verdict.AnswerSlot) meaning {
 		return form
 	}
 	switch c.Kind {
-	case formatv0.CheckKindNumber, formatv0.CheckKindFraction, formatv0.CheckKindChoice:
+	case formatv0.CheckKindNumber, formatv0.CheckKindFraction, formatv0.CheckKindChoice, formatv0.CheckKindTime:
 		if c.Key != nil {
 			m.key = compared(*c.Key)
 		}
@@ -513,8 +514,12 @@ func meaningOf(s verdict.AnswerSlot) meaning {
 			m.form = string(*c.Form)
 		}
 	case formatv0.CheckKindChoice:
+		m.notation = string(formatv0.CheckNotationOptions)
+		if c.Notation != nil {
+			m.notation = string(*c.Notation)
+		}
 		for _, option := range s.ChoiceOptions() {
-			m.options = append(m.options, normal.Choice(string(option)))
+			m.options = append(m.options, normal.ChoiceOf(c, string(option)))
 		}
 		m.options = sorted(m.options)
 	}

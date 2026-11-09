@@ -23,5 +23,10 @@
 // module's templates one on each CPU, with the caller's context, and CheckModule gives the numbers
 // of their instances to the build of a package, so that each solver runs once (R38). A report of
 // Check holds besides its warnings, which refuse nothing: one for each text of the whole module — a
-// rung template, a trap's advice, a technique — that holds a number, as section 20 asks (R50).
+// rung template, a trap's advice, a technique, a solving step — that holds a number, as section 20
+// asks (R50). With format 0.4 it holds the page of a workbook too, task.workbook-page and
+// lesson.workbook-page, by package page, and lesson.example-fills; the leak check of the leading
+// question, of the solving steps, of the picture paths of an instance, of numbered lists and of the
+// lines of a worked example on a workbook; and the picture paths of a template, by each instance
+// (R52).
 package module

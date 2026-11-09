@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://altnovatrail.github.io/spec/format/0.3/lesson.schema.json",
+  "$id": "https://altnovatrail.github.io/spec/format/0.4/lesson.schema.json",
   "title": "Lesson",
   "description": "A lesson of a module: a sequence that its author made — explanations, worked examples and tasks, in order — and the skills of the module that it teaches. The skill graph orders the lessons.",
   "type": "object",
@@ -59,11 +59,11 @@
         "explanation": {
           "type": "array",
           "items": {
-            "$ref": "common.schema.json#/$defs/statement_part",
+            "$ref": "#/$defs/explanation_part",
             "unevaluatedProperties": false
           },
           "minItems": 1,
-          "description": "An explanation: paragraphs and pictures that the learner reads, in order, in the module's explanation language.",
+          "description": "An explanation: paragraphs, pictures and numbered lists that the learner reads, in order, in the module's explanation language.",
           "x-open": true
         },
         "worked_example": {
@@ -82,6 +82,104 @@
       "maxProperties": 1,
       "description": "A segment of a lesson: an explanation, a worked example or a task, by its one field."
     },
+    "explanation_part": {
+      "type": "object",
+      "properties": {
+        "text": {
+          "$ref": "common.schema.json#/$defs/text",
+          "description": "A paragraph, as plain text.",
+          "x-open": true
+        },
+        "picture": {
+          "$ref": "common.schema.json#/$defs/picture_path",
+          "description": "A picture, by its path from media/: a lesson has no template, so its path holds no placeholder.",
+          "x-open": true
+        },
+        "alt": {
+          "type": "string",
+          "description": "What the picture shows, in words: a screen reader reads it, and it stands in the picture's place until the picture comes. Empty for a picture that only decorates.",
+          "x-open": true
+        },
+        "width": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991,
+          "description": "The width the picture is shown at, in CSS px; narrower when the text it stands in is.",
+          "x-open": true
+        },
+        "height": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991,
+          "description": "The height the picture is shown at, in CSS px, in proportion to its width.",
+          "x-open": true
+        },
+        "numbered_list": {
+          "type": "array",
+          "items": {
+            "$ref": "common.schema.json#/$defs/text",
+            "not": {
+              "pattern": "^[0-9]+[.)]( |$)"
+            }
+          },
+          "minItems": 2,
+          "description": "A numbered list: its texts in order, such as the steps of a method, each a short text that does not begin with a number of its own, as 1. or 1) does. The learner's app draws the numbers, so the leak check reads none of them; it searches the texts as it searches the paragraphs.",
+          "x-open": true
+        }
+      },
+      "if": {
+        "required": [
+          "numbered_list"
+        ]
+      },
+      "then": {
+        "maxProperties": 1
+      },
+      "else": {
+        "if": {
+          "required": [
+            "picture"
+          ]
+        },
+        "then": {
+          "required": [
+            "alt",
+            "width",
+            "height"
+          ],
+          "not": {
+            "required": [
+              "text"
+            ]
+          }
+        },
+        "else": {
+          "required": [
+            "text"
+          ],
+          "not": {
+            "anyOf": [
+              {
+                "required": [
+                  "alt"
+                ]
+              },
+              {
+                "required": [
+                  "width"
+                ]
+              },
+              {
+                "required": [
+                  "height"
+                ]
+              }
+            ]
+          }
+        }
+      },
+      "description": "A part of an explanation: a numbered list, or a paragraph or a picture with what it shows and its size, as a part of a task's statement is; a lesson's picture path holds no placeholder."
+    },
     "worked_example": {
       "type": "object",
       "properties": {
@@ -89,7 +187,14 @@
           "type": "array",
           "items": {
             "$ref": "common.schema.json#/$defs/statement_part",
-            "unevaluatedProperties": false
+            "unevaluatedProperties": false,
+            "properties": {
+              "picture": {
+                "$ref": "common.schema.json#/$defs/picture_path",
+                "description": "A picture, by its path from media/: a lesson has no template, so its path holds no placeholder.",
+                "x-open": true
+              }
+            }
           },
           "minItems": 1,
           "description": "What the example asks: paragraphs and pictures in order, as a task's statement.",
@@ -97,14 +202,18 @@
         },
         "canvas": {
           "$ref": "common.schema.json#/$defs/canvas",
-          "properties": {
-            "kind": {
-              "const": "handwriting_sheet",
-              "description": "A worked example is shown on a handwriting sheet."
-            }
-          },
           "unevaluatedProperties": false,
-          "description": "The sheet that the author's demo is shown on: a handwriting sheet and its grid. The learner does not write on it.",
+          "description": "What the author's demo is shown on: a handwriting sheet and its grid, or a workbook, the example's lines with their boxes. The learner does not write on it.",
+          "x-open": true
+        },
+        "lines": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/example_line",
+            "unevaluatedProperties": false
+          },
+          "minItems": 1,
+          "description": "On a workbook: the example's lines, each with its boxes and what they hold, laid out on the page as a task's lines are.",
           "x-open": true
         },
         "demo": {
@@ -123,7 +232,130 @@
         "canvas",
         "demo"
       ],
-      "description": "A worked example of a lesson: no task, with no answer slots and no key."
+      "description": "A worked example of a lesson: no task, with no answer slots and no key. On a handwriting sheet the demo shows pictures on the sheet; on a workbook it fills the boxes of the example's lines.",
+      "if": {
+        "properties": {
+          "canvas": {
+            "properties": {
+              "kind": {
+                "const": "workbook"
+              }
+            },
+            "required": [
+              "kind"
+            ]
+          }
+        },
+        "required": [
+          "canvas"
+        ]
+      },
+      "then": {
+        "required": [
+          "lines"
+        ],
+        "properties": {
+          "demo": {
+            "items": {
+              "not": {
+                "required": [
+                  "area"
+                ]
+              }
+            },
+            "description": "On a workbook, no picture stands on the sheet."
+          }
+        }
+      },
+      "else": {
+        "not": {
+          "required": [
+            "lines"
+          ]
+        },
+        "properties": {
+          "demo": {
+            "items": {
+              "not": {
+                "required": [
+                  "fill"
+                ]
+              }
+            },
+            "description": "On a handwriting sheet, no box is filled."
+          }
+        }
+      }
+    },
+    "example_line": {
+      "type": "object",
+      "properties": {
+        "line": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/example_line_part",
+            "unevaluatedProperties": false
+          },
+          "minItems": 1,
+          "contains": {
+            "required": [
+              "binding"
+            ]
+          },
+          "description": "The pieces of the line, in order, a box among them at least.",
+          "x-open": true
+        }
+      },
+      "required": [
+        "line"
+      ],
+      "description": "A line of a worked example on a workbook."
+    },
+    "example_line_part": {
+      "type": "object",
+      "properties": {
+        "text": {
+          "$ref": "common.schema.json#/$defs/text",
+          "description": "A piece of text of the line.",
+          "x-open": true
+        },
+        "binding": {
+          "const": "box",
+          "description": "A box of the line.",
+          "x-open": true
+        },
+        "value": {
+          "$ref": "common.schema.json#/$defs/text",
+          "description": "Of a box: what the demo writes in it when a part fills it.",
+          "x-open": true
+        }
+      },
+      "if": {
+        "required": [
+          "binding"
+        ]
+      },
+      "then": {
+        "required": [
+          "value"
+        ],
+        "not": {
+          "required": [
+            "text"
+          ]
+        }
+      },
+      "else": {
+        "required": [
+          "text"
+        ],
+        "not": {
+          "required": [
+            "value"
+          ]
+        }
+      },
+      "description": "A piece of a line of a worked example: a piece of text, or a box with what the demo writes in it."
     },
     "demo_part": {
       "type": "object",
@@ -162,30 +394,76 @@
           "unevaluatedProperties": false,
           "description": "The area of the sheet that a picture on the sheet is shown in, at its size, on the canvas layer of the author's demo.",
           "x-open": true
+        },
+        "fill": {
+          "$ref": "#/$defs/demo_fill",
+          "unevaluatedProperties": false,
+          "description": "Of a worked example on a workbook: the box that this part of the demo fills with its value.",
+          "x-open": true
         }
       },
       "if": {
         "required": [
-          "picture"
+          "fill"
         ]
       },
       "then": {
-        "required": [
-          "alt"
-        ],
-        "not": {
-          "required": [
-            "text"
-          ]
-        },
+        "maxProperties": 1
+      },
+      "else": {
         "if": {
           "required": [
-            "area"
+            "picture"
           ]
         },
         "then": {
+          "required": [
+            "alt"
+          ],
+          "not": {
+            "required": [
+              "text"
+            ]
+          },
+          "if": {
+            "required": [
+              "area"
+            ]
+          },
+          "then": {
+            "not": {
+              "anyOf": [
+                {
+                  "required": [
+                    "width"
+                  ]
+                },
+                {
+                  "required": [
+                    "height"
+                  ]
+                }
+              ]
+            }
+          },
+          "else": {
+            "required": [
+              "width",
+              "height"
+            ]
+          }
+        },
+        "else": {
+          "required": [
+            "text"
+          ],
           "not": {
             "anyOf": [
+              {
+                "required": [
+                  "alt"
+                ]
+              },
               {
                 "required": [
                   "width"
@@ -195,47 +473,41 @@
                 "required": [
                   "height"
                 ]
+              },
+              {
+                "required": [
+                  "area"
+                ]
               }
             ]
           }
+        }
+      },
+      "description": "A part of the author's demo: a paragraph; a picture beside the sheet, with what it shows and its size; a picture on the sheet, with what it shows and its area; or, on a workbook, a box filled."
+    },
+    "demo_fill": {
+      "type": "object",
+      "properties": {
+        "line": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 99,
+          "description": "The line, by its place among the example's lines, from 1.",
+          "x-open": true
         },
-        "else": {
-          "required": [
-            "width",
-            "height"
-          ]
+        "box": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 99,
+          "description": "The box, by its place among the boxes of the line, from 1.",
+          "x-open": true
         }
       },
-      "else": {
-        "required": [
-          "text"
-        ],
-        "not": {
-          "anyOf": [
-            {
-              "required": [
-                "alt"
-              ]
-            },
-            {
-              "required": [
-                "width"
-              ]
-            },
-            {
-              "required": [
-                "height"
-              ]
-            },
-            {
-              "required": [
-                "area"
-              ]
-            }
-          ]
-        }
-      },
-      "description": "A part of the author's demo: a paragraph; a picture beside the sheet, with what it shows and its size; or a picture on the sheet, with what it shows and its area."
+      "required": [
+        "line",
+        "box"
+      ],
+      "description": "A box of a worked example's lines, by its line and its place in it."
     }
   }
 }

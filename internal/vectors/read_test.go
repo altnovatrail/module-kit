@@ -86,6 +86,7 @@ var vectorFiles = map[string]vectorFile{
 	"vectors/random/*.yaml":           {"random-vector.schema.json", typeOf[formatv0.RandomVector]()},
 	"vectors/templates/*.yaml":        {"template-vector.schema.json", typeOf[formatv0.TemplateVector]()},
 	"vectors/tiers/*.yaml":            {"tier-vector.schema.json", typeOf[formatv0.TierVector]()},
+	"vectors/pages/*.yaml":            {"page-vector.schema.json", typeOf[formatv0.PageVector]()},
 	"vectors/packages/*/package.yaml": {"package-vector.schema.json", typeOf[formatv0.PackageVector]()},
 	"vectors/indexes/*/index.yaml":    {"index-vector.schema.json", typeOf[formatv0.IndexVector]()},
 	"vectors/versions/*/version.yaml": {"version-vector.schema.json", typeOf[formatv0.VersionVector]()},

@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://altnovatrail.github.io/spec/format/0.3/task.schema.json",
+  "$id": "https://altnovatrail.github.io/spec/format/0.4/task.schema.json",
   "title": "Task",
   "description": "A task of a module, tasks/<id>.yaml in its folder: its statement, its canvas, its items with their answer slots, each with the check that says what is right in it, the skills it trains, its band and difficulty, and, when they are fewer than the module's, the age categories it is for; and what helps the learner on the way: what the statement gives and asks, the techniques that help, the traps that AI may suggest, a simpler case for each item, the solution and the phrases that give the answer away. The ID, the statement, the canvas, the items, the givens and the unknown are open, since the learner's app shows them, but for the skills and the simpler case of an item and the check of each answer slot; those, the skills, the band, the difficulty, the age categories, the techniques, the traps, the solution, the leak phrases and the template are closed, since the server reads them. A task with a template is a template of tasks: each attempt gets one instance of it, with numbers in the place of its placeholders.",
   "type": "object",
@@ -50,6 +50,10 @@
       "$ref": "common.schema.json#/$defs/text",
       "description": "What the task asks to find, in the module's explanation language: the chip that the learner ticks beside the givens.",
       "x-open": true
+    },
+    "leading_question": {
+      "$ref": "common.schema.json#/$defs/text",
+      "description": "The author's question that breaks the task down, in the module's explanation language: what a hint asked for gives before the first wrong answer, with the techniques. Closed, since it hints at how to solve the task more than a technique does; the leak check searches it for the task's keys."
     },
     "skills": {
       "$ref": "#/$defs/skills",
@@ -301,7 +305,7 @@
         "value": {
           "type": "string",
           "minLength": 1,
-          "description": "The wrong value, as the key is written: for a choice, one of its options other than the key."
+          "description": "The wrong value, as the key is written: for a choice, one of its options other than the key; for a time, in the notation of a time read, so that 5:60 can show a trap."
         },
         "trap": {
           "$ref": "common.schema.json#/$defs/trap_id",
@@ -552,15 +556,16 @@
             "number",
             "fraction",
             "choice",
+            "time",
             "predicate",
             "rubric"
           ],
-          "description": "The check kind: a number, a fraction, a choice, a predicate on a whole number, or a rubric, which gives feedback and no verdict."
+          "description": "The check kind: a number, a fraction, a choice, a time of day in hours and minutes, a predicate on a whole number, or a rubric, which gives feedback and no verdict."
         },
         "key": {
           "type": "string",
           "minLength": 1,
-          "description": "The right answer, as a string: a number for number, a simple fraction for fraction, one of the options for choice."
+          "description": "The right answer, as a string: a number for number, a simple fraction for fraction, one of the options for choice, a time H:MM for time."
         },
         "units": {
           "type": "array",
@@ -588,6 +593,14 @@
           "uniqueItems": true,
           "description": "Of a choice written by hand: the options the learner writes one of, such as the signs <, > and =."
         },
+        "notation": {
+          "enum": [
+            "options",
+            "word"
+          ],
+          "default": "options",
+          "description": "Of a choice written by hand: what is in notation. options, unless given: the options alone. word: the options, and any other value that is one word of letters, which gets not_yet; the key is one such word, and the other options may be phrases."
+        },
         "trap_values": {
           "type": "array",
           "items": {
@@ -595,7 +608,7 @@
             "unevaluatedProperties": false
           },
           "minItems": 1,
-          "description": "Of a number, a fraction or a choice: the wrong values that the author knows, each with the trap it shows, compared with the value read as the key is."
+          "description": "Of a number, a fraction, a choice or a time: the wrong values that the author knows, each with the trap it shows, compared with the value read as the key is."
         },
         "predicate": {
           "type": "string",
@@ -667,6 +680,11 @@
                 },
                 {
                   "required": [
+                    "notation"
+                  ]
+                },
+                {
+                  "required": [
                     "predicate"
                   ]
                 },
@@ -729,6 +747,11 @@
                 },
                 {
                   "required": [
+                    "notation"
+                  ]
+                },
+                {
+                  "required": [
                     "predicate"
                   ]
                 },
@@ -786,6 +809,76 @@
           "if": {
             "properties": {
               "kind": {
+                "const": "time"
+              }
+            },
+            "required": [
+              "kind"
+            ]
+          },
+          "then": {
+            "properties": {
+              "key": {
+                "pattern": "^(0|[1-9]|1[0-9]|2[0-3]):[0-5][0-9]$",
+                "description": "A time of day, H:MM: hours from 0 to 23 with no leading zero, and minutes from 00 to 59, such as 7:30 or 19:05."
+              },
+              "trap_values": {
+                "items": {
+                  "$ref": "#/$defs/trap_value",
+                  "properties": {
+                    "value": {
+                      "pattern": "^[0-9]{1,2}:([0-9]{2}|[1-9][0-9]{2})$",
+                      "description": "A wrong time, in the notation of a value read: H:MM or HH:MM, with minutes of two digits, or of three that begin with no zero, so that a time of 60 minutes or more, such as 5:60 or 10:100, can show a trap."
+                    }
+                  },
+                  "unevaluatedProperties": false
+                },
+                "description": "Of a time: the wrong values, each in the notation of a value read."
+              }
+            },
+            "required": [
+              "key"
+            ],
+            "not": {
+              "anyOf": [
+                {
+                  "required": [
+                    "units"
+                  ]
+                },
+                {
+                  "required": [
+                    "form"
+                  ]
+                },
+                {
+                  "required": [
+                    "options"
+                  ]
+                },
+                {
+                  "required": [
+                    "notation"
+                  ]
+                },
+                {
+                  "required": [
+                    "predicate"
+                  ]
+                },
+                {
+                  "required": [
+                    "criteria"
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "kind": {
                 "const": "predicate"
               }
             },
@@ -817,6 +910,11 @@
                 {
                   "required": [
                     "options"
+                  ]
+                },
+                {
+                  "required": [
+                    "notation"
                   ]
                 },
                 {
@@ -872,6 +970,11 @@
                 },
                 {
                   "required": [
+                    "notation"
+                  ]
+                },
+                {
+                  "required": [
                     "predicate"
                   ]
                 },
@@ -895,6 +998,7 @@
             "number",
             "fraction",
             "choice",
+            "time",
             "predicate"
           ],
           "description": "The kind of the check of an answer written by hand: any kind but the rubric."
@@ -926,11 +1030,20 @@
         }
       },
       "not": {
-        "required": [
-          "options"
+        "anyOf": [
+          {
+            "required": [
+              "options"
+            ]
+          },
+          {
+            "required": [
+              "notation"
+            ]
+          }
         ]
       },
-      "description": "The check of a choice by tapping: its options are the answer slot's, and the check holds none."
+      "description": "The check of a choice by tapping: its options are the answer slot's, and the check holds none, nor a notation."
     },
     "sheet_check": {
       "$ref": "#/$defs/check",

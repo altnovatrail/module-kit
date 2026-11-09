@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://altnovatrail.github.io/spec/format/0.3/template-vector.schema.json",
+  "$id": "https://altnovatrail.github.io/spec/format/0.4/template-vector.schema.json",
   "title": "Template vector",
   "description": "A test vector of templates (sections 23 and 24 of the format text): a template, the number of its instances, the names that its solver gets, when it has one, and attempts, each with its seed, the numbers of the instance that the seed picks, that instance, and the digest of its open view. An implementation counts the instances, picks the instance of each seed, runs the solver on it, replaces the placeholders, and gets exactly these.",
   "type": "object",

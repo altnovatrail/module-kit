@@ -99,7 +99,7 @@ func TestBreaches(t *testing.T) {
 	}
 	moved := compareCase(t, "format-transition", "1.0.0")
 	if moved.Part != Major || moved.Refused() || len(moved.Changes) != 1 || moved.Changes[0].String() !=
-		"inventory.json #/module_format_version: major: the module moves from version 0.2 of the format to 0.3" {
+		"inventory.json #/module_format_version: major: the module moves from version 0.2 of the format to 0.4" {
 		t.Errorf("a move of the format: %s", moved)
 	}
 	if c := compareCase(t, "earlier-format-older-version", "0.9.0", "1.0.0"); c.Part != Minor || c.Refused() || c.Newest != "1.0.0" {

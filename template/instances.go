@@ -125,8 +125,10 @@ func namesBreaches(t formatv0.Template) []Breach {
 // expressionBreaches gives the breaches of task.template-expressions: every derived number is an int
 // expression of the subset that names only parameters, and the constraint a bool expression of it
 // that names only parameters and derived numbers. The subset is of Starlark and runs in the dialect
-// of the format, so an expression is also one that go.starlark.net at its version parses, as a
-// predicate is (format/README.md, sections 15, 23 and 24).
+// of the format: an expression of it begins with a token and nests at most 64 levels, so that
+// go.starlark.net at its version parses every one (format/README.md, sections 23 and 24; R102 spec).
+// An expression of the subset that go.starlark.net still does not parse is a breach rather than a
+// panic of compiled: the check goes on, and the subset and the dialect are held to each other twice.
 func expressionBreaches(t formatv0.Template, parameters, derived []formatv0.TemplateName) []Breach {
 	var found []Breach
 	check := func(src formatv0.TemplateExpression, names []formatv0.TemplateName, want exprType, what string, place ...string) {
@@ -163,8 +165,9 @@ func plain(names []formatv0.TemplateName) []string {
 // placeholderBreaches gives the breaches of task.placeholders in a template: in every string of the
 // task outside its template, every brace is doubled or part of a placeholder that names a parameter,
 // a derived number or a result of the solver, and a placeholder of a result stands only in a key or
-// a trap value of a check of a number or a fraction, in the solution or in a leak phrase
-// (format/README.md, sections 23 and 24). A breach for each string that breaks it, at the string.
+// a trap value of a check of a number or a fraction, in the text of the solution or in a leak phrase,
+// and in no picture path (format/README.md, sections 23 and 24). A breach for each string that breaks
+// it, at the string.
 func placeholderBreaches(task formatv0.Task) []Breach {
 	t := *task.Template
 	known := func(name formatv0.TemplateName) bool {
@@ -187,7 +190,7 @@ func placeholderBreaches(task formatv0.Task) []Breach {
 		} else if i := slices.IndexFunc(names, func(n formatv0.TemplateName) bool { return !known(n) }); i >= 0 {
 			message = fmt.Sprintf("{%s} names no parameter, derived number or result of the solver", names[i])
 		} else if i := slices.IndexFunc(names, onlyResult); i >= 0 && !takesResults(task, s.tokens) {
-			message = fmt.Sprintf("{%s} is a result of the solver, which stands only in a key or a trap value of a number or a fraction, in the solution and in a leak phrase", names[i])
+			message = fmt.Sprintf("{%s} is a result of the solver, which stands only in a key or a trap value of a number or a fraction, in the text of the solution and in a leak phrase", names[i])
 		}
 		if message != "" {
 			found = append(found, Breach{RulePlaceholders, at(s.tokens...), message})
@@ -198,10 +201,13 @@ func placeholderBreaches(task formatv0.Task) []Breach {
 
 // takesResults says whether a placeholder of a result of the solver may stand in the string of a task
 // at the place tokens: in the key or the value of a trap value of a check of a number or a fraction,
-// in the solution and in a leak phrase (format/README.md, section 24).
+// in the text of the solution and in a leak phrase, and in no picture path, not even the solution's,
+// since a picture of every instance is a file of the module (format/README.md, sections 23 and 24).
 func takesResults(task formatv0.Task, tokens []string) bool {
 	switch tokens[0] {
-	case "solution", "leak_phrases":
+	case "solution":
+		return tokens[len(tokens)-1] != "picture"
+	case "leak_phrases":
 		return true
 	case "items":
 	default:

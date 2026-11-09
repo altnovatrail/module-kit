@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://altnovatrail.github.io/spec/format/0.3/package-vector.schema.json",
+  "$id": "https://altnovatrail.github.io/spec/format/0.4/package-vector.schema.json",
   "title": "Package vector",
   "description": "The package that a test vector of packages gives, package.yaml beside the module/ it is of (sections 9 and 25 of the format text): the module's server part, the listing of its device part, its inventory and its digest. An implementation builds the package of module/ and gets exactly these, whatever the order of keys. The results of a solver are the vector's, in the instances of the server part.",
   "type": "object",

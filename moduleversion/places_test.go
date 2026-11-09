@@ -48,10 +48,10 @@ func TestReadPublished(t *testing.T) {
 		{"no server part", Published{Digest: good.Digest, Files: noServer}, modulepackage.ErrChain},
 		{"another server part", Published{Digest: good.Digest, Files: otherServer}, modulepackage.ErrChain},
 		{"no JSON", inventory(`{`), modulepackage.ErrNotCanonical},
-		{"a newer format", inventory(`{"module_format_version":"0.4"}`), modulepackage.ErrFormatVersion},
+		{"a newer format", inventory(`{"module_format_version":"0.5"}`), modulepackage.ErrFormatVersion},
 		{"no format version", inventory(`{"id":"example/versions"}`), modulepackage.ErrFormatVersion},
 		{"a server part named otherwise", inventory(`{"module_format_version":"0.2","server_part":{"digest":"sha256:0","size":1}}`), modulepackage.ErrChain},
-		{"a 0.3 package not of its schema", inventory(`{"module_format_version":"0.3"}`), modulepackage.ErrNotCanonical},
+		{"a 0.4 package not of its schema", inventory(`{"module_format_version":"0.4"}`), modulepackage.ErrNotCanonical},
 	} {
 		if _, err := readPublished(c.p); !errors.Is(err, c.reason) {
 			t.Errorf("%s: readPublished = %v; want %v", c.name, err, c.reason)

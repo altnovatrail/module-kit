@@ -160,7 +160,8 @@ func (c *checker) templateRules(path string, e *expansion) {
 	c.onInstances(e, func(sub *checker, i instance) {
 		if len(i.invalid) == 0 {
 			sub.checkRules(path, i.task)
-			sub.taskLeaks(path, i.task, ownShown(i.task))
+			sub.workbookPage(path, i.task)
+			sub.taskLeaks(path, i.task, ownShown(i.task, true))
 		}
 	})
 }

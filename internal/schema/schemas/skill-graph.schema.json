@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://altnovatrail.github.io/spec/format/0.3/skill-graph.schema.json",
+  "$id": "https://altnovatrail.github.io/spec/format/0.4/skill-graph.schema.json",
   "title": "Skill graph",
   "description": "The skill graph of a module, skill-graph.yaml at the root of its folder: the module's skills, what a learner needs before each one, how the platform can know a learner's command of each, which anchor skills of the shared taxonomy each one teaches, the names of the tiers, and the skills that the module had once and has no more. The tier of a skill is computed from the prerequisites, never written, and module-kit puts it into the module's package. Every field is open but retired_skills, since the skill map shows them.",
   "type": "object",

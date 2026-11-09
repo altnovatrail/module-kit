@@ -17,8 +17,8 @@ func TestDiffCases(t *testing.T) {
 	root := "vectors/versions/media-changed"
 	folders, indexFile := publishedFolders(t, root)
 	module := fromSpec(t, root+"/module")
-	otherIndex := writeTemp(t, "module-index.json", []byte(`{"module_format_version":"0.3","modules":{"example/smallest":{"0.1.0":`+
-		`{"module_format_version":"0.3","package_digest":"sha256:fcbe6e68430776b0506c93ab51b155f8e7f92e2b3ecbe03e34e2afb91b4d4d08","release":"v0.1.0"}}}}`))
+	otherIndex := writeTemp(t, "module-index.json", []byte(`{"module_format_version":"0.4","modules":{"example/smallest":{"0.1.0":`+
+		`{"module_format_version":"0.4","package_digest":"sha256:fcbe6e68430776b0506c93ab51b155f8e7f92e2b3ecbe03e34e2afb91b4d4d08","release":"v0.1.0"}}}}`))
 	built := filepath.Join(t.TempDir(), "package")
 	var out, errs bytes.Buffer
 	if status := run(context.Background(), []string{"build", module, built}, &out, &errs); status != statusAccepted {

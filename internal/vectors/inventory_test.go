@@ -42,6 +42,7 @@ func TestInventoryNamesEachCase(t *testing.T) {
 		"vectors/random/one-name.yaml",
 		"vectors/templates/escapes.yaml",
 		"vectors/tiers/chain.yaml",
+		"vectors/pages/workbook-page.yaml",
 		"vectors/packages/smallest/package.yaml",
 		"vectors/packages/smallest/module/.editor-notes",
 		"vectors/indexes/first-release/index.yaml",
@@ -72,6 +73,7 @@ func TestInventoryNamesEachCase(t *testing.T) {
 		"format/vectors/rules/yaml.encoding/byte-order-mark.yaml": "rules",
 		"format/vectors/templates/escapes.yaml":                   "templates",
 		"format/vectors/tiers/chain.yaml":                         "tiers",
+		"format/vectors/pages/workbook-page.yaml":                 "pages",
 		"format/vectors/verdicts/number/negative.yaml":            "verdicts",
 		"format/vectors/versions/zone-moved":                      "versions",
 	}
@@ -248,11 +250,11 @@ func TestExampleRunners(t *testing.T) {
 // format/VERSION, or when an entry lists teaches out of order: section 26 asks both, and its schema
 // can say neither, as indexFormProblems of spec's format-check holds them.
 func TestIndexForm(t *testing.T) {
-	const entry = `{module_format_version: "0.3", package_digest: "sha256:fcbe6e68430776b0506c93ab51b155f8e7f92e2b3ecbe03e34e2afb91b4d4d08", release: v0.1.0`
+	const entry = `{module_format_version: "0.4", package_digest: "sha256:fcbe6e68430776b0506c93ab51b155f8e7f92e2b3ecbe03e34e2afb91b4d4d08", release: v0.1.0`
 	for _, c := range []struct{ data, refused string }{
-		{"module_format_version: \"0.3\"\nmodules: {example/a: {\"0.1.0\": " + entry + ", teaches: [core.a, core.b]}}}\n", ""},
-		{"module_format_version: \"0.2\"\nmodules: {example/a: {\"0.1.0\": " + entry + "}}}\n", "names the format version 0.2"},
-		{"module_format_version: \"0.3\"\nmodules: {example/a: {\"0.1.0\": " + entry + ", teaches: [core.b, core.a]}}}\n",
+		{"module_format_version: \"0.4\"\nmodules: {example/a: {\"0.1.0\": " + entry + ", teaches: [core.a, core.b]}}}\n", ""},
+		{"module_format_version: \"0.3\"\nmodules: {example/a: {\"0.1.0\": " + entry + "}}}\n", "names the format version 0.3"},
+		{"module_format_version: \"0.4\"\nmodules: {example/a: {\"0.1.0\": " + entry + ", teaches: [core.b, core.a]}}}\n",
 			"the teaches of example/a 0.1.0 are not in the order of code units"},
 	} {
 		path := "examples/module-index/valid/a.yaml"

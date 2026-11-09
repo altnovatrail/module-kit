@@ -37,7 +37,7 @@ func TestCheckWarns(t *testing.T) {
 	lines := strings.Split(strings.TrimSuffix(stdout.String(), "\n"), "\n")
 	want := file + ": warning: the pixel at x = 0, y = 0 has alpha 0 of 65535"
 	if status != statusAccepted || stderr.Len() > 0 || len(lines) != 2 || !strings.HasPrefix(lines[0], want) ||
-		lines[1] != accepted+": the module breaks no rule of the format 0.3" {
+		lines[1] != accepted+": the module breaks no rule of the format 0.4" {
 		t.Errorf("status %d, stdout %q, stderr %q; want 0, a warning that begins %q and the last line", status, stdout.String(), stderr.String(), want)
 	}
 
@@ -74,7 +74,7 @@ func TestCheckWarnsOfNumbers(t *testing.T) {
 	lines := strings.Split(strings.TrimSuffix(stdout.String(), "\n"), "\n")
 	want := filepath.ToSlash(manifest) + ` #/rung_templates/0: warning: the text holds the number "1000": `
 	if status != statusAccepted || stderr.Len() > 0 || len(lines) != 3 || !strings.HasPrefix(lines[0], want) ||
-		!strings.HasPrefix(lines[1], picture+": warning: ") || lines[2] != dir+": the module breaks no rule of the format 0.3" {
+		!strings.HasPrefix(lines[1], picture+": warning: ") || lines[2] != dir+": the module breaks no rule of the format 0.4" {
 		t.Errorf("status %d, stdout %q, stderr %q; want 0, a warning that begins %q, that of the picture and the last line", status, stdout.String(), stderr.String(), want)
 	}
 }

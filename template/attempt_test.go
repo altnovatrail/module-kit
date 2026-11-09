@@ -33,6 +33,12 @@ type attempt struct {
 // by code units, the first changing slowest, and the combinations that the constraint leaves out
 // not numbered.
 var vectorAttempts = map[string][]attempt{
+	// rows from 2 to 3 and total from 6 to 8, where rows divides total: (2, 6), (2, 8) and (3, 6).
+	"picture-of-the-instance.yaml": {
+		{0, map[string]int64{"rows": 2, "total": 6}, 0},
+		{2, map[string]int64{"rows": 2, "total": 8}, 1},
+		{5, map[string]int64{"rows": 3, "total": 6}, 2},
+	},
 	// One instance: below(1) gives 0 for every seed.
 	"one-instance.yaml": {
 		{0, map[string]int64{"a": 4}, 0},

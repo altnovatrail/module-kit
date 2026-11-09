@@ -56,7 +56,7 @@ func publishedFolders(t *testing.T, root string) (folders []string, indexFile st
 		}
 		folders = append(folders, folder)
 	}
-	index := map[string]any{"module_format_version": "0.3", "modules": map[string]any{id: versions}}
+	index := map[string]any{"module_format_version": "0.4", "modules": map[string]any{id: versions}}
 	text, err := canonical.Text(index)
 	if err != nil {
 		t.Fatal(err)

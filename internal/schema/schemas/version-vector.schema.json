@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://altnovatrail.github.io/spec/format/0.3/version-vector.schema.json",
+  "$id": "https://altnovatrail.github.io/spec/format/0.4/version-vector.schema.json",
   "title": "Version vector",
   "description": "What a test vector of versions of a module gives, version.yaml beside the new version in module/ and the published versions in published/ (sections 9 and 27 of the format text): either the part of the version that the comparison of the new version with the newest published version finds, or the rule of versions by which the new version is refused. An implementation compares the new version with every published version and gets exactly this.",
   "type": "object",

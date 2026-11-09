@@ -311,4 +311,10 @@ func TestKeyOf(t *testing.T) {
 	if n, ok := keyOf(formatv0.Check{Kind: formatv0.CheckKindChoice, Key: new(" ＜ ")}); !ok || n.form != "<" || n.magnitude != nil {
 		t.Errorf("a key of a choice is searched as %+v", n)
 	}
+	if n, ok := keyOf(formatv0.Check{Kind: formatv0.CheckKindTime, Key: new("7:30")}); !ok || n.clock == nil || n.clock.String() != "7:30" || n.magnitude != nil {
+		t.Errorf("a key of a time is searched as %+v", n)
+	}
+	if n, ok := keyOf(formatv0.Check{Kind: formatv0.CheckKindTime, Key: new("7:3")}); ok {
+		t.Errorf("a key of a time out of its notation is searched as %+v", n)
+	}
 }

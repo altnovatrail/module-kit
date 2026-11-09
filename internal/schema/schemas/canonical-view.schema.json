@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://altnovatrail.github.io/spec/format/0.3/canonical-view.schema.json",
+  "$id": "https://altnovatrail.github.io/spec/format/0.4/canonical-view.schema.json",
   "title": "Canonical view",
   "description": "The canonical view of a module, the server part of its package (section 25 of the format text): each part of the module as its file gives it, a part that a module has many of as an object by local ID, the tier of each skill, and the numbers of every instance of each template. module-kit builds it from the module's folder by the format version that the manifest names, and so does spec's CI for the vectors of packages; sim reads it by these types. No field of it is open: the learner's app gets the open view of a part from the server, never the canonical view.",
   "type": "object",

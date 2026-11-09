@@ -6,9 +6,11 @@ import (
 	"fmt"
 	"slices"
 	"strconv"
+	"strings"
 
 	"github.com/altnovatrail/spec/types/formatv0"
 
+	"github.com/altnovatrail/module-kit/internal/normal"
 	"github.com/altnovatrail/module-kit/verdict"
 )
 
@@ -53,8 +55,20 @@ type slotBreach struct {
 // task.predicate-expression. It reads a task that is no template: a template is checked through its
 // instances, each a task of its own (templates.go). The key or a trap value of a number or a fraction
 // that holds a placeholder outside a template breaks task.placeholders, since no instance puts a
-// number in its place, and nothing more of its check is read (format/README.md, section 23).
+// number in its place, and nothing more of its check is read; and so does the picture path of a part
+// of its statement or its solution that holds a brace (format/README.md, section 23).
 func (c *checker) checkRules(path string, task formatv0.Task) {
+	for _, list := range []struct {
+		parts []formatv0.StatementPart
+		name  string
+	}{{task.Statement, "statement"}, {task.Solution, "solution"}} {
+		for k, part := range list.parts {
+			if part.Picture != nil && strings.ContainsAny(string(*part.Picture), "{}") {
+				c.add(RuleTaskPlaceholders, path, 0, 0, at(list.name, strconv.Itoa(k), "picture"),
+					fmt.Sprintf("the picture path %s holds a brace, and the task is no template: no instance puts a number in its place", *part.Picture))
+			}
+		}
+	}
 	for i, item := range task.Items {
 		slots, places := slotsOf(item, i)
 		for n, slot := range slots {
@@ -119,19 +133,31 @@ func slotRules(slot verdict.AnswerSlot) []slotBreach {
 }
 
 // choiceRules gives the breaches of task.choice-key and task.choice-options: the key is one of the
-// options as written, and no two options are alike once normalized.
+// options as written, and with notation: word one word of letters, its end kept; no two options are
+// alike once normalized by the notation, and with notation: word none is left empty
+// (format/README.md, section 15).
 func choiceRules(slot verdict.AnswerSlot) []slotBreach {
 	var found []slotBreach
 	options := slot.ChoiceOptions()
-	if key := *slot.Check.Key; !slices.Contains(options, formatv0.Text(key)) {
+	word := normal.WordNotation(slot.Check)
+	switch key := *slot.Check.Key; {
+	case !slices.Contains(options, formatv0.Text(key)):
 		found = append(found, slotBreach{RuleTaskChoiceKey, []string{"check", "key"},
 			fmt.Sprintf("the key %s is none of the options as written", key)})
+	case word && !normal.Word(normal.Choice(key)):
+		found = append(found, slotBreach{RuleTaskChoiceKey, []string{"check", "key"},
+			fmt.Sprintf("the key %s is no one word of letters, and the key of a choice of notation: word is one, its end kept", key)})
 	}
 	list := []string{"check", "options"}
 	if slot.Binding == string(formatv0.AnswerSlotBindingChoice) {
 		list = []string{"options"}
 	}
 	for k, option := range options {
+		if word && normal.ChoiceOf(slot.Check, string(option)) == "" {
+			found = append(found, slotBreach{RuleTaskChoiceOptions, slices.Concat(list, []string{strconv.Itoa(k)}),
+				fmt.Sprintf("the option %s is left empty once normalized as a choice of notation: word normalizes it", option)})
+			continue
+		}
 		for _, earlier := range options[:k] {
 			if verdict.Same(slot, string(earlier), string(option)) {
 				found = append(found, slotBreach{RuleTaskChoiceOptions, slices.Concat(list, []string{strconv.Itoa(k)}),

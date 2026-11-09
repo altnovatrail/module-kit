@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://altnovatrail.github.io/spec/format/0.3/traps.schema.json",
+  "$id": "https://altnovatrail.github.io/spec/format/0.4/traps.schema.json",
   "title": "Trap catalog",
   "description": "The trap catalog of a module, traps.yaml at the root of its folder: the typical mistakes that the module's tasks catch, each under its local ID, with what the mistake is, the skills it belongs to and what to advise on it. A task names only a trap of the catalog, so that a wrong answer becomes a diagnosis that can be counted. Every field is closed, since a trap tells what mistake a task expects.",
   "type": "object",

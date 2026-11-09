@@ -265,6 +265,8 @@ func TestOfSlotErrors(t *testing.T) {
 		{"a choice with no key", context.Background(), noChoiceKey, ptr("a"), "verdict: the choice check has no key", nil},
 		{"a choice written with no options", context.Background(), byHand("a"), ptr("a"), "verdict: the choice check has no options", nil},
 		{"a choice tapped with no options", context.Background(), tapped("a"), ptr("a"), "verdict: the choice check has no options", nil},
+		{"a time with no key", context.Background(), box(formatv0.Check{Kind: formatv0.CheckKindTime}), ptr("7:30"), "verdict: the time check has no key", nil},
+		{"a time key out of the notation", context.Background(), box(formatv0.Check{Kind: formatv0.CheckKindTime, Key: ptr("7:3")}), ptr("7:30"), `verdict: the key "7:3" is not in the notation of a time`, nil},
 		{"a predicate with no expression", context.Background(), noExpression, ptr("3"), "verdict: the predicate check has no predicate", nil},
 		{"a rubric", context.Background(), rubric(), ptr("An essay."), "verdict: a rubric gives no verdict", ErrNoVerdict},
 		{"a value that is not UTF-8", context.Background(), number("7"), ptr("7\xff"), "verdict: the value read is not UTF-8", nil},

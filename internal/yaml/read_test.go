@@ -82,10 +82,10 @@ var readCases = []readCase{
 	{name: "not UTF-8 in two keys", in: "caf\xe9: 1\ncaf\xe8: 2\n", refused: []string{"yaml.encoding 1:4"}},
 
 	// What is not YAML in its characters.
-	{name: "control character", in: "a: \x01\n", refused: []string{"not YAML 1:4"}},
-	{name: "control character in a comment", in: "# a\x7f\nb: c\n", refused: []string{"not YAML 1:4"}},
-	{name: "C1 control character in quotes", in: "a: \"\u0080\"\n", refused: []string{"not YAML 1:5"}},
-	{name: "U+FFFE written", in: "a: \"\ufffe\"\n", refused: []string{"not YAML 1:5"}},
+	{name: "control character", in: "a: \x01\n", refused: []string{"yaml.printable 1:4"}},
+	{name: "control character in a comment", in: "# a\x7f\nb: c\n", refused: []string{"yaml.printable 1:4"}},
+	{name: "C1 control character in quotes", in: "a: \"\u0080\"\n", refused: []string{"yaml.printable 1:5"}},
+	{name: "U+FFFE written", in: "a: \"\ufffe\"\n", refused: []string{"yaml.printable 1:5"}},
 
 	// yaml.single-document.
 	{name: "comment only", in: "# A comment, and no document.\n", refused: []string{"yaml.single-document 1:1"}},
