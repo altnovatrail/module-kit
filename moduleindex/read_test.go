@@ -82,7 +82,7 @@ func TestReadLaterVersion(t *testing.T) {
 	  "signed_by": "registry",
 	  "modules": {
 	    "example/smallest": {
-	      "0.1.0": {"module_format_version": "0.3", "package_digest": "sha256:fcbe6e68430776b0506c93ab51b155f8e7f92e2b3ecbe03e34e2afb91b4d4d08",
+	      "0.1.0": {"module_format_version": "0.4", "package_digest": "sha256:fcbe6e68430776b0506c93ab51b155f8e7f92e2b3ecbe03e34e2afb91b4d4d08",
 	                "release": "v0.1.0", "withdrawn": "unsafe_widget", "place": {"url": "https://example.org"}},
 	      "2.0.0": {"module_format_version": "1.4", "package_digest": "sha256:860ba9ff55af668cb068de2cb8b6e99d86f8739ed40e00d3c40bba34d71f7555",
 	                "release": "v3.0.0", "teaches": ["core.multiplication-table"]}
@@ -91,7 +91,7 @@ func TestReadLaterVersion(t *testing.T) {
 	}`
 	want := formatv0.ModuleIndex{ModuleFormatVersion: "1.4", Modules: map[formatv0.ModuleID]map[formatv0.ModuleVersion]formatv0.Entry{
 		"example/smallest": {
-			"0.1.0": {ModuleFormatVersion: "0.3", PackageDigest: "sha256:fcbe6e68430776b0506c93ab51b155f8e7f92e2b3ecbe03e34e2afb91b4d4d08", Release: "v0.1.0",
+			"0.1.0": {ModuleFormatVersion: "0.4", PackageDigest: "sha256:fcbe6e68430776b0506c93ab51b155f8e7f92e2b3ecbe03e34e2afb91b4d4d08", Release: "v0.1.0",
 				Withdrawn: reason("unsafe_widget")},
 			"2.0.0": {ModuleFormatVersion: "1.4", PackageDigest: "sha256:860ba9ff55af668cb068de2cb8b6e99d86f8739ed40e00d3c40bba34d71f7555", Release: "v3.0.0",
 				Teaches: []formatv0.AnchorSkillID{"core.multiplication-table"}},
@@ -104,27 +104,27 @@ func TestReadLaterVersion(t *testing.T) {
 
 // A member at a place that every version keeps, not in its form, is no index of any version.
 func TestReadRefuses(t *testing.T) {
-	entry := `"module_format_version":"0.3","package_digest":"sha256:fcbe6e68430776b0506c93ab51b155f8e7f92e2b3ecbe03e34e2afb91b4d4d08","release":"v0.1.0"`
+	entry := `"module_format_version":"0.4","package_digest":"sha256:fcbe6e68430776b0506c93ab51b155f8e7f92e2b3ecbe03e34e2afb91b4d4d08","release":"v0.1.0"`
 	for _, text := range []string{
 		``,
 		`[]`,
 		`"module_format_version"`,
-		`{"module_format_version":"0.3"}`,
+		`{"module_format_version":"0.4"}`,
 		`{"modules":{"example/smallest":{"0.1.0":{` + entry + `}}}}`,
-		`{"module_format_version":"0.3","modules":{}}`,
-		`{"module_format_version":"0.3","modules":{"example/smallest":{}}}`,
-		`{"module_format_version":"0.3","modules":{"example/smallest":[]}}`,
-		`{"module_format_version":"0.3","modules":{"example/smallest":{"0.1.0":"v0.1.0"}}}`,
-		`{"module_format_version":"0.3","modules":{"Example/Smallest":{"0.1.0":{` + entry + `}}}}`,
-		`{"module_format_version":"0.3","modules":{"example/smallest":{"0.1":{` + entry + `}}}}`,
+		`{"module_format_version":"0.4","modules":{}}`,
+		`{"module_format_version":"0.4","modules":{"example/smallest":{}}}`,
+		`{"module_format_version":"0.4","modules":{"example/smallest":[]}}`,
+		`{"module_format_version":"0.4","modules":{"example/smallest":{"0.1.0":"v0.1.0"}}}`,
+		`{"module_format_version":"0.4","modules":{"Example/Smallest":{"0.1.0":{` + entry + `}}}}`,
+		`{"module_format_version":"0.4","modules":{"example/smallest":{"0.1":{` + entry + `}}}}`,
 		`{"module_format_version":"0.3.0","modules":{"example/smallest":{"0.1.0":{` + entry + `}}}}`,
-		`{"module_format_version":"0.3","modules":{"example/smallest":{"0.1.0":{` + entry + `,"withdrawn":true}}}}`,
-		`{"module_format_version":"0.3","modules":{"example/smallest":{"0.1.0":{` + entry + `,"withdrawn":"wrong` + "\xff" + `key"}}}}`,
-		`{"module_format_version":"0.3","modules":{"example/smallest":{"0.1.0":{` + entry + `,"teaches":[]}}}}`,
-		`{"module_format_version":"0.3","modules":{"example/smallest":{"0.1.0":{` + entry + `,"teaches":["multiplication"]}}}}`,
-		`{"module_format_version":"0.3","modules":{"example/smallest":{"0.1.0":{` + strings.Replace(entry, `"v0.1.0"`, `"0.1.0"`, 1) + `}}}}`,
-		`{"module_format_version":"0.3","modules":{"example/smallest":{"0.1.0":{` + strings.Replace(entry, `sha256:fc`, `sha256:FC`, 1) + `}}}}`,
-		`{"module_format_version":"0.3","modules":{"example/smallest":{"0.1.0":{` + strings.Replace(entry, `"module_format_version":"0.3",`, ``, 1) + `}}}}`,
+		`{"module_format_version":"0.4","modules":{"example/smallest":{"0.1.0":{` + entry + `,"withdrawn":true}}}}`,
+		`{"module_format_version":"0.4","modules":{"example/smallest":{"0.1.0":{` + entry + `,"withdrawn":"wrong` + "\xff" + `key"}}}}`,
+		`{"module_format_version":"0.4","modules":{"example/smallest":{"0.1.0":{` + entry + `,"teaches":[]}}}}`,
+		`{"module_format_version":"0.4","modules":{"example/smallest":{"0.1.0":{` + entry + `,"teaches":["multiplication"]}}}}`,
+		`{"module_format_version":"0.4","modules":{"example/smallest":{"0.1.0":{` + strings.Replace(entry, `"v0.1.0"`, `"0.1.0"`, 1) + `}}}}`,
+		`{"module_format_version":"0.4","modules":{"example/smallest":{"0.1.0":{` + strings.Replace(entry, `sha256:fc`, `sha256:FC`, 1) + `}}}}`,
+		`{"module_format_version":"0.4","modules":{"example/smallest":{"0.1.0":{` + strings.Replace(entry, `"module_format_version":"0.4",`, ``, 1) + `}}}}`,
 	} {
 		if index, err := Read([]byte(text)); !errors.Is(err, ErrNotIndex) || index.Modules != nil {
 			t.Errorf("Read(%s) = %+v, %v; want ErrNotIndex", text, index, err)
@@ -138,11 +138,11 @@ func TestNewest(t *testing.T) {
 	entry := func(format formatv0.ModuleFormatVersion, withdrawn *formatv0.WithdrawalReason) formatv0.Entry {
 		return formatv0.Entry{ModuleFormatVersion: format, PackageDigest: smallest(t).Digest, Release: "v0.1.0", Withdrawn: withdrawn}
 	}
-	index := formatv0.ModuleIndex{ModuleFormatVersion: "0.3", Modules: map[formatv0.ModuleID]map[formatv0.ModuleVersion]formatv0.Entry{
-		"example/a": {"1.2.0": entry("0.3", nil), "1.9.0": entry("0.3", nil), "1.10.0": entry("0.3", nil), "1.11.0": entry("0.3", reason("wrong_key")),
-			"1.12.0": entry("0.3", reason("unsafe_widget")), "2.0.0": entry("0.4", nil), "1.13": entry("0.3", nil)},
-		"example/b": {"0.1.0": entry("0.2", nil), "0.2.0": entry("0.3", reason("answer_leak"))},
-		"example/c": {"0.1.0": entry("0.3", nil)},
+	index := formatv0.ModuleIndex{ModuleFormatVersion: "0.4", Modules: map[formatv0.ModuleID]map[formatv0.ModuleVersion]formatv0.Entry{
+		"example/a": {"1.2.0": entry("0.4", nil), "1.9.0": entry("0.4", nil), "1.10.0": entry("0.4", nil), "1.11.0": entry("0.4", reason("wrong_key")),
+			"1.12.0": entry("0.4", reason("unsafe_widget")), "2.0.0": entry("0.5", nil), "1.13": entry("0.4", nil)},
+		"example/b": {"0.1.0": entry("0.3", nil), "0.2.0": entry("0.4", reason("answer_leak"))},
+		"example/c": {"0.1.0": entry("0.4", nil)},
 	}}
 	for _, c := range []struct {
 		id   formatv0.ModuleID

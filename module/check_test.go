@@ -244,27 +244,27 @@ var checkCases = []struct {
 	{name: "a manifest that the YAML rules refuse, and the rest checked", fsys: module(fstest.MapFS{
 		manifestPath: file(manifest + "title: Another\n"), licensePath: nil, "notes.txt": file("x"),
 	}), refused: []string{". module.license", line(1, 1) + " yaml.unique-keys", "notes.txt module.layout"}},
-	{name: "a manifest of 0.4 that the YAML rules refuse names no version the check reads", fsys: module(fstest.MapFS{
-		manifestPath: file(strings.Replace(manifest, `"0.3"`, `"0.4"`, 1) + "subject: no\n"), "notes.txt": file("x"),
+	{name: "a manifest of 0.5 that the YAML rules refuse names no version the check reads", fsys: module(fstest.MapFS{
+		manifestPath: file(strings.Replace(manifest, `"0.4"`, `"0.5"`, 1) + "subject: no\n"), "notes.txt": file("x"),
 	}), refused: []string{line(1, 1) + " yaml.unique-keys", line(1, 10) + " yaml.plain-strings", "notes.txt module.layout"}},
 
 	// The format version.
-	{name: "a module of 0.2, refused for it alone", fsys: module(fstest.MapFS{
-		manifestPath: file(strings.Replace(manifest, `"0.3"`, `"0.2"`, 1) + "colour: red\n"), licensePath: nil,
+	{name: "a module of 0.3, refused for it alone", fsys: module(fstest.MapFS{
+		manifestPath: file(strings.Replace(manifest, `"0.4"`, `"0.3"`, 1) + "colour: red\n"), licensePath: nil,
 		"notes.txt": file("x"), "link": {Data: []byte("x"), Mode: fs.ModeSymlink}, "tasks/a.yaml": file("id: b\n"),
 	}), refused: []string{"manifest.yaml #/module_format_version manifest.format-version"}},
-	{name: "a module of 0.4", fsys: module(fstest.MapFS{manifestPath: file(strings.Replace(manifest, `"0.3"`, `"0.4"`, 1))}),
+	{name: "a module of 0.5", fsys: module(fstest.MapFS{manifestPath: file(strings.Replace(manifest, `"0.4"`, `"0.5"`, 1))}),
 		refused: []string{"manifest.yaml #/module_format_version manifest.format-version"}},
-	{name: "a module of 1.0", fsys: module(fstest.MapFS{manifestPath: file(strings.Replace(manifest, `"0.3"`, `"1.0"`, 1))}),
+	{name: "a module of 1.0", fsys: module(fstest.MapFS{manifestPath: file(strings.Replace(manifest, `"0.4"`, `"1.0"`, 1))}),
 		refused: []string{"manifest.yaml #/module_format_version manifest.format-version"}},
 	{name: "a version that is no MAJOR.MINOR is the schema's", fsys: module(fstest.MapFS{
-		manifestPath: file(strings.Replace(manifest, `"0.3"`, `"0.03"`, 1)),
+		manifestPath: file(strings.Replace(manifest, `"0.4"`, `"0.04"`, 1)),
 	}), refused: []string{"manifest.yaml #/module_format_version schema pattern"}},
 	{name: "a version as a number is the schema's", fsys: module(fstest.MapFS{
-		manifestPath: file(strings.Replace(manifest, `"0.3"`, `0.2`, 1)),
+		manifestPath: file(strings.Replace(manifest, `"0.4"`, `0.3`, 1)),
 	}), refused: []string{"manifest.yaml #/module_format_version schema type"}},
 	{name: "a manifest with no version is the schema's", fsys: module(fstest.MapFS{
-		manifestPath: file(strings.Replace(manifest, `module_format_version: "0.3"`+"\n", "", 1)),
+		manifestPath: file(strings.Replace(manifest, `module_format_version: "0.4"`+"\n", "", 1)),
 	}), refused: []string{"manifest.yaml # schema required"}},
 	{name: "a manifest that is no object is the schema's", fsys: module(fstest.MapFS{manifestPath: file("- \"0.2\"\n")}),
 		refused: []string{"manifest.yaml # schema type"}},
@@ -385,11 +385,11 @@ func TestBreachString(t *testing.T) {
 			t.Errorf("%q, want %q", got, c.want)
 		}
 	}
-	report, err := Check(context.Background(), module(fstest.MapFS{manifestPath: file(strings.Replace(manifest, `"0.3"`, `"0.2"`, 1))}))
+	report, err := Check(context.Background(), module(fstest.MapFS{manifestPath: file(strings.Replace(manifest, `"0.4"`, `"0.3"`, 1))}))
 	if err != nil {
 		t.Fatal(err)
 	}
-	if want := "manifest.yaml #/module_format_version: manifest.format-version: names the format version 0.2, and module-kit reads 0.3 alone"; report.String() != want {
+	if want := "manifest.yaml #/module_format_version: manifest.format-version: names the format version 0.3, and module-kit reads 0.4 alone"; report.String() != want {
 		t.Errorf("%q, want %q", report, want)
 	}
 }
@@ -400,9 +400,9 @@ func TestCheckFile(t *testing.T) {
 		refused    []string
 	}{
 		{part: "manifest", data: manifest},
-		{part: "manifest", data: strings.Replace(manifest, `"0.3"`, `"0.2"`, 1), refused: []string{"#/module_format_version manifest.format-version"}},
+		{part: "manifest", data: strings.Replace(manifest, `"0.4"`, `"0.3"`, 1), refused: []string{"#/module_format_version manifest.format-version"}},
 		{part: "manifest", data: "module_format_version: 0.2\n", refused: []string{"# schema required", "#/module_format_version schema type"}},
-		{part: "manifest", data: "module_format_version: \"0.4\"\nid: 5\n", refused: []string{"#/module_format_version manifest.format-version"}},
+		{part: "manifest", data: "module_format_version: \"0.5\"\nid: 5\n", refused: []string{"#/module_format_version manifest.format-version"}},
 		{part: "manifest", data: "module_format_version: \"0.2\"\nmodule_format_version: \"0.2\"\n", refused: []string{"2:1 yaml.unique-keys"}},
 		{part: "task", data: string(task("a").Data)},
 		{part: "task", data: "id: a\n", refused: []string{"# schema required"}},
@@ -426,7 +426,7 @@ func TestCheckFile(t *testing.T) {
 }
 
 func TestReadsFormat(t *testing.T) {
-	for v, want := range map[string]bool{"0.3": true, "0.2": false, "0.4": false, "1.0": false, "0.3.0": false, "": false} {
+	for v, want := range map[string]bool{"0.4": true, "0.3": false, "0.5": false, "1.0": false, "0.4.0": false, "": false} {
 		if ReadsFormat(v) != want {
 			t.Errorf("ReadsFormat(%q) is %t", v, !want)
 		}
@@ -436,8 +436,8 @@ func TestReadsFormat(t *testing.T) {
 // A format version is newer than FormatVersion by the values of its numbers, and what is no version
 // MAJOR.MINOR is newer than none.
 func TestNewerFormat(t *testing.T) {
-	for v, want := range map[string]bool{"0.4": true, "0.10": true, "1.0": true, "10.0": true, "0.3": false, "0.2": false, "0.0": false,
-		"0.03": false, "0.4.0": false, "v0.4": false, "": false} {
+	for v, want := range map[string]bool{"0.5": true, "0.10": true, "1.0": true, "10.0": true, "0.4": false, "0.3": false, "0.0": false,
+		"0.04": false, "0.5.0": false, "v0.5": false, "": false} {
 		if NewerFormat(v) != want {
 			t.Errorf("NewerFormat(%q) is %t", v, !want)
 		}

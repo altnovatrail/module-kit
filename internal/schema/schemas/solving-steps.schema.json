@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://altnovatrail.github.io/spec/format/0.3/solving-steps.schema.json",
+  "$id": "https://altnovatrail.github.io/spec/format/0.4/solving-steps.schema.json",
   "title": "Solving steps",
   "description": "The solving steps of a module, solving-steps.yaml at the root of its folder: the frame through which the tutor leads a learner within a task, step by step, each with its title, what of the task it gives and when it ends. Every task of the module goes through the same steps. Every field is open, since the learner's app leads the steps itself.",
   "type": "object",
@@ -27,6 +27,11 @@
         "title": {
           "$ref": "common.schema.json#/$defs/text",
           "description": "What the learner does in the step, in the module's explanation language.",
+          "x-open": true
+        },
+        "description": {
+          "$ref": "common.schema.json#/$defs/text",
+          "description": "How to go through the step, in the module's explanation language, which the learner's app shows beside its title. Every task of the module goes through the step, so the leak check searches it for the keys of every task.",
           "x-open": true
         },
         "gives": {

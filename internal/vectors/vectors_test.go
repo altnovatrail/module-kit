@@ -867,6 +867,7 @@ var runners = map[string]func(vector) error{
 	"leaks":     leaks,       // each text gives the keys and leak phrases it names
 	"random":    randomDraws, // each draw gives its value
 	"templates": templates,   // the count, and each seed's numbers and instance
+	"pages":     pages,       // the page of the items, or the item at whose row it has no room
 	"tiers":     tiers,       // the tier of each skill
 	"packages":  packages,    // the package of module/ is package.yaml
 	"indexes":   indexes,     // the index the release builds, or the rule that refuses it
@@ -885,10 +886,10 @@ var exampleParts = slices.Concat(layoutParts, []string{"inventory", "module-inde
 
 // The check kinds that give verdicts, by the names of their folders; rubric gives none
 // (format/README.md, section 15).
-var verdictKinds = []string{"choice", "fraction", "number", "predicate"}
+var verdictKinds = []string{"choice", "fraction", "number", "predicate", "time"}
 
 // The vectors whose cases are files, each a YAML file of its own.
-var fileVectors = []string{"leaks", "random", "templates", "tiers"}
+var fileVectors = []string{"leaks", "pages", "random", "templates", "tiers"}
 
 // The vectors whose cases are folders of their own kind, by the things each folder holds and
 // nothing else, in order (format/README.md, section 9).
@@ -925,7 +926,7 @@ func classifyFormat(name string) (casePath, kind string, known bool) {
 	parts := strings.Split(name, "/")
 	yaml := strings.HasSuffix(name, ".yaml")
 	switch {
-	case name == "README.md" || name == "VERSION":
+	case name == "README.md" || name == "VERSION" || name == "page.yaml":
 		return "", "", true
 	case len(parts) == 2 && parts[0] == "schemas":
 		return "", "", strings.HasSuffix(parts[1], ".schema.json")

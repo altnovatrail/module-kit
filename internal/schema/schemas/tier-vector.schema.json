@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://altnovatrail.github.io/spec/format/0.3/tier-vector.schema.json",
+  "$id": "https://altnovatrail.github.io/spec/format/0.4/tier-vector.schema.json",
   "title": "Tier vector",
   "description": "A test vector of tiers (sections 12 and 25 of the format text): a skill graph and the tier of each of its skills. An implementation computes the tiers from the prerequisites and gets exactly these.",
   "type": "object",

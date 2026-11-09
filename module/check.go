@@ -22,7 +22,7 @@ import (
 // schemas that internal/schema holds, a copy of those of spec.Format, and of the test vectors
 // (format/README.md, section 2; R23). While the format is v0, it is the one version the library
 // reads.
-const FormatVersion = "0.3"
+const FormatVersion = "0.4"
 
 // ReadsFormat says whether the library reads a module written in the format version v, as a
 // manifest names it in module_format_version: while the format is v0, only FormatVersion

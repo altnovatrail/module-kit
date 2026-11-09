@@ -1,0 +1,253 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://altnovatrail.github.io/spec/format/0.4/page-vector.schema.json",
+  "title": "Page vector",
+  "description": "A test vector of the workbook's page (sections 9 and 14 of the format text): the lines of a task's items, as the open view holds them, and either the page that the layout makes of them or the item at whose row it has no room. An implementation lays the page out by format/page.yaml and gets exactly these.",
+  "type": "object",
+  "properties": {
+    "items": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/page_line",
+        "unevaluatedProperties": false,
+        "description": "An item of a workbook, its line alone."
+      },
+      "minItems": 1,
+      "description": "The items of the task, in order."
+    },
+    "bottom": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 10000,
+      "description": "The bottom of the last row of the page."
+    },
+    "page": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/page_item",
+        "unevaluatedProperties": false,
+        "description": "An item on the page."
+      },
+      "description": "The items on the page, in the task's order."
+    },
+    "no_room_at": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 10000,
+      "description": "The item, counted from 0, at whose row the page has no room: the layout refuses the page there, and task.workbook-page with it."
+    }
+  },
+  "required": [
+    "items"
+  ],
+  "if": {
+    "required": [
+      "no_room_at"
+    ]
+  },
+  "then": {
+    "not": {
+      "anyOf": [
+        {
+          "required": [
+            "page"
+          ]
+        },
+        {
+          "required": [
+            "bottom"
+          ]
+        }
+      ]
+    }
+  },
+  "else": {
+    "required": [
+      "page",
+      "bottom"
+    ]
+  },
+  "unevaluatedProperties": false,
+  "$defs": {
+    "page_line_part": {
+      "type": "object",
+      "properties": {
+        "text": {
+          "type": "string",
+          "minLength": 1,
+          "description": "A piece of text of the line."
+        },
+        "binding": {
+          "const": "box",
+          "description": "A box, an answer slot."
+        }
+      },
+      "minProperties": 1,
+      "maxProperties": 1,
+      "description": "A piece of the line: a piece of text, or a box."
+    },
+    "page_line": {
+      "type": "object",
+      "properties": {
+        "line": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/page_line_part",
+            "unevaluatedProperties": false,
+            "description": "A piece of the line: a piece of text, or a box."
+          },
+          "minItems": 1,
+          "description": "The pieces of the item's line, in order."
+        }
+      },
+      "required": [
+        "line"
+      ],
+      "description": "An item of a workbook, its line alone."
+    },
+    "page_part": {
+      "type": "object",
+      "properties": {
+        "text": {
+          "type": "string",
+          "minLength": 1,
+          "description": "The text, its words joined by single spaces."
+        },
+        "left": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 10000,
+          "description": "Where it starts."
+        },
+        "baseline": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 10000,
+          "description": "Its alphabetic baseline."
+        },
+        "width": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 10000,
+          "description": "The width that it is fitted to."
+        },
+        "top": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 10000,
+          "description": "Of a box: its top."
+        },
+        "height": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 10000,
+          "description": "Of a box: its height."
+        }
+      },
+      "if": {
+        "required": [
+          "text"
+        ]
+      },
+      "then": {
+        "required": [
+          "text",
+          "left",
+          "baseline",
+          "width"
+        ],
+        "not": {
+          "anyOf": [
+            {
+              "required": [
+                "top"
+              ]
+            },
+            {
+              "required": [
+                "height"
+              ]
+            }
+          ]
+        }
+      },
+      "else": {
+        "required": [
+          "left",
+          "top",
+          "width",
+          "height"
+        ],
+        "not": {
+          "anyOf": [
+            {
+              "required": [
+                "baseline"
+              ]
+            }
+          ]
+        }
+      },
+      "description": "A text of the line on one line of the page, with its place, or a box, with its rectangle."
+    },
+    "page_text": {
+      "type": "object",
+      "properties": {
+        "text": {
+          "type": "string",
+          "minLength": 1,
+          "description": "The text, its words joined by single spaces."
+        },
+        "left": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 10000,
+          "description": "Where it starts."
+        },
+        "baseline": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 10000,
+          "description": "Its alphabetic baseline."
+        },
+        "width": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 10000,
+          "description": "The width that it is fitted to."
+        }
+      },
+      "required": [
+        "text",
+        "left",
+        "baseline",
+        "width"
+      ],
+      "description": "The item's number, n., right in the column of the numbers on the baseline of its first line."
+    },
+    "page_item": {
+      "type": "object",
+      "properties": {
+        "number": {
+          "$ref": "#/$defs/page_text",
+          "unevaluatedProperties": false,
+          "description": "The item's number, n., right in the column of the numbers on the baseline of its first line."
+        },
+        "line": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/page_part",
+            "unevaluatedProperties": false,
+            "description": "A text of the line on one line of the page, with its place, or a box, with its rectangle."
+          },
+          "description": "The item's texts and boxes, in the order they are read."
+        }
+      },
+      "required": [
+        "number",
+        "line"
+      ],
+      "description": "An item on the page."
+    }
+  }
+}

@@ -97,9 +97,9 @@ func TestRulesAreTheFormats(t *testing.T) {
 // skills it teaches, each once and in order; the order of the packages and a package given twice
 // change nothing, and the index is the canonical text of what it names.
 func TestBuildFirst(t *testing.T) {
-	want := formatv0.ModuleIndex{ModuleFormatVersion: "0.3", Modules: map[formatv0.ModuleID]map[formatv0.ModuleVersion]formatv0.Entry{
-		"example/smallest": {"0.1.0": {ModuleFormatVersion: "0.3", PackageDigest: smallest(t).Digest, Release: "v0.1.0"}},
-		"example/times-tables": {"0.1.0": {ModuleFormatVersion: "0.3", PackageDigest: timesTables(t).Digest, Release: "v0.1.0",
+	want := formatv0.ModuleIndex{ModuleFormatVersion: "0.4", Modules: map[formatv0.ModuleID]map[formatv0.ModuleVersion]formatv0.Entry{
+		"example/smallest": {"0.1.0": {ModuleFormatVersion: "0.4", PackageDigest: smallest(t).Digest, Release: "v0.1.0"}},
+		"example/times-tables": {"0.1.0": {ModuleFormatVersion: "0.4", PackageDigest: timesTables(t).Digest, Release: "v0.1.0",
 			Teaches: []formatv0.AnchorSkillID{"core.division-with-remainder", "core.multiplication-table"}}},
 	}}
 	for _, packages := range [][]*modulepackage.Package{
@@ -123,8 +123,8 @@ func TestBuildFirst(t *testing.T) {
 // the release; and a withdrawal marks the entry, one of a version new in the release too, while
 // one for the reason it has already changes nothing.
 func TestBuildNext(t *testing.T) {
-	previous := formatv0.ModuleIndex{ModuleFormatVersion: "0.3", Modules: map[formatv0.ModuleID]map[formatv0.ModuleVersion]formatv0.Entry{
-		"example/smallest": {"0.1.0": {ModuleFormatVersion: "0.3", PackageDigest: smallest(t).Digest, Release: "v0.1.0", Withdrawn: reason("answer_leak")}},
+	previous := formatv0.ModuleIndex{ModuleFormatVersion: "0.4", Modules: map[formatv0.ModuleID]map[formatv0.ModuleVersion]formatv0.Entry{
+		"example/smallest": {"0.1.0": {ModuleFormatVersion: "0.4", PackageDigest: smallest(t).Digest, Release: "v0.1.0", Withdrawn: reason("answer_leak")}},
 		"example/old":      {"1.0.0": {ModuleFormatVersion: "0.1", PackageDigest: timesTables(t).Digest, Release: "v0.1.0"}},
 	}}
 	got, err := Build(Release{
@@ -137,12 +137,12 @@ func TestBuildNext(t *testing.T) {
 		t.Fatal(err)
 	}
 	teaches := []formatv0.AnchorSkillID{"core.division-with-remainder", "core.multiplication-table"}
-	want := formatv0.ModuleIndex{ModuleFormatVersion: "0.3", Modules: map[formatv0.ModuleID]map[formatv0.ModuleVersion]formatv0.Entry{
+	want := formatv0.ModuleIndex{ModuleFormatVersion: "0.4", Modules: map[formatv0.ModuleID]map[formatv0.ModuleVersion]formatv0.Entry{
 		"example/smallest": previous.Modules["example/smallest"],
 		"example/old":      previous.Modules["example/old"],
 		"example/times-tables": {
-			"0.1.0": {ModuleFormatVersion: "0.3", PackageDigest: timesTables(t).Digest, Release: "v0.4.0", Teaches: teaches, Withdrawn: reason("wrong_key")},
-			"0.2.0": {ModuleFormatVersion: "0.3", PackageDigest: timesTables020(t).Digest, Release: "v0.4.0", Teaches: teaches},
+			"0.1.0": {ModuleFormatVersion: "0.4", PackageDigest: timesTables(t).Digest, Release: "v0.4.0", Teaches: teaches, Withdrawn: reason("wrong_key")},
+			"0.2.0": {ModuleFormatVersion: "0.4", PackageDigest: timesTables020(t).Digest, Release: "v0.4.0", Teaches: teaches},
 		},
 	}}
 	if string(got) != string(textOf(t, want)) {
@@ -153,12 +153,12 @@ func TestBuildNext(t *testing.T) {
 // Each rule refuses the build with a breach at the version that breaks it, and a release that
 // breaks several gets every breach, in the order of the module, the version and the rule.
 func TestBuildRefuses(t *testing.T) {
-	previous := textOf(t, formatv0.ModuleIndex{ModuleFormatVersion: "0.3", Modules: map[formatv0.ModuleID]map[formatv0.ModuleVersion]formatv0.Entry{
-		"example/smallest": {"0.1.0": {ModuleFormatVersion: "0.3", PackageDigest: smallest(t).Digest, Release: "v0.1.0", Withdrawn: reason("wrong_key")}},
+	previous := textOf(t, formatv0.ModuleIndex{ModuleFormatVersion: "0.4", Modules: map[formatv0.ModuleID]map[formatv0.ModuleVersion]formatv0.Entry{
+		"example/smallest": {"0.1.0": {ModuleFormatVersion: "0.4", PackageDigest: smallest(t).Digest, Release: "v0.1.0", Withdrawn: reason("wrong_key")}},
 		"example/times-tables": {
-			"0.1.0":  {ModuleFormatVersion: "0.3", PackageDigest: timesTables(t).Digest, Release: "v0.1.0"},
-			"0.1.10": {ModuleFormatVersion: "0.3", PackageDigest: timesTables(t).Digest, Release: "v0.2.0", Withdrawn: reason("answer_leak")},
-			"0.2.0":  {ModuleFormatVersion: "0.2", PackageDigest: timesTables020(t).Digest, Release: "v0.2.0"},
+			"0.1.0":  {ModuleFormatVersion: "0.4", PackageDigest: timesTables(t).Digest, Release: "v0.1.0"},
+			"0.1.10": {ModuleFormatVersion: "0.4", PackageDigest: timesTables(t).Digest, Release: "v0.2.0", Withdrawn: reason("answer_leak")},
+			"0.2.0":  {ModuleFormatVersion: "0.3", PackageDigest: timesTables020(t).Digest, Release: "v0.2.0"},
 		},
 	}})
 	republished := pkg(t, "republished-version", "times-tables")
@@ -213,8 +213,8 @@ func TestBuildRefuses(t *testing.T) {
 // A release whose previous index cannot be read fails rather than start a new index, and so does
 // one that cannot be given an index: each with the error of its reason.
 func TestBuildErrors(t *testing.T) {
-	index := formatv0.ModuleIndex{ModuleFormatVersion: "0.3", Modules: map[formatv0.ModuleID]map[formatv0.ModuleVersion]formatv0.Entry{
-		"example/smallest": {"0.1.0": {ModuleFormatVersion: "0.3", PackageDigest: smallest(t).Digest, Release: "v0.1.0"}},
+	index := formatv0.ModuleIndex{ModuleFormatVersion: "0.4", Modules: map[formatv0.ModuleID]map[formatv0.ModuleVersion]formatv0.Entry{
+		"example/smallest": {"0.1.0": {ModuleFormatVersion: "0.4", PackageDigest: smallest(t).Digest, Release: "v0.1.0"}},
 	}}
 	previous := textOf(t, index)
 	withMember := strings.Replace(string(previous), `"release":"v0.1.0"`, `"release":"v0.1.0","place":"elsewhere"`, 1)
@@ -224,13 +224,13 @@ func TestBuildErrors(t *testing.T) {
 	badVersion := *smallest(t)
 	badVersion.Inventory.Version = "0.1"
 	otherFormat := *smallest(t)
-	otherFormat.Inventory.ModuleFormatVersion = "0.2"
+	otherFormat.Inventory.ModuleFormatVersion = "0.3"
 	badTeaches := *timesTables(t)
 	badTeaches.View.SkillGraph = &formatv0.SkillGraph{Skills: map[formatv0.SkillID]formatv0.Skill{"a": {Teaches: []formatv0.SharedTaxonomy{"multiplication"}}}}
 	later := index
 	later.ModuleFormatVersion = "0.10"
-	unordered := strings.Replace(string(textOf(t, formatv0.ModuleIndex{ModuleFormatVersion: "0.3", Modules: map[formatv0.ModuleID]map[formatv0.ModuleVersion]formatv0.Entry{
-		"example/times-tables": {"0.1.0": {ModuleFormatVersion: "0.3", PackageDigest: timesTables(t).Digest, Release: "v0.1.0",
+	unordered := strings.Replace(string(textOf(t, formatv0.ModuleIndex{ModuleFormatVersion: "0.4", Modules: map[formatv0.ModuleID]map[formatv0.ModuleVersion]formatv0.Entry{
+		"example/times-tables": {"0.1.0": {ModuleFormatVersion: "0.4", PackageDigest: timesTables(t).Digest, Release: "v0.1.0",
 			Teaches: []formatv0.AnchorSkillID{"core.division-with-remainder", "core.multiplication-table"}}},
 	}})), `"core.division-with-remainder","core.multiplication-table"`, `"core.multiplication-table","core.division-with-remainder"`, 1)
 	packages := []*modulepackage.Package{smallest(t)}

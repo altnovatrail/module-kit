@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://altnovatrail.github.io/spec/format/0.3/shared-taxonomy.schema.json",
+  "$id": "https://altnovatrail.github.io/spec/format/0.4/shared-taxonomy.schema.json",
   "title": "Shared taxonomy",
   "description": "The vocabulary of anchor skills: the skills that belong to no module and that modules name to build on one another. Its instance is the ID of an anchor skill, core.<name>: a skill of a module names one among its prerequisites or in teaches, and a manifest in its dependencies. It describes no part of a module, and it refuses an ID that names no anchor skill. Each anchor skill is a branch of oneOf, with its ID, its title and its description, all in English; the description is normative, since it is what the skill means.",
   "type": "string",

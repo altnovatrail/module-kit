@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://altnovatrail.github.io/spec/format/0.3/manifest.schema.json",
+  "$id": "https://altnovatrail.github.io/spec/format/0.4/manifest.schema.json",
   "title": "Manifest",
   "description": "The manifest of a module, manifest.yaml at the root of its folder: the format version the module is written in, its ID and version, what it is called and teaches, whom it is for, the bands of its difficulty scale, its languages, the anchor skills it builds on, the settings of its canvas, its authors and its license, and the templates of the rungs of its hint ladder. Every field is open, since the learner's app shows them.",
   "type": "object",

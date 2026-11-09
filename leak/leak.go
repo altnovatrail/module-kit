@@ -19,7 +19,7 @@ type Kind string
 
 // The kinds of a leak.
 const (
-	Key    Kind = "key"    // the key of a check of a number, a fraction or a choice
+	Key    Kind = "key"    // the key of a check of a number, a fraction, a choice or a time
 	Phrase Kind = "phrase" // a phrase of the task's leak_phrases
 )
 
@@ -41,18 +41,20 @@ type Leak struct {
 var ErrTemplate = errors.New("leak: a template is searched through its instances, and an instance is a task with its numbers in place")
 
 // Search is what the leak check searches a text for, for one task (format/README.md, section 20):
-// the key of every check of a number, a fraction and a choice, in every item, but a key that the
-// same search finds in a text that the learner sees with its item; and every leak phrase. It holds
-// nothing that changes, so one Search searches texts from many goroutines at once.
+// the key of every check of a number, a fraction, a choice and a time, in every item, but a key that
+// the same search finds in a text that the learner sees with its item; and every leak phrase. It
+// holds nothing that changes, so one Search searches texts from many goroutines at once.
 type Search struct {
 	needles []needle
 }
 
 // A needle is a key or a leak phrase that a search looks for: a key of a number or a fraction by its
-// magnitude, and a key of a choice and a leak phrase by its normal form.
+// magnitude, a key of a time by its hours and minutes, and a key of a choice and a leak phrase by
+// its normal form.
 type needle struct {
 	leak      Leak
 	magnitude *big.Rat
+	clock     *normal.Clock
 	form      string
 }
 
@@ -115,8 +117,9 @@ func Numbers(text string) []string {
 }
 
 // keyOf gives the needle of the key of a check, and whether the leak check searches for it: a key
-// of a number or a fraction in the notation of its kind, by its magnitude, and a key of a choice, by
-// its normal form. A predicate has no key, and a rubric neither.
+// of a number or a fraction in the notation of its kind, by its magnitude, a key of a time, by its
+// hours and minutes, and a key of a choice, by its normal form. A predicate has no key, and a rubric
+// neither.
 func keyOf(c formatv0.Check) (needle, bool) {
 	if c.Key == nil {
 		return needle{}, false
@@ -130,6 +133,12 @@ func keyOf(c formatv0.Check) (needle, bool) {
 		return needle{magnitude: new(big.Rat).Abs(w.Value)}, true
 	case formatv0.CheckKindChoice:
 		return needle{form: form(*c.Key)}, true
+	case formatv0.CheckKindTime:
+		clock, ok := normal.TimeNotation(*c.Key)
+		if !ok {
+			return needle{}, false
+		}
+		return needle{clock: &clock}, true
 	}
 	return needle{}, false
 }
@@ -171,10 +180,14 @@ func itemTexts(item formatv0.Item, slots []verdict.AnswerSlot) []*searched {
 }
 
 // in says whether a needle is found in a text: a key of a number or a fraction where a number of the
-// text has its magnitude, and a key of a choice or a leak phrase where its normal form stands.
+// text has its magnitude, a key of a time where a time of the text has its hours and minutes, and a
+// key of a choice or a leak phrase where its normal form stands.
 func (n needle) in(t *searched) bool {
 	if n.magnitude != nil {
 		return slices.ContainsFunc(t.numbers(), func(v *big.Rat) bool { return v.Cmp(n.magnitude) == 0 })
+	}
+	if n.clock != nil {
+		return slices.Contains(t.times(), *n.clock)
 	}
 	return holds(t.form, n.form)
 }
@@ -183,15 +196,17 @@ func (n needle) in(t *searched) bool {
 // 15, then NFKC, the dashes and slashes of step 3 and the white space of step 4, and then each
 // character to its simple lowercase mapping (format/README.md, section 20).
 func form(text string) string {
-	return normal.Choice(normal.Scripts(text))
+	return normal.Search(text)
 }
 
-// A searched text: its normal form, and the numbers in it, read once, when a key of a number or a
-// fraction first asks for them: a search with no such key reads none.
+// A searched text: its normal form, and the numbers and the times in it, each read once, when a key
+// of their kind first asks for them: a search with no such key reads none.
 type searched struct {
-	form  string
-	found []*big.Rat
-	read  bool
+	form      string
+	found     []*big.Rat
+	read      bool
+	clocks    []normal.Clock
+	readTimes bool
 }
 
 func searchedOf(text string) *searched {
@@ -204,6 +219,14 @@ func (t *searched) numbers() []*big.Rat {
 		t.found, t.read = numbersIn([]rune(t.form)), true
 	}
 	return t.found
+}
+
+// times gives the times of the text, reading them the first time.
+func (t *searched) times() []normal.Clock {
+	if !t.readTimes {
+		t.clocks, t.readTimes = timesIn([]rune(t.form)), true
+	}
+	return t.clocks
 }
 
 // isWord says whether a character is a character of a word: one of the general categories L, M and
@@ -333,4 +356,29 @@ func longestRun(runes []rune, at int) (int, *big.Rat) {
 		}
 	}
 	return end, value
+}
+
+// timesIn gives the times of a text in its normal form, each by its hours and minutes, from its
+// start (format/README.md, section 20): at a digit, the run of digits, : and digits, which is a time
+// of the text when it is in the notation of a time read and no character of a word stands right
+// before it and none right after it; either way the search goes on after the run, so that 17:30
+// shows no 7:30, and a run with no : is skipped whole.
+func timesIn(runes []rune) []normal.Clock {
+	var found []normal.Clock
+	for at := 0; at < len(runes); {
+		if !isDigit(runes[at]) {
+			at++
+			continue
+		}
+		end := digitsEnd(runes, at)
+		if end+1 < len(runes) && runes[end] == ':' && isDigit(runes[end+1]) {
+			end = digitsEnd(runes, end+1)
+			clock, ok := normal.TimeNotation(string(runes[at:end]))
+			if ok && !wordAt(runes, at-1) && !wordAt(runes, end) {
+				found = append(found, clock)
+			}
+		}
+		at = end
+	}
+	return found
 }

@@ -34,7 +34,7 @@ var partRules = []string{
 	RuleSkillGraphRetiredIDs, RuleSkillGraphOwnAnchors, RuleTrapsKnownSkills, RuleTaskKnownTraps, RuleTaskKnownTechniques,
 	RuleTaskKnownSkills, RuleTaskSkillRoles, RuleTaskOwnAnchors, RuleTaskKnownBand, RuleTaskKnownPictures, RuleTaskAgeCategories,
 	RuleTaskZones, RuleTaskAssessability, RuleLessonKnownSkills, RuleLessonKnownTasks, RuleLessonTaskSkills,
-	RuleLessonKnownPictures, RuleLessonAreas, RuleLessonAgeCategories, RuleLessonOrder, RuleTaskChoiceKey, RuleTaskChoiceOptions,
+	RuleLessonKnownPictures, RuleLessonAreas, RuleLessonAgeCategories, RuleLessonOrder, RuleLessonExampleFills, RuleLessonWorkbookPage, RuleTaskWorkbookPage, RuleTaskChoiceKey, RuleTaskChoiceOptions,
 	RuleTaskFractionKey, RuleTaskTrapValues, RuleTaskPredicateExpression, RuleTaskNoLeaks, RuleLessonNoLeaks,
 	RuleTaskTemplateNames, RuleTaskTemplateExpressions, RuleTaskPlaceholders, RuleTaskTemplateInstances, RuleTaskTemplateSolver,
 	RuleTaskInstances,
@@ -68,6 +68,7 @@ type parts struct {
 	skillGraph *formatv0.SkillGraph
 	traps      *formatv0.Traps
 	techniques *formatv0.Techniques
+	steps      *formatv0.SolvingSteps
 	tasks      map[string]formatv0.Task
 	templates  map[string]*expansion
 	lessons    map[string]formatv0.Lesson
@@ -95,6 +96,8 @@ func (p *parts) add(path, part string, value any) {
 		p.traps = new(typed[formatv0.Traps](value))
 	case partTechniques:
 		p.techniques = new(typed[formatv0.Techniques](value))
+	case partSteps:
+		p.steps = new(typed[formatv0.SolvingSteps](value))
 	case partTask:
 		p.tasks[path] = typed[formatv0.Task](value)
 	case partLesson:
@@ -130,10 +133,13 @@ func (c *checker) withinPart(p parts) {
 			continue
 		}
 		c.checkRules(path, task)
-		c.taskLeaks(path, task, ownShown(task))
+		c.workbookPage(path, task)
+		c.taskLeaks(path, task, ownShown(task, false))
 	}
 	for path, lesson := range p.lessons {
 		c.areas(path, lesson)
+		c.exampleFills(path, lesson)
+		c.exampleOnPage(path, lesson)
 	}
 }
 
@@ -151,11 +157,13 @@ func (c *checker) betweenParts(p parts) {
 		if e, ok := p.templates[path]; ok {
 			c.onInstances(e, func(sub *checker, i instance) {
 				if len(i.invalid) == 0 {
+					sub.taskPictures(path, i.task, p.media)
 					sub.taskLeaks(path, i.task, partsShown(i.task, p))
 				}
 			})
 			continue
 		}
+		c.taskPictures(path, task, p.media)
 		c.taskLeaks(path, task, partsShown(task, p))
 	}
 	for path, lesson := range p.lessons {

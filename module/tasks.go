@@ -227,19 +227,29 @@ func (c *checker) ageCategories(rule, path string, categories []formatv0.AgeCate
 }
 
 // pictures checks that the picture of every part of a list is a file of the module, in media/
-// (task.known-pictures, lesson.known-pictures). P is a part of a statement or of a demo.
-func pictures[P formatv0.StatementPart | formatv0.DemoPart](c *checker, rule, path string, media map[string]bool, parts []P, place ...string) {
+// (task.known-pictures, lesson.known-pictures). P is a part of a statement, of an explanation or of
+// a demo; a task's picture path may hold placeholders only in a template, which is checked through
+// its instances, each with its numbers in place (format/README.md, section 23).
+func pictures[P formatv0.StatementPart | formatv0.ExplanationPart | formatv0.DemoPart](c *checker, rule, path string, media map[string]bool, parts []P, place ...string) {
 	for k, part := range parts {
-		var picture *formatv0.PicturePath
+		var picture string
 		switch part := any(part).(type) {
 		case formatv0.StatementPart:
-			picture = part.Picture
+			if part.Picture != nil {
+				picture = string(*part.Picture)
+			}
+		case formatv0.ExplanationPart:
+			if part.Picture != nil {
+				picture = string(*part.Picture)
+			}
 		case formatv0.DemoPart:
-			picture = part.Picture
+			if part.Picture != nil {
+				picture = string(*part.Picture)
+			}
 		}
-		if picture != nil && !media[mediaFolder+string(*picture)] {
+		if picture != "" && !media[mediaFolder+picture] {
 			c.add(rule, path, 0, 0, at(slices.Concat(place, []string{strconv.Itoa(k), "picture"})...),
-				fmt.Sprintf("the picture %s is no file of the module in %s", *picture, mediaFolder))
+				fmt.Sprintf("the picture %s is no file of the module in %s", picture, mediaFolder))
 		}
 	}
 }
@@ -250,8 +260,14 @@ func (c *checker) taskRules(path string, task formatv0.Task, p parts) {
 	c.assessability(path, task, p.skillGraph)
 	c.knownBand(path, task, *p.manifest)
 	c.ageCategories(RuleTaskAgeCategories, path, task.AgeCategories, *p.manifest)
-	pictures(c, RuleTaskKnownPictures, path, p.media, task.Statement, "statement")
-	pictures(c, RuleTaskKnownPictures, path, p.media, task.Solution, "solution")
+}
+
+// taskPictures checks task.known-pictures on a task that is no template, or on an instance of one,
+// whose picture paths hold the numbers of the instance in place of their placeholders
+// (format/README.md, section 23).
+func (c *checker) taskPictures(path string, task formatv0.Task, media map[string]bool) {
+	pictures(c, RuleTaskKnownPictures, path, media, task.Statement, "statement")
+	pictures(c, RuleTaskKnownPictures, path, media, task.Solution, "solution")
 }
 
 // lessonTasks gives each task that a lesson names and the module has, by the segment that names it.

@@ -77,7 +77,7 @@ func indexText(t *testing.T, entries map[string]map[string]entry) []byte {
 				digest = string(canonical.Digest(inventory))
 			}
 			if format == "" {
-				format = "0.3"
+				format = "0.4"
 			}
 			value := map[string]any{"module_format_version": format, "package_digest": digest, "release": "v0.1.0"}
 			if e.withdrawn != "" {
@@ -87,7 +87,7 @@ func indexText(t *testing.T, entries map[string]map[string]entry) []byte {
 		}
 		modules[id] = m
 	}
-	text, err := canonical.Text(map[string]any{"module_format_version": "0.3", "modules": modules})
+	text, err := canonical.Text(map[string]any{"module_format_version": "0.4", "modules": modules})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -171,7 +171,7 @@ func TestOpenPackages(t *testing.T) {
 		t.Fatalf("status %d, %s%s", status, stdout, stderr)
 	}
 	views := openViewsOf(t, out)
-	if views["format"] != openViewsFormat || views["version"] != int64(openViewsVersion) || views["module_format_version"] != "0.3" {
+	if views["format"] != openViewsFormat || views["version"] != int64(openViewsVersion) || views["module_format_version"] != "0.4" {
 		t.Errorf("the root is %v, %v, %v", views["format"], views["version"], views["module_format_version"])
 	}
 	modules := views["modules"].([]any)
@@ -192,7 +192,7 @@ func TestOpenPackages(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		if module["version"] != string(pkg.Inventory.Version) || module["module_format_version"] != "0.3" ||
+		if module["version"] != string(pkg.Inventory.Version) || module["module_format_version"] != "0.4" ||
 			module["release"] != "v0.1.0" || module["package_digest"] != string(pkg.Digest) {
 			t.Errorf("%s is named %v", id, module)
 		}
@@ -344,7 +344,7 @@ func TestOpenWithdrawn(t *testing.T) {
 		smallest: {
 			smallestVersion: {folder: folders["smallest"]},
 			"9.0.0":         {digest: other},
-			"8.0.0":         {digest: other, format: "0.4"},
+			"8.0.0":         {digest: other, format: "0.5"},
 		},
 		stringsID: {stringsVersion: {folder: folders["strings"]}},
 	}
@@ -352,7 +352,7 @@ func TestOpenWithdrawn(t *testing.T) {
 		smallest: {
 			smallestVersion: {folder: folders["smallest"]},
 			"9.0.0":         {digest: other, withdrawn: "wrong_key"},
-			"8.0.0":         {digest: other, format: "0.4"},
+			"8.0.0":         {digest: other, format: "0.5"},
 		},
 		stringsID:       {stringsVersion: {folder: folders["strings"], withdrawn: "answer_leak"}},
 		"example/later": {"0.1.0": {digest: other}},
@@ -363,7 +363,7 @@ func TestOpenWithdrawn(t *testing.T) {
 	}
 	for _, line := range []string{
 		smallest + " 9.0.0: skipped, withdrawn (wrong_key)\n",
-		smallest + " 8.0.0: skipped, of the format 0.4: module-kit reads the format 0.3\n",
+		smallest + " 8.0.0: skipped, of the format 0.5: module-kit reads the format 0.4\n",
 		smallest + " " + smallestVersion + ": ",
 		stringsID + " " + stringsVersion + ": skipped, withdrawn (answer_leak)\n",
 		stringsID + ": no version to open\n",
@@ -518,7 +518,7 @@ func TestOpenHelpers(t *testing.T) {
 		t.Errorf("String = %q", got)
 	}
 	var skipped strings.Builder
-	writeSkipped(&skipped, "example/x", map[formatv0.ModuleVersion]formatv0.Entry{"x": {ModuleFormatVersion: "0.3"}}, "", false)
+	writeSkipped(&skipped, "example/x", map[formatv0.ModuleVersion]formatv0.Entry{"x": {ModuleFormatVersion: "0.4"}}, "", false)
 	if got := skipped.String(); got != "example/x x: skipped, not a version X.Y.Z\nexample/x: no version to open\n" {
 		t.Errorf("writeSkipped wrote %q", got)
 	}

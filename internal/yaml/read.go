@@ -14,6 +14,7 @@ import (
 // The rules of section 4 of format/README.md, in its order.
 const (
 	RuleEncoding       = "yaml.encoding"
+	RulePrintable      = "yaml.printable"
 	RuleSingleDocument = "yaml.single-document"
 	RuleNoDirectives   = "yaml.no-directives"
 	RuleNoAnchors      = "yaml.no-anchors"
@@ -27,7 +28,7 @@ const (
 
 // Rules are the IDs of the rules yaml.*, in the order of section 4.
 var Rules = []string{
-	RuleEncoding, RuleSingleDocument, RuleNoDirectives, RuleNoAnchors, RuleNoTags,
+	RuleEncoding, RulePrintable, RuleSingleDocument, RuleNoDirectives, RuleNoAnchors, RuleNoTags,
 	RuleStringKeys, RuleUniqueKeys, RuleJSONScalars, RulePlainStrings, RuleCharacters,
 }
 

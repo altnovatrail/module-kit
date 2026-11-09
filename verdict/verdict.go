@@ -192,12 +192,14 @@ func Same(slot AnswerSlot, a, b string) bool {
 }
 
 // NormalForm gives a value as the check of an answer slot normalizes it, and whether it is in the
-// kind's notation, with no Starlark (format/README.md, section 15): for a choice, its normal form,
-// in the notation when it is the key's or an option's; for a number, a fraction and a predicate,
-// steps 1 to 7, with a number's units dropped, in the notation when the kind takes what is left. An
-// empty form is blank, and in no notation. A rubric normalizes nothing: the form is the value as it
-// is, in no notation, and so is a value that is not UTF-8. The joining of two readings compares the
-// values out of the notation by it (contracts/README.md, section 10).
+// kind's notation, with no Starlark (format/README.md, section 15): for a choice, its normal form by
+// its notation, in the notation when it is the key's or an option's, or, with notation: word, one
+// word of letters; for a number, a fraction and a predicate, steps 1 to 7, with a number's units
+// dropped, in the notation when the kind takes what is left; for a time, steps 1 to 5 with the
+// spaces at either end dropped, in the notation when it is a time read. An empty form is blank, and
+// in no notation. A rubric normalizes nothing: the form is the value as it is, in no notation, and so
+// is a value that is not UTF-8. The joining of two readings compares the values out of the notation
+// by it (contracts/README.md, section 10).
 func NormalForm(slot AnswerSlot, value string) (form string, inNotation bool) {
 	if !utf8.ValidString(value) {
 		return value, false
@@ -205,19 +207,23 @@ func NormalForm(slot AnswerSlot, value string) (form string, inNotation bool) {
 	c := slot.Check
 	switch c.Kind {
 	case formatv0.CheckKindChoice:
-		form = normal.Choice(value)
+		form = normal.ChoiceOf(c, value)
 		if form == "" {
 			return form, false
 		}
-		if c.Key != nil && normal.Choice(*c.Key) == form {
+		if c.Key != nil && normal.ChoiceOf(c, *c.Key) == form {
 			return form, true
 		}
 		for _, option := range slot.ChoiceOptions() {
-			if normal.Choice(string(option)) == form {
+			if normal.ChoiceOf(c, string(option)) == form {
 				return form, true
 			}
 		}
-		return form, false
+		return form, normal.WordNotation(c) && normal.Word(form)
+	case formatv0.CheckKindTime:
+		form = normal.Time(value)
+		_, ok := normal.TimeNotation(form)
+		return form, ok
 	case formatv0.CheckKindNumber, formatv0.CheckKindFraction, formatv0.CheckKindPredicate:
 		form = normal.Number(value, normal.Units(c))
 		_, ok := normal.Notation(form, c.Kind)
@@ -238,6 +244,8 @@ func (s AnswerSlot) verdict(ctx context.Context, value *string) (SlotVerdict, er
 		return s.numberVerdict(value)
 	case formatv0.CheckKindChoice:
 		return s.choiceVerdict(value)
+	case formatv0.CheckKindTime:
+		return s.timeVerdict(value)
 	case formatv0.CheckKindPredicate:
 		return s.predicateVerdict(ctx, sandbox.Predicate, value)
 	case formatv0.CheckKindRubric:
@@ -329,7 +337,8 @@ func (s AnswerSlot) numberVerdict(value *string) (SlotVerdict, error) {
 }
 
 // choiceVerdict gives the verdict of a choice: blank, the key, another option, or none of the
-// options, which is out of the notation (format/README.md, section 15).
+// options, which is out of the notation, but with notation: word one word of letters, which is not
+// yet right (format/README.md, section 15).
 func (s AnswerSlot) choiceVerdict(value *string) (SlotVerdict, error) {
 	c := s.Check
 	if c.Key == nil {
@@ -342,19 +351,50 @@ func (s AnswerSlot) choiceVerdict(value *string) (SlotVerdict, error) {
 	if value == nil {
 		return SlotVerdict{Verdict: Unreadable, Reason: Blank}, nil
 	}
-	read := normal.Choice(*value)
+	read := normal.ChoiceOf(c, *value)
 	switch {
 	case read == "":
 		return SlotVerdict{Verdict: Unreadable, Reason: Blank}, nil
-	case read == normal.Choice(*c.Key):
+	case read == normal.ChoiceOf(c, *c.Key):
 		return SlotVerdict{Verdict: Correct}, nil
 	}
 	for _, option := range options {
-		if normal.Choice(string(option)) == read {
+		if normal.ChoiceOf(c, string(option)) == read {
 			return s.notYet(*value), nil
 		}
 	}
+	if normal.WordNotation(c) && normal.Word(read) {
+		return s.notYet(*value), nil
+	}
 	return SlotVerdict{Verdict: Unreadable, Reason: Notation}, nil
+}
+
+// timeVerdict gives the verdict of a time: blank, out of the notation of a time read, another time
+// than the key's by its hours or its minutes, or right (format/README.md, section 15).
+func (s AnswerSlot) timeVerdict(value *string) (SlotVerdict, error) {
+	c := s.Check
+	if c.Key == nil {
+		return SlotVerdict{}, errors.New("the time check has no key")
+	}
+	key, ok := normal.TimeNotation(*c.Key)
+	if !ok {
+		return SlotVerdict{}, fmt.Errorf("the key %q is not in the notation of a time", *c.Key)
+	}
+	if value == nil {
+		return SlotVerdict{Verdict: Unreadable, Reason: Blank}, nil
+	}
+	text := normal.Time(*value)
+	if text == "" {
+		return SlotVerdict{Verdict: Unreadable, Reason: Blank}, nil
+	}
+	read, ok := normal.TimeNotation(text)
+	switch {
+	case !ok:
+		return SlotVerdict{Verdict: Unreadable, Reason: Notation}, nil
+	case read != key:
+		return s.notYet(*value), nil
+	}
+	return SlotVerdict{Verdict: Correct}, nil
 }
 
 // ChoiceOptions gives the options of a choice as written: the answer slot's when it is bound

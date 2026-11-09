@@ -12,9 +12,10 @@ import (
 // and give it a text it reads as YAML 1.2.2 does.
 
 // decode is the first pass. It refuses, with yaml.encoding, a file that is not UTF-8, at its first
-// byte that is no part of a UTF-8 character, and a character outside the printable set of YAML
-// 1.2.2, which is no YAML even in a comment or in quotes, as R45 spec has it; go-yaml refuses one
-// too, but without its place (TestRead, "control character"). Either file is read no further, and
+// byte that is no part of a UTF-8 character, and, with yaml.printable, a character outside the
+// printable set of YAML 1.2.2, in a comment and in quotes too, where YAML 1.2.2 takes more, as
+// format 0.4 has it (format/README.md, section 4; R102 spec); go-yaml refuses one too, but without
+// its place (TestRead, "control character"). Either file is read no further, and
 // ok is false: in a file that is not UTF-8 the text is not known, and two keys that differ only in
 // the bytes that are not UTF-8 would read as the same key.
 func (r *reader) decode(data []byte) (text string, ok bool) {
@@ -32,7 +33,7 @@ func (r *reader) decode(data []byte) (text string, ok bool) {
 			ok = false
 		case !printable(c):
 			ok = false
-			r.breaches = append(r.breaches, Breach{"", line, column, codePoint(c) + ": YAML allows no such character, not even in a comment or in quotes"})
+			r.breaches = append(r.breaches, Breach{RulePrintable, line, column, codePoint(c) + ": the format allows no such character, not even in a comment or in quotes"})
 		}
 		b.WriteRune(c)
 		at += size

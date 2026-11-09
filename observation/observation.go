@@ -316,8 +316,8 @@ func joinSlot(p place, a, b *observationv1.AnswerSlotObservation) *observationv1
 }
 
 // alike says whether two values that are not blank join under the check of an answer slot. The
-// verdicts compared are those of number, fraction and choice, which run no predicate, on a check
-// that checked took and values that Validate took: OfSlot gives no error on them, and one is a
+// verdicts compared are those of number, fraction, choice and time, which run no predicate, on a
+// check that checked took and values that Validate took: OfSlot gives no error on them, and one is a
 // defect of module-kit.
 func alike(s verdict.AnswerSlot, a, b string) bool {
 	formA, inA := verdict.NormalForm(s, a)

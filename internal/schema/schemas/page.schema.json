@@ -1,0 +1,328 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://altnovatrail.github.io/spec/format/0.4/page.schema.json",
+  "title": "Page",
+  "description": "The numbers and the table of widths of a workbook's page, format/page.yaml (section 14 of the format text): canvas lays every page out by them, and task.workbook-page holds every task on a workbook to them. Units are those of the page, and a width of a character is in whole hundredths of the type size.",
+  "type": "object",
+  "properties": {
+    "sheet": {
+      "$ref": "#/$defs/page_sheet",
+      "unevaluatedProperties": false,
+      "description": "The page, as large as the handwriting sheet."
+    },
+    "numbers": {
+      "$ref": "#/$defs/page_numbers",
+      "unevaluatedProperties": false,
+      "description": "The numbers of the layout, in units of the page."
+    },
+    "most_items": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 99,
+      "description": "The most items that a page holds, 99 at most: the column of their numbers is two digits and a full stop wide."
+    },
+    "widths": {
+      "$ref": "#/$defs/page_widths",
+      "unevaluatedProperties": false,
+      "description": "The table of widths, in whole hundredths of the type size."
+    },
+    "joints": {
+      "$ref": "#/$defs/page_joints",
+      "unevaluatedProperties": false,
+      "description": "The marks that glue two neighbours of a line together."
+    }
+  },
+  "required": [
+    "sheet",
+    "numbers",
+    "most_items",
+    "widths",
+    "joints"
+  ],
+  "unevaluatedProperties": false,
+  "$defs": {
+    "page_width_class": {
+      "type": "object",
+      "properties": {
+        "characters": {
+          "type": "string",
+          "minLength": 1,
+          "description": "The characters of the class."
+        },
+        "width": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1000,
+          "description": "Their width."
+        }
+      },
+      "required": [
+        "characters",
+        "width"
+      ],
+      "description": "Characters of one width."
+    },
+    "page_sheet": {
+      "type": "object",
+      "properties": {
+        "width": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 10000,
+          "description": "The width of the page, in its units."
+        },
+        "height": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 10000,
+          "description": "The height of the page, in its units."
+        }
+      },
+      "required": [
+        "width",
+        "height"
+      ],
+      "description": "The page, as large as the handwriting sheet."
+    },
+    "page_numbers": {
+      "type": "object",
+      "properties": {
+        "size": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 10000,
+          "description": "The type size of the text of a line."
+        },
+        "box_width": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 10000,
+          "description": "The width of a box, the same for every box of the task."
+        },
+        "box_height": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 10000,
+          "description": "The height of a box."
+        },
+        "line": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 10000,
+          "description": "The height of a line of text without a box."
+        },
+        "lead": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 10000,
+          "description": "Between a line with a box and one without, in an item that wraps."
+        },
+        "gap": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 10000,
+          "description": "Between a box and a word beside it, and between an item's number and its line."
+        },
+        "apart": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 10000,
+          "description": "Between two boxes side by side, and between two lines with boxes in an item that wraps."
+        },
+        "items": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 10000,
+          "description": "Between two rows of items."
+        },
+        "gutter": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 10000,
+          "description": "Between the two columns of short items."
+        },
+        "margin": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 10000,
+          "description": "The margin of the page on its sides, its top and its bottom."
+        }
+      },
+      "required": [
+        "size",
+        "box_width",
+        "box_height",
+        "line",
+        "lead",
+        "gap",
+        "apart",
+        "items",
+        "gutter",
+        "margin"
+      ],
+      "description": "The numbers of the layout, in units of the page."
+    },
+    "page_space_width": {
+      "type": "object",
+      "properties": {
+        "code_point": {
+          "type": "string",
+          "pattern": "^U\\+([0-9A-F]{4}|[1-9A-F][0-9A-F]{4}|10[0-9A-F]{4})$",
+          "description": "The code point of the space, U+ and four to six hexadecimal digits."
+        },
+        "width": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1000,
+          "description": "Its width."
+        }
+      },
+      "required": [
+        "code_point",
+        "width"
+      ],
+      "description": "A space that does not break, of its own width."
+    },
+    "page_wide": {
+      "type": "object",
+      "properties": {
+        "width": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1000,
+          "description": "The width of such a character, a square."
+        },
+        "ranges": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^U\\+([0-9A-F]{4}|[1-9A-F][0-9A-F]{4}|10[0-9A-F]{4})(–U\\+([0-9A-F]{4}|[1-9A-F][0-9A-F]{4}|10[0-9A-F]{4}))?$",
+            "description": "A code point, or a range of them."
+          },
+          "minItems": 1,
+          "description": "The ranges of the wide characters."
+        }
+      },
+      "required": [
+        "width",
+        "ranges"
+      ],
+      "description": "The characters of a square's width: Hangul, CJK, the full-width forms and emoji."
+    },
+    "page_widths": {
+      "type": "object",
+      "properties": {
+        "digits": {
+          "$ref": "#/$defs/page_width_class",
+          "description": "The digits, all of one width.",
+          "unevaluatedProperties": false
+        },
+        "signs": {
+          "$ref": "#/$defs/page_width_class",
+          "description": "The signs of operations and comparisons, all of one width.",
+          "unevaluatedProperties": false
+        },
+        "space": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1000,
+          "description": "The space between two words, which the layout sets itself."
+        },
+        "characters": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/page_width_class",
+            "unevaluatedProperties": false
+          },
+          "minItems": 1,
+          "description": "The characters of a width of their own, each class by its width."
+        },
+        "spaces": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/page_space_width",
+            "unevaluatedProperties": false,
+            "description": "A space that does not break, of its own width."
+          },
+          "minItems": 1,
+          "description": "The spaces that do not break, each a character of its word."
+        },
+        "zero": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^U\\+([0-9A-F]{4}|[1-9A-F][0-9A-F]{4}|10[0-9A-F]{4})(–U\\+([0-9A-F]{4}|[1-9A-F][0-9A-F]{4}|10[0-9A-F]{4}))?$",
+            "description": "A code point, or a range of them, U+…–U+…."
+          },
+          "minItems": 1,
+          "description": "The code points of no width, each joining the character before it."
+        },
+        "wide": {
+          "$ref": "#/$defs/page_wide",
+          "unevaluatedProperties": false,
+          "description": "The characters of a square's width: Hangul, CJK, the full-width forms and emoji."
+        },
+        "breaks": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^U\\+([0-9A-F]{4}|[1-9A-F][0-9A-F]{4}|10[0-9A-F]{4})$",
+            "description": "A code point of white space that breaks."
+          },
+          "minItems": 1,
+          "description": "The white space that a line breaks at: a run of it is one space between two words, and none at the ends of a piece."
+        },
+        "unknown": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1000,
+          "description": "The width of a character that the table does not know."
+        },
+        "joiner": {
+          "type": "string",
+          "pattern": "^U\\+([0-9A-F]{4}|[1-9A-F][0-9A-F]{4}|10[0-9A-F]{4})$",
+          "description": "The joiner: the code point after it goes with the one before it."
+        },
+        "regional_indicators": {
+          "type": "string",
+          "pattern": "^U\\+([0-9A-F]{4}|[1-9A-F][0-9A-F]{4}|10[0-9A-F]{4})(–U\\+([0-9A-F]{4}|[1-9A-F][0-9A-F]{4}|10[0-9A-F]{4}))?$",
+          "description": "The regional indicators, two of which make a flag, one cluster."
+        }
+      },
+      "required": [
+        "digits",
+        "signs",
+        "space",
+        "characters",
+        "spaces",
+        "zero",
+        "wide",
+        "breaks",
+        "unknown",
+        "joiner",
+        "regional_indicators"
+      ],
+      "description": "The table of widths, in whole hundredths of the type size."
+    },
+    "page_joints": {
+      "type": "object",
+      "properties": {
+        "closing": {
+          "type": "string",
+          "minLength": 1,
+          "description": "The marks that a word glues to the word before it: no space between them, and no break."
+        },
+        "opening": {
+          "type": "string",
+          "minLength": 1,
+          "description": "The marks that glue a word to the word after it, or to a box: no break after them."
+        }
+      },
+      "required": [
+        "closing",
+        "opening"
+      ],
+      "description": "The marks that glue two neighbours of a line together."
+    }
+  }
+}

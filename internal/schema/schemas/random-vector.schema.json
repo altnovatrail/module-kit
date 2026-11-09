@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://altnovatrail.github.io/spec/format/0.3/random-vector.schema.json",
+  "$id": "https://altnovatrail.github.io/spec/format/0.4/random-vector.schema.json",
   "title": "Vector of the generator",
   "description": "A test vector of the generator (section 22 of the format text): the start of a stream — two words, and the seed and names of the place of randomness whose stream it is — and the functions called on the stream, in order, each with its arguments and the value it gives.",
   "type": "object",

@@ -13,7 +13,7 @@ permissions:
   contents: read
 
 env:
-  RELEASE_LINE: "0.2"
+  RELEASE_LINE: "0.3"
 
 jobs:
   release:
@@ -30,6 +30,7 @@ jobs:
         go.mod
         go.sum
         internal/schema/schemas/*.schema.json
+        page/page.yaml
         justfile
         LICENSE
         .devcontainer/Dockerfile

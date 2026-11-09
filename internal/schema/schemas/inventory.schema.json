@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://altnovatrail.github.io/spec/format/0.3/inventory.schema.json",
+  "$id": "https://altnovatrail.github.io/spec/format/0.4/inventory.schema.json",
   "title": "Inventory",
   "description": "The inventory of a module's package, inventory.json (section 25 of the format text): the module's format version, ID and version, and the digest and size of each of the package's two parts — the server part, which is the canonical view, and the device part, which a listing of its files names. The digest of the package is the digest of its inventory.",
   "type": "object",

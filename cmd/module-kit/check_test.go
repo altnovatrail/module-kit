@@ -25,7 +25,7 @@ func TestCheckAccepts(t *testing.T) {
 			dir := fromSpec(t, "examples/module/valid/"+e.Name())
 			var stdout, stderr bytes.Buffer
 			status := run(context.Background(), []string{"check", dir}, &stdout, &stderr)
-			want := dir + ": the module breaks no rule of the format 0.3\n"
+			want := dir + ": the module breaks no rule of the format 0.4\n"
 			if status != statusAccepted || stdout.String() != want || stderr.Len() > 0 {
 				t.Errorf("status %d, stdout %q, stderr %q; want 0 and %q", status, stdout.String(), stderr.String(), want)
 			}
@@ -79,7 +79,7 @@ func TestCheckRefuses(t *testing.T) {
 				if count := fmt.Sprintf(": %d %s", breaches, noun); breaches == 0 || !strings.HasSuffix(lines[len(lines)-1], count) {
 					t.Errorf("the report %q has %d breaches, and its last line does not end with %q", stdout.String(), breaches, count)
 				}
-				if last := lines[len(lines)-1]; !strings.HasPrefix(last, dir+": the format 0.3 refuses the module: ") {
+				if last := lines[len(lines)-1]; !strings.HasPrefix(last, dir+": the format 0.4 refuses the module: ") {
 					t.Errorf("the last line is %q", last)
 				}
 			})

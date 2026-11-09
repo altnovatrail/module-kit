@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://altnovatrail.github.io/spec/format/0.3/common.schema.json",
+  "$id": "https://altnovatrail.github.io/spec/format/0.4/common.schema.json",
   "title": "Common definitions",
   "description": "The definitions that the parts of a module share: the format version, IDs and versions, languages, the license, age categories, school grades, subjects, the paths of media files and pictures, texts, the parts of a text that the learner reads, a canvas, and a rectangle of the handwriting sheet.",
   "$defs": {
@@ -103,6 +103,15 @@
       "pattern": "\\.(png|jpg|webp)$",
       "description": "The path of a picture from the module's media/ folder: a media path whose extension is .png, .jpg or .webp."
     },
+    "task_picture_path": {
+      "type": "string",
+      "pattern": "^([a-z][a-z0-9]*(-([a-z0-9]+|\\{[a-z][a-z0-9_]*\\}))*/)*[a-z][a-z0-9]*(-([a-z0-9]+|\\{[a-z][a-z0-9_]*\\}))*\\.(png|jpg|webp)$",
+      "maxLength": 128,
+      "not": {
+        "pattern": "(^|/)(con|prn|aux|nul|com[1-9]|lpt[1-9])(/|\\.)"
+      },
+      "description": "The path of a picture of a task's statement or solution: a picture path, and in a template, one whose names MAY hold placeholders of parameters and derived numbers, each after a -, such as pictures/split-{total}-{parts}.png, which every instance replaces with numbers."
+    },
     "text": {
       "type": "string",
       "minLength": 1,
@@ -117,8 +126,8 @@
           "x-open": true
         },
         "picture": {
-          "$ref": "#/$defs/picture_path",
-          "description": "A picture, by its path from media/.",
+          "$ref": "#/$defs/task_picture_path",
+          "description": "A picture, by its path from media/; in a task, a template's may hold placeholders, and a lesson's holds none.",
           "x-open": true
         },
         "alt": {
@@ -182,7 +191,7 @@
           ]
         }
       },
-      "description": "A part of a text that the learner reads — a statement, a solution or an explanation: a paragraph, or a picture with what it shows and its size."
+      "description": "A part of a text that the learner reads — a statement, a solution, the statement of a worked example, or a paragraph or a picture of an explanation, which the lesson's own explanation_part repeats: a paragraph, or a picture with what it shows and its size."
     },
     "canvas": {
       "type": "object",
