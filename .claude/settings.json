@@ -1,6 +1,7 @@
 {
   "claudeMdExcludes": [
     "**/module-kit/spec/CLAUDE.md",
-    "**/module-kit/spec/**/CLAUDE.md"
+    "**/module-kit/spec/**/CLAUDE.md",
+    "**/module-kit/spec/.claude/rules/**"
   ]
 }
