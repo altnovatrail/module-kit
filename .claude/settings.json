@@ -3,5 +3,31 @@
     "**/module-kit/spec/CLAUDE.md",
     "**/module-kit/spec/**/CLAUDE.md",
     "**/module-kit/spec/.claude/rules/**"
-  ]
+  ],
+  "autoCompactWindow": 400000,
+  "disableClaudeAiConnectors": true,
+  "hooks": {
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node",
+            "args": ["${CLAUDE_PROJECT_DIR}/spec/tools/session/main.mjs"]
+          }
+        ]
+      }
+    ]
+  },
+  "extraKnownMarketplaces": {
+    "novatrail": {
+      "source": {
+        "source": "directory",
+        "path": "./spec/claude-plugins"
+      }
+    }
+  },
+  "enabledPlugins": {
+    "gopls-lsp@novatrail": true
+  }
 }
