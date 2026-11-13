@@ -1,253 +1,253 @@
-# module-kit — источники
+# module-kit — sources
 
-> Внешние факты, на которых стоят документы `docs/` этого репозитория: условия поставщика, цена, закон, стандарт, документация библиотеки. Здесь — их записи: адрес, версия или дата страницы, дата прочтения и цитата на языке источника, — а [architecture.md](architecture.md) и журнал решений держат утверждение и ссылку на запись по её номеру, как на раздел: `sources 1.1` (RULES.md, The bar; R143 spec).
+> The external facts that the documents of `docs/` of this repository rest on: a provider's terms, a price, a law, a standard, a library's documentation. Here are their records: the address, the version or the date of the page, the date read and the quote in the language of the source, — and [architecture.md](architecture.md) and the decision log hold the claim and a reference to the record by its number, as to a section: `sources 1.1` (RULES.md, The bar; R143 spec).
 >
-> Запись — подраздел «N.M» темы: один источник или одно прочтение нескольких источников ради одного решения. Номер записи не меняется: новая запись встаёт в конец своей темы, новая тема — в конец файла. Источник, прочитанный снова, — пункт со своей датой в той же записи, а прежний текст не правится. Новая версия источника — релиз, тег, коммит, — своя запись: так стоят рядом Go 1.27.3 и 1.27.4 (sources 2.1 и 2.2), общий релиз v0.1.4 и v0.1.10 (sources 3.7 и 3.8), go-yaml v4.0.0-rc.9 и v4.0.0 (sources 4.3 и 4.4). Образец — sources spec. Итоги замеров — не здесь, а в [measurements.md](measurements.md).
+> A record is a subsection "N.M" of a topic: one source, or one reading of several sources for the sake of one decision. The number of a record does not change: a new record goes at the end of its topic, a new topic at the end of the file. A source read again is an item with its own date in the same record, and the earlier text is not edited. A new version of a source — a release, a tag, a commit — is a record of its own: so Go 1.27.3 and 1.27.4 stand side by side (sources 2.1 and 2.2), the shared release v0.1.4 and v0.1.10 (sources 3.7 and 3.8), go-yaml v4.0.0-rc.9 and v4.0.0 (sources 4.3 and 4.4). The model is sources spec. The results of measurements are not here but in [measurements.md](measurements.md).
 >
-> До T43 записи стояли пунктами в [architecture.md](architecture.md), раздел 4. Там остался указатель: на этот раздел ссылаются журнал решений и архивы `docs/plan/`, а они не переписываются. Запись начинается с того, для какого решения или раздела её прочитали, так что источники решения находятся по его номеру: `grep -n 'R21' docs/sources.md`.
+> Until T43 the records stood as items in [architecture.md](architecture.md), section 4. A pointer remains there: the decision log and the archives of `docs/plan/` refer to that section, and they are not rewritten. A record begins with the decision or the section it was read for, so the sources of a decision are found by its number: `grep -n 'R21' docs/sources.md`.
 
 ## 1. MathTrail standalone
 
-### 1.1. Песочница решателей standalone
+### 1.1. The solver sandbox of standalone
 
-Для architecture 3.4 — [mathtrail/mathtrail-standalone, `SPEC.md`](https://github.com/mathtrail/mathtrail-standalone/blob/c6cbeb2/SPEC.md), раздел 6 «The Starlark solver», ветка `main`, коммит c6cbeb2, прочитано 2026-10-19:
-- 6.1: «the program is written by the same model that wrote the task»;
-- 6.4, рекурсия выключена: «A recursive Starlark function recurses on the Go stack, and a stack overflow in Go cannot be recovered: it would take the whole instance down, not the request»;
-- 6.5: «Every helper that builds a list is capped at 1,000,000 elements», «a step for every sixteen bytes»; «There is no random number generator, seeded or otherwise. A brute force that samples proves nothing about uniqueness, and a verdict that depends on a seed is a verdict nobody can reproduce from the task alone»;
-- 6.6, таблица «The limits»: Steps — 25,000,000; Wall clock — 2 seconds per run; Memory — «What the built-ins keep: 381 MiB at the ceiling above; nine tenths of the instance for the runtime»; Source size — 8 KB; Result — 5 letters; Concurrent runs — 1 per vCPU; Wait for a slot — «3 seconds per run», и запуск, который не дождался места, «does not start, and the task is told it was not checked and cost no attempt». О литерале: «`[{} for i in range(n)]` keeps 512 bytes for every nine steps — 2.6 million dictionaries at the ceiling, and an instance of 1 GiB was killed for its memory by them». О калибровке: «The bench measured the worst of the 450 at 2,081,362 steps, which is what moved the ceiling from 10,000,000 to 25,000,000» (R53 standalone) и «the worst of all 603 is 2,413,617 steps». О дыре памяти: «a solver written that way takes the instance down rather than the request» и «The fix, if the gap ever bites, is a solver in a process of its own with a memory limit on it — a change of shape rather than a setting, and not one v1 pays for».
+For architecture 3.4 — [mathtrail/mathtrail-standalone, `SPEC.md`](https://github.com/mathtrail/mathtrail-standalone/blob/c6cbeb2/SPEC.md), section 6 "The Starlark solver", branch `main`, commit c6cbeb2, read 2026-10-19:
+- 6.1: "the program is written by the same model that wrote the task";
+- 6.4, recursion is turned off: "A recursive Starlark function recurses on the Go stack, and a stack overflow in Go cannot be recovered: it would take the whole instance down, not the request";
+- 6.5: "Every helper that builds a list is capped at 1,000,000 elements", "a step for every sixteen bytes"; "There is no random number generator, seeded or otherwise. A brute force that samples proves nothing about uniqueness, and a verdict that depends on a seed is a verdict nobody can reproduce from the task alone";
+- 6.6, the table "The limits": Steps — 25,000,000; Wall clock — 2 seconds per run; Memory — "What the built-ins keep: 381 MiB at the ceiling above; nine tenths of the instance for the runtime"; Source size — 8 KB; Result — 5 letters; Concurrent runs — 1 per vCPU; Wait for a slot — "3 seconds per run", and a run that did not get a slot in time "does not start, and the task is told it was not checked and cost no attempt". On the literal: "`[{} for i in range(n)]` keeps 512 bytes for every nine steps — 2.6 million dictionaries at the ceiling, and an instance of 1 GiB was killed for its memory by them". On the calibration: "The bench measured the worst of the 450 at 2,081,362 steps, which is what moved the ceiling from 10,000,000 to 25,000,000" (R53 standalone) and "the worst of all 603 is 2,413,617 steps". On the memory gap: "a solver written that way takes the instance down rather than the request" and "The fix, if the gap ever bites, is a solver in a process of its own with a memory limit on it — a change of shape rather than a setting, and not one v1 pays for".
 
-### 1.2. Дыра памяти шире, чем в SPEC
+### 1.2. The memory gap is wider than in SPEC
 
-Для architecture 3.4 — [`docs/decisions.md`](https://github.com/mathtrail/mathtrail-standalone/blob/c6cbeb2/docs/decisions.md) standalone, R53 standalone, коммит c6cbeb2, прочитано 2026-10-19: «the methods of the values themselves take a lazy range of any length in one step — `x.extend(range(3000000))` is nineteen steps», «so no cap on the helpers can close the gap, and only a limit on the memory of the process can»; о времени: «the clock is seen only between instructions» и «a process of its own would bound its time as well as its memory».
+For architecture 3.4 — [`docs/decisions.md`](https://github.com/mathtrail/mathtrail-standalone/blob/c6cbeb2/docs/decisions.md) of standalone, R53 standalone, commit c6cbeb2, read 2026-10-19: "the methods of the values themselves take a lazy range of any length in one step — `x.extend(range(3000000))` is nineteen steps", "so no cap on the helpers can close the gap, and only a limit on the memory of the process can"; on the time: "the clock is seen only between instructions" and "a process of its own would bound its time as well as its memory".
 
-### 1.3. Цена в байтах, места и память экземпляра
+### 1.3. The price in bytes, the slots and the memory of an instance
 
-Для architecture 3.4 — R125 standalone, тот же `docs/decisions.md`, коммит c6cbeb2, прочитано 2026-10-19: «an instance runs one solver for each vCPU, and it has 1 GiB, nine tenths of it told to the runtime»; отвергнуто: «Four slots with the clock as insurance. Verdicts depend on the load» и «The process of its own now. A change of shape, and the author's decision»; открыто: «One account handing in solvers that spend their whole clock, for requests nobody opened, keeps an instance's single slot busy» и «Such a hand-in spends no attempt, so the account pays nothing for it. That stays open».
+For architecture 3.4 — R125 standalone, the same `docs/decisions.md`, commit c6cbeb2, read 2026-10-19: "an instance runs one solver for each vCPU, and it has 1 GiB, nine tenths of it told to the runtime"; rejected: "Four slots with the clock as insurance. Verdicts depend on the load" and "The process of its own now. A change of shape, and the author's decision"; open: "One account handing in solvers that spend their whole clock, for requests nobody opened, keeps an instance's single slot busy" and "Such a hand-in spends no attempt, so the account pays nothing for it. That stays open".
 
-### 1.4. Интерпретатор Starlark standalone
+### 1.4. The Starlark interpreter of standalone
 
-Для architecture 3.4 — [`go.mod`](https://github.com/mathtrail/mathtrail-standalone/blob/c6cbeb2/go.mod), коммит c6cbeb2, прочитано 2026-10-19: `go.starlark.net v0.0.0-20260908191801-89a6a09411d5`.
+For architecture 3.4 — [`go.mod`](https://github.com/mathtrail/mathtrail-standalone/blob/c6cbeb2/go.mod), commit c6cbeb2, read 2026-10-19: `go.starlark.net v0.0.0-20260908191801-89a6a09411d5`.
 
-### 1.5. Случайность в коде standalone
+### 1.5. Randomness in the code of standalone
 
-Для architecture 3.3 — поиск по `internal/` и `cmd/` того же коммита, 2026-10-19:
-- вне тестов `math/rand/v2` импортируют только `internal/store/drive/calls.go` и `internal/transport/mcp/afresh.go`, и оба вызова дают случайную длительность паузы (`time.Duration`); генератора задач от зерна там нет;
-- в тестах генераторы PCG получают зерно числами, без хеша: `rand.NewPCG(uint64(grade), uint64(child))` в `internal/domain/tutor/simulation_test.go`, `rand.NewPCG(7, 7)` в `pause_test.go`, `rand.NewPCG(d.Dice, 0)` в `property_test.go` и другие.
+For architecture 3.3 — a search of `internal/` and `cmd/` of the same commit, 2026-10-19:
+- outside tests, only `internal/store/drive/calls.go` and `internal/transport/mcp/afresh.go` import `math/rand/v2`, and both calls give a random length of a pause (`time.Duration`); there is no generator of tasks from a seed there;
+- in tests, PCG generators get their seed as numbers, without a hash: `rand.NewPCG(uint64(grade), uint64(child))` in `internal/domain/tutor/simulation_test.go`, `rand.NewPCG(7, 7)` in `pause_test.go`, `rand.NewPCG(d.Dice, 0)` in `property_test.go` and others.
 
-### 1.6. Вывод зёрен в стенде standalone
+### 1.6. The derivation of seeds in standalone's simulator
 
-Для architecture 3.3 — [`tools/learners/child.go`](https://github.com/mathtrail/mathtrail-standalone/blob/c6cbeb2/tools/learners/child.go), коммит c6cbeb2, прочитано 2026-10-19: функция `seeded(unit, purpose string) *rand.Rand` с комментарием «seeded is the random stream of one unit of the experiment for one purpose»; она пишет в `fnv.New64a()` строку `"%d|%s|%s|%s"` из `masterSeed`, `experiment`, `unit` и `purpose` и возвращает `rand.New(rand.NewPCG(hash.Sum64(), masterSeed))` из `math/rand/v2`. Та же функция есть в `research/experiments/` того же коммита.
+For architecture 3.3 — [`tools/learners/child.go`](https://github.com/mathtrail/mathtrail-standalone/blob/c6cbeb2/tools/learners/child.go), commit c6cbeb2, read 2026-10-19: the function `seeded(unit, purpose string) *rand.Rand` with the comment "seeded is the random stream of one unit of the experiment for one purpose"; it writes to `fnv.New64a()` the string `"%d|%s|%s|%s"` of `masterSeed`, `experiment`, `unit` and `purpose`, and returns `rand.New(rand.NewPCG(hash.Sum64(), masterSeed))` of `math/rand/v2`. The same function is in `research/experiments/` of the same commit.
 
-## 2. Go и его тулчейн
+## 2. Go and its toolchain
 
 ### 2.1. Go 1.27.3
 
-Для R04 — список релизов go.dev, `https://go.dev/dl/?mode=json`, прочитано 2026-10-21: новейший стабильный релиз — `go1.27.3`; sha256 архива `go1.27.3.linux-amd64.tar.gz` — `65efbc80fdc1fa2cd2631cad5b481777a68e8725f34e89f50fc6ac714e379b40`, `go1.27.3.linux-arm64.tar.gz` — `a06e99309dbcbdca1a8ccd2282c3ee146e55930886e26b4f1193269587165f49`. Оба архива скачаны и сверены `sha256sum` 2026-10-21.
+For R04 — the list of go.dev's releases, `https://go.dev/dl/?mode=json`, read 2026-10-21: the newest stable release is `go1.27.3`; the sha256 of the archive `go1.27.3.linux-amd64.tar.gz` is `65efbc80fdc1fa2cd2631cad5b481777a68e8725f34e89f50fc6ac714e379b40`, of `go1.27.3.linux-arm64.tar.gz` — `a06e99309dbcbdca1a8ccd2282c3ee146e55930886e26b4f1193269587165f49`. Both archives were downloaded and checked with `sha256sum` on 2026-10-21.
 
 ### 2.2. Go 1.27.4
 
-Для R54 — список релизов go.dev, `https://go.dev/dl/?mode=json&include=all`, прочитано 2026-11-12: sha256 архива `go1.27.4.linux-amd64.tar.gz` — `7226736c2339719cda28fbf3a54d71aa63bcefe376e98cef00034268dab24840`, `go1.27.4.linux-arm64.tar.gz` — `3392582988a273a87ab5043ee1b2c9c17a2c3c00580bf9326c47a2e0aaaeac92`, те же, что в `.devcontainer/Dockerfile` `spec` v0.16.3. Архив amd64 скачан и сверен `sha256sum` 2026-11-12.
+For R54 — the list of go.dev's releases, `https://go.dev/dl/?mode=json&include=all`, read 2026-11-12: the sha256 of the archive `go1.27.4.linux-amd64.tar.gz` is `7226736c2339719cda28fbf3a54d71aa63bcefe376e98cef00034268dab24840`, of `go1.27.4.linux-arm64.tar.gz` — `3392582988a273a87ab5043ee1b2c9c17a2c3c00580bf9326c47a2e0aaaeac92`, the same as in `.devcontainer/Dockerfile` of `spec` v0.16.3. The amd64 archive was downloaded and checked with `sha256sum` on 2026-11-12.
 
 ### 2.3. `GOTOOLCHAIN=local`
 
-Для R04 — [Go Toolchains](https://go.dev/doc/toolchain), прочитано 2026-10-21: «When GOTOOLCHAIN is set to local, the go command always runs the bundled Go toolchain».
+For R04 — [Go Toolchains](https://go.dev/doc/toolchain), read 2026-10-21: "When GOTOOLCHAIN is set to local, the go command always runs the bundled Go toolchain".
 
-### 2.4. JSON в Go 1.27.3
+### 2.4. JSON in Go 1.27.3
 
-Для R09 — исходники в `$(go env GOROOT)` стадии `toolchain`, прочитано 2026-11-02:
-- `src/internal/buildcfg/exp.go`, строка 87: `JSONv2: true` в наборе `baseline`, то есть эксперимент `jsonv2` включён по умолчанию. Файлы `encoding/json/jsontext` начинаются с `//go:build goexperiment.jsonv2`. `go list encoding/json/jsontext` без флагов находит пакет, а с `GOEXPERIMENT=nojsonv2` отвечает «build constraints exclude all Go files»;
-- `go doc encoding/json/jsontext.Value.Canonicalize`: «Canonicalize canonicalizes the raw JSON value according to the JSON Canonicalization Scheme (JCS) as defined by RFC 8785» и «JSON numbers are formatted as double precision numbers»;
-- `encoding/json` в go1.27 собран из файлов `v2_*.go` с `//go:build goexperiment.jsonv2`, а `encode.go` — с `//go:build !goexperiment.jsonv2`. В `internal/jsonflags/flags.go` `DefaultV1Flags` включает `EscapeForHTML` и `EscapeForJS`, а в `internal/jsonwire/encode.go`, строка 97, — `case (r == '\u2028' || r == '\u2029') && flags.Get(jsonflags.EscapeForJS):`. `SetEscapeHTML(false)` снимает только `EscapeForHTML`.
+For R09 — the sources in `$(go env GOROOT)` of the stage `toolchain`, read 2026-11-02:
+- `src/internal/buildcfg/exp.go`, line 87: `JSONv2: true` in the set `baseline`, that is, the experiment `jsonv2` is on by default. The files of `encoding/json/jsontext` begin with `//go:build goexperiment.jsonv2`. `go list encoding/json/jsontext` without flags finds the package, and with `GOEXPERIMENT=nojsonv2` answers "build constraints exclude all Go files";
+- `go doc encoding/json/jsontext.Value.Canonicalize`: "Canonicalize canonicalizes the raw JSON value according to the JSON Canonicalization Scheme (JCS) as defined by RFC 8785" and "JSON numbers are formatted as double precision numbers";
+- `encoding/json` in go1.27 is built from the files `v2_*.go` with `//go:build goexperiment.jsonv2`, and `encode.go` with `//go:build !goexperiment.jsonv2`. In `internal/jsonflags/flags.go`, `DefaultV1Flags` includes `EscapeForHTML` and `EscapeForJS`, and in `internal/jsonwire/encode.go`, line 97, there is `case (r == '\u2028' || r == '\u2029') && flags.Get(jsonflags.EscapeForJS):`. `SetEscapeHTML(false)` removes only `EscapeForHTML`.
 
-### 2.5. `math/rand/v2` и `hash/fnv` в Go 1.27.3
+### 2.5. `math/rand/v2` and `hash/fnv` in Go 1.27.3
 
-Для R10 — исходники в `$(go env GOROOT)` стадии `toolchain`, прочитано 2026-11-02:
-- `src/math/rand/v2/pcg.go`: `mulHi = 2549297995355413924`, `mulLo = 4865540595714422341`, `incHi = 6364136223846793005`, `incLo = 1442695040888963407` и выход DXSM с `cheapMul = 0xda942042e4dd58b5` — те же числа, что в [тексте формата](../spec/format/README.md), раздел 22;
-- `src/math/rand/v2/rand.go`: у `Uint64N` — «It panics if n == 0», у `Int64N` — «It panics if n <= 0», у `Shuffle` — «Shuffle panics if n < 0». `Perm` о панике не говорит, но `Perm(-1)` падает раньше `Shuffle`, в `make([]int, n)`: «panic: runtime error: makeslice: len out of range», строка 235 (проба, 2026-11-02). На 32 битах `uint64n` идёт через `uint32n`, и комментарий к нему говорит: «On 32-bit systems, here we need to implement that same logic in 32-bit math, both to preserve the exact output sequence observed on 64-bit machines and to preserve the optimization that the unbiasing loop almost never runs». О неизменности потоков документация пакета не говорит: `go doc -all math/rand/v2` такой фразы не находит;
-- `src/math/rand/v2/regress_test.go`: «Test that random number sequences generated by a specific seed do not change from version to version» и «Do NOT make changes to the golden outputs. If bugs need to be fixed in the underlying code, find ways to fix them that do not affect the outputs»;
-- `src/hash/fnv/fnv.go`: «Package fnv implements FNV-1 and FNV-1a, non-cryptographic hash functions», `offset64 = 14695981039346656037` и `prime64 = 1099511628211`.
+For R10 — the sources in `$(go env GOROOT)` of the stage `toolchain`, read 2026-11-02:
+- `src/math/rand/v2/pcg.go`: `mulHi = 2549297995355413924`, `mulLo = 4865540595714422341`, `incHi = 6364136223846793005`, `incLo = 1442695040888963407` and the DXSM output with `cheapMul = 0xda942042e4dd58b5` — the same numbers as in the [format text](../spec/format/README.md), section 22;
+- `src/math/rand/v2/rand.go`: `Uint64N` has "It panics if n == 0", `Int64N` — "It panics if n <= 0", `Shuffle` — "Shuffle panics if n < 0". `Perm` says nothing of a panic, but `Perm(-1)` fails before `Shuffle`, in `make([]int, n)`: "panic: runtime error: makeslice: len out of range", line 235 (a probe, 2026-11-02). On 32 bits `uint64n` goes through `uint32n`, and the comment on it says: "On 32-bit systems, here we need to implement that same logic in 32-bit math, both to preserve the exact output sequence observed on 64-bit machines and to preserve the optimization that the unbiasing loop almost never runs". The package's documentation says nothing of the streams staying unchanged: `go doc -all math/rand/v2` finds no such phrase;
+- `src/math/rand/v2/regress_test.go`: "Test that random number sequences generated by a specific seed do not change from version to version" and "Do NOT make changes to the golden outputs. If bugs need to be fixed in the underlying code, find ways to fix them that do not affect the outputs";
+- `src/hash/fnv/fnv.go`: "Package fnv implements FNV-1 and FNV-1a, non-cryptographic hash functions", `offset64 = 14695981039346656037` and `prime64 = 1099511628211`.
 
-### 2.6. Обещание Go о потоках
+### 2.6. Go's promise about the streams
 
-Для R10 — блог Go, [«Evolving the Go Standard Library with math/rand/v2»](https://go.dev/blog/randv2), 1 мая 2024, прочитано 2026-11-02. О `math/rand`: «At that point, we decided Go 1 compatibility included the specific random outputs for a given seed and added a test». О `math/rand/v2` — после того, как `IntN` и родственные функции получили метод Лемира: «The concrete rand.Rand API is now locked in to that value stream, so we will not be able to take advantage of any optimizations yet to be discovered».
+For R10 — the Go blog, ["Evolving the Go Standard Library with math/rand/v2"](https://go.dev/blog/randv2), 1 May 2024, read 2026-11-02. On `math/rand`: "At that point, we decided Go 1 compatibility included the specific random outputs for a given seed and added a test". On `math/rand/v2` — after `IntN` and the related functions got Lemire's method: "The concrete rand.Rand API is now locked in to that value stream, so we will not be able to take advantage of any optimizations yet to be discovered".
 
-### 2.7. Тулчейн главного модуля
+### 2.7. The toolchain of the main module
 
-Для R10 — [Go Toolchains](https://go.dev/doc/toolchain), прочитано 2026-11-02: «The choice of Go toolchain being used depends on the GOTOOLCHAIN environment setting and the go and toolchain lines in the main module's go.mod file or the current workspace's go.work file» и «The go line for each module sets the language version the compiler enforces when compiling packages in that module».
+For R10 — [Go Toolchains](https://go.dev/doc/toolchain), read 2026-11-02: "The choice of Go toolchain being used depends on the GOTOOLCHAIN environment setting and the go and toolchain lines in the main module's go.mod file or the current workspace's go.work file" and "The go line for each module sets the language version the compiler enforces when compiling packages in that module".
 
-### 2.8. Модули `spec` у прокси Go
+### 2.8. The modules of `spec` at the Go proxy
 
-Для R20 — `https://proxy.golang.org/github.com/altnovatrail/spec/@v/v0.9.2.info` и `…/spec/contracts/@v/v0.9.2.info`, прочитано 2026-11-04: у обоих `"Hash":"6f86ff50c76dacb79b7faf673713ddf02e42f531"`, а `Ref` — `refs/tags/v0.9.2` и `refs/tags/contracts/v0.9.2`. `go help mod download`, Go 1.27.3: у `-json` есть поле `Origin any // provenance of module`; `go mod download -json <модуль>@<версия>` печатает его, а без версии — нет (проба, 2026-11-04).
+For R20 — `https://proxy.golang.org/github.com/altnovatrail/spec/@v/v0.9.2.info` and `…/spec/contracts/@v/v0.9.2.info`, read 2026-11-04: both have `"Hash":"6f86ff50c76dacb79b7faf673713ddf02e42f531"`, and `Ref` is `refs/tags/v0.9.2` and `refs/tags/contracts/v0.9.2`. `go help mod download`, Go 1.27.3: `-json` has the field `Origin any // provenance of module`; `go mod download -json <module>@<version>` prints it, and without a version it does not (a probe, 2026-11-04).
 
-### 2.9. Покрытие из чужих тестов
+### 2.9. Coverage from the tests of other packages
 
-Для R20 — `go help testflag`, Go 1.27.3, прочитано 2026-11-04: «-coverpkg pattern1,pattern2,pattern3 Apply coverage analysis in each test to packages whose import paths match the patterns. The default is for each test to analyze only the package being tested».
+For R20 — `go help testflag`, Go 1.27.3, read 2026-11-04: "-coverpkg pattern1,pattern2,pattern3 Apply coverage analysis in each test to packages whose import paths match the patterns. The default is for each test to analyze only the package being tested".
 
-## 3. Проверки, CI и релиз
+## 3. Checks, CI and release
 
-### 3.1. Инструменты
+### 3.1. Tools
 
-Для R04 — прокси модулей Go, `https://proxy.golang.org/<модуль>/@latest`, прочитано 2026-10-21: `golang.org/x/vuln` — v1.9.0 (2026-10-11), `github.com/google/go-licenses/v2` — v2.0.1 (2025-09-08). Лицензии — API GitHub, `repos/<владелец>/<репозиторий>/license`, 2026-10-21: golang/vuln — BSD-3-Clause, google/go-licenses — Apache-2.0.
+For R04 — the Go module proxy, `https://proxy.golang.org/<module>/@latest`, read 2026-10-21: `golang.org/x/vuln` — v1.9.0 (2026-10-11), `github.com/google/go-licenses/v2` — v2.0.1 (2025-09-08). The licenses — the GitHub API, `repos/<owner>/<repository>/license`, 2026-10-21: golang/vuln — BSD-3-Clause, google/go-licenses — Apache-2.0.
 
 ### 3.2. `go-licenses check`
 
-Для R04 — [README v2.0.1](https://github.com/google/go-licenses/blob/v2.0.1/README.md), раздел Usages, Check, прочитано 2026-10-21: «Allow only specific license names» — `go-licenses check <package> [package...] --allowed_licenses=<comma separated license names>`. Проба 2026-10-21: со списком `spec` рецепт `ci-licenses` проходит, а со списком из одной MIT отвечает «Not allowed license 'Apache-2.0' found for library 'github.com/altnovatrail/module-kit/cmd/module-kit'».
+For R04 — [README v2.0.1](https://github.com/google/go-licenses/blob/v2.0.1/README.md), section Usages, Check, read 2026-10-21: "Allow only specific license names" — `go-licenses check <package> [package...] --allowed_licenses=<comma separated license names>`. A probe on 2026-10-21: with `spec`'s list the recipe `ci-licenses` passes, and with a list of MIT alone it answers "Not allowed license 'Apache-2.0' found for library 'github.com/altnovatrail/module-kit/cmd/module-kit'".
 
-### 3.3. Образец рецептов
+### 3.3. A model for the recipes
 
-Для R04 — [`justfile` canvas-api](https://github.com/MathTrail/canvas-api/blob/0901af0439280334b3da33ffc4cc5c853e4403ff/justfile), коммит 0901af0, прочитано 2026-10-21: `ci-lint`, `ci-test`, `ci-vuln` и `ci-licenses`, а об инструментах — «Each is a Go program run straight from its module, so none of them is installed anywhere».
+For R04 — [the `justfile` of canvas-api](https://github.com/MathTrail/canvas-api/blob/0901af0439280334b3da33ffc4cc5c853e4403ff/justfile), commit 0901af0, read 2026-10-21: `ci-lint`, `ci-test`, `ci-vuln` and `ci-licenses`, and on the tools — "Each is a Go program run straight from its module, so none of them is installed anywhere".
 
 ### 3.4. SonarCloud, docker:S8545
 
-Для R04 — правило «Go dependencies should be locked to verified versions» (API SonarCloud, `api/rules/show?key=docker:S8545`, 2026-10-21). На pull request #8 оно отметило строку `go install` gopls в Dockerfile: «Dependency versions are not predictable. Use a lock-file enforcing command instead». У canvas-api такие находки открыты у двух строк его Dockerfile, 198 и 199, хотя там стоит `-mod=readonly` (API SonarCloud, проект MathTrail_canvas-api, 2026-10-21).
+For R04 — the rule "Go dependencies should be locked to verified versions" (the SonarCloud API, `api/rules/show?key=docker:S8545`, 2026-10-21). On pull request #8 it flagged the line `go install` of gopls in the Dockerfile: "Dependency versions are not predictable. Use a lock-file enforcing command instead". In canvas-api such findings are open on two lines of its Dockerfile, 198 and 199, although `-mod=readonly` stands there (the SonarCloud API, the project MathTrail_canvas-api, 2026-10-21).
 
-### 3.5. Autobuild Go в CodeQL
+### 3.5. Go autobuild in CodeQL
 
-Для R06 — [GitHub Docs, «CodeQL build options and steps for compiled languages»](https://docs.github.com/en/code-security/reference/code-scanning/codeql/build-options-for-compiled-languages), раздел «Autodetection for Go», исходник в `github/docs` на коммите c008b66, прочитано 2026-10-21: «Invoke `make`, `ninja`, `./build` or `./build.sh` (in that order) until one of these commands succeeds and a subsequent `go list ./...` also succeeds»; «By default, test code (code in files ending in `_test.go`) is not analyzed».
+For R06 — [GitHub Docs, "CodeQL build options and steps for compiled languages"](https://docs.github.com/en/code-security/reference/code-scanning/codeql/build-options-for-compiled-languages), section "Autodetection for Go", the source in `github/docs` at commit c008b66, read 2026-10-21: "Invoke `make`, `ninja`, `./build` or `./build.sh` (in that order) until one of these commands succeeds and a subsequent `go list ./...` also succeeds"; "By default, test code (code in files ending in `_test.go`) is not analyzed".
 
-### 3.6. Лицензии в релизе
+### 3.6. Licenses in the release
 
-Для R07:
-- Apache-2.0 — [LICENSE](../LICENSE), раздел 4 (a): «You must give any other recipients of the Work or Derivative Works a copy of this License»;
-- лицензия Go — `LICENSE` в корне Go 1.27.3 стадии `toolchain`, `$(go env GOROOT)/LICENSE`, прочитано 2026-10-21: «Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution». Бинарник Go несёт стандартную библиотеку, а сторонних модулей у `module-kit` нет (`go.mod`).
+For R07:
+- Apache-2.0 — [LICENSE](../LICENSE), section 4 (a): "You must give any other recipients of the Work or Derivative Works a copy of this License";
+- Go's license — `LICENSE` at the root of Go 1.27.3 of the stage `toolchain`, `$(go env GOROOT)/LICENSE`, read 2026-10-21: "Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution". A Go binary carries the standard library, and `module-kit` has no third-party modules (`go.mod`).
 
-### 3.7. Общий релиз
+### 3.7. The shared release
 
-Для R07 — [`release.yml`](https://github.com/altnovatrail/.github/blob/11435dbe61d3d4885c9a8dd30686e8111e26cabb/.github/workflows/release.yml) и R18 .github, релиз `.github` v0.1.4, коммит 11435db, прочитано 2026-10-21: условия рецепту `release-files` — стадия `toolchain` выпускаемого коммита, его дерево из `git archive`, запуск под uid раннера с `HOME=/tmp` и без токенов, в `dist/` — только простые файлы с именами по `^[A-Za-z0-9_+][A-Za-z0-9._+-]*$` и без `.sigstore.json`. Релиз неизменяемый: `gh release verify v0.1.4 -R altnovatrail/.github` — «Release v0.1.4 verified!».
+For R07 — [`release.yml`](https://github.com/altnovatrail/.github/blob/11435dbe61d3d4885c9a8dd30686e8111e26cabb/.github/workflows/release.yml) and R18 .github, the release of `.github` v0.1.4, commit 11435db, read 2026-10-21: the conditions for the recipe `release-files` — the stage `toolchain` of the commit being released, its tree from `git archive`, a run under the runner's uid with `HOME=/tmp` and without tokens, in `dist/` only regular files with names by `^[A-Za-z0-9_+][A-Za-z0-9._+-]*$` and without `.sigstore.json`. The release is immutable: `gh release verify v0.1.4 -R altnovatrail/.github` — "Release v0.1.4 verified!".
 
-### 3.8. Общий релиз v0.1.10
+### 3.8. The shared release v0.1.10
 
-Для R07 и T08 — сравнение `release.yml` `.github` v0.1.4 (11435db) и v0.1.10 (f3addb7), `gh api repos/altnovatrail/.github/compare/…`, прочитано 2026-11-02. Рецепты `spec` релиз запускает скриптом `spec/tools/toolchain/toolchain.sh` из подмодуля вызывающего, а до сборки проверяет: «that spec/ be a submodule of altnovatrail/spec, checked out at the commit the caller pins and at a tag of spec» и «that the tag hold the script, which spec ships from v0.2.17; anything else stops it before anything is built, with the reason». Сумму скрипта он сверяет и после сборки: «spec/tools/toolchain/toolchain.sh changed in the copy of the checkout while the release ran». Условия рецепту `release-files` выше прочитаны на v0.1.4: на v0.1.10 их проверит первый релиз.
+For R07 and T08 — a comparison of `release.yml` of `.github` v0.1.4 (11435db) and v0.1.10 (f3addb7), `gh api repos/altnovatrail/.github/compare/…`, read 2026-11-02. The release runs the recipes of `spec` with the script `spec/tools/toolchain/toolchain.sh` from the caller's submodule, and before the build it checks: "that spec/ be a submodule of altnovatrail/spec, checked out at the commit the caller pins and at a tag of spec" and "that the tag hold the script, which spec ships from v0.2.17; anything else stops it before anything is built, with the reason". It checks the script's sum after the build too: "spec/tools/toolchain/toolchain.sh changed in the copy of the checkout while the release ran". The conditions for the recipe `release-files` above were read at v0.1.4: at v0.1.10 the first release will check them.
 
-### 3.9. Покрытие и перечень `paths`
+### 3.9. Coverage and the list `paths`
 
-Для R18 — [docs/architecture.md `.github`](https://github.com/altnovatrail/.github/blob/89d3ceee0b9977b3334488a4133d084d76474e0d/docs/architecture.md), раздел 3.3 — «Покрытие», job «Go» и перечень вида `go`, — и [`go.yml`](https://github.com/altnovatrail/.github/blob/89d3ceee0b9977b3334488a4133d084d76474e0d/.github/workflows/go.yml), релиз `.github` v0.1.15, коммит 89d3cee, прочитано 2026-11-04. Из общих workflow между v0.1.10 и v0.1.15 менялись только `go.yml`, `release.yml` и `typescript.yml` (`gh api repos/altnovatrail/.github/compare/v0.1.10...v0.1.15`, 2026-11-04).
+For R18 — [docs/architecture.md of `.github`](https://github.com/altnovatrail/.github/blob/89d3ceee0b9977b3334488a4133d084d76474e0d/docs/architecture.md), section 3.3 — «Покрытие», the job "Go" and the list of the kind `go`, — and [`go.yml`](https://github.com/altnovatrail/.github/blob/89d3ceee0b9977b3334488a4133d084d76474e0d/.github/workflows/go.yml), the release of `.github` v0.1.15, commit 89d3cee, read 2026-11-04. Of the shared workflows, between v0.1.10 and v0.1.15 only `go.yml`, `release.yml` and `typescript.yml` changed (`gh api repos/altnovatrail/.github/compare/v0.1.10...v0.1.15`, 2026-11-04).
 
-### 3.10. gopls из lock-файла
+### 3.10. gopls from a lock file
 
-Для R19 — R12 tutor и его [`.devcontainer/Dockerfile`](https://github.com/altnovatrail/tutor/blob/be607e56f87bf94a93b1d318f9cd578a3e3c221e/.devcontainer/Dockerfile) и `.devcontainer/gopls/`, `main` be607e5, прочитано 2026-11-04. Находок docker:S8545 у `tutor` нет (API SonarCloud, `api/issues/search?componentKeys=altnovatrail_tutor&rules=docker:S8545`, 2026-11-04). Его Scorecard Pinned-Dependencies отмечает в Dockerfile только `npmCommand not pinned by hash` (API GitHub, `code-scanning/alerts`, 2026-11-04). gopls v0.24.0 от 2026-10-14 — последний релиз (`https://proxy.golang.org/golang.org/x/tools/gopls/@latest`, прочитано 2026-11-04); лицензия golang/tools — BSD-3-Clause (API GitHub, `repos/golang/tools/license`, 2026-11-04).
+For R19 — R12 tutor and its [`.devcontainer/Dockerfile`](https://github.com/altnovatrail/tutor/blob/be607e56f87bf94a93b1d318f9cd578a3e3c221e/.devcontainer/Dockerfile) and `.devcontainer/gopls/`, `main` be607e5, read 2026-11-04. `tutor` has no findings of docker:S8545 (the SonarCloud API, `api/issues/search?componentKeys=altnovatrail_tutor&rules=docker:S8545`, 2026-11-04). Its Scorecard Pinned-Dependencies flags in the Dockerfile only `npmCommand not pinned by hash` (the GitHub API, `code-scanning/alerts`, 2026-11-04). gopls v0.24.0 of 2026-10-14 is the latest release (`https://proxy.golang.org/golang.org/x/tools/gopls/@latest`, read 2026-11-04); the license of golang/tools is BSD-3-Clause (the GitHub API, `repos/golang/tools/license`, 2026-11-04).
 
-### 3.11. Когда Dependabot предлагает версию
+### 3.11. When Dependabot proposes a version
 
-Для поправки 2026-11-04 к R18 — GitHub Docs, прочитано 2026-11-04: [«Configuring Dependabot version updates»](https://docs.github.com/en/code-security/dependabot/dependabot-version-updates/configuring-dependabot-version-updates) — «When this file is checked in, Dependabot checks the manifest files on the default branch for outdated dependencies»; [«Dependabot options reference»](https://docs.github.com/en/code-security/dependabot/working-with-dependabot/dependabot-options-reference), `cooldown` — «A new version is not considered for a version update until 3 days after its release», а с какого мгновения и как считаются дни, там не сказано. Релиз `.github` v0.1.15 опубликован 2026-11-02 в 03:40:33 UTC (`gh release view v0.1.15 -R altnovatrail/.github`, 2026-11-04).
+For the 2026-11-04 amendment to R18 — GitHub Docs, read 2026-11-04: ["Configuring Dependabot version updates"](https://docs.github.com/en/code-security/dependabot/dependabot-version-updates/configuring-dependabot-version-updates) — "When this file is checked in, Dependabot checks the manifest files on the default branch for outdated dependencies"; ["Dependabot options reference"](https://docs.github.com/en/code-security/dependabot/working-with-dependabot/dependabot-options-reference), `cooldown` — "A new version is not considered for a version update until 3 days after its release", and from what instant and how the days are counted it does not say. The release of `.github` v0.1.15 was published 2026-11-02 at 03:40:33 UTC (`gh release view v0.1.15 -R altnovatrail/.github`, 2026-11-04).
 
-## 4. Библиотеки Go
+## 4. Go libraries
 
-### 4.1. Библиотеки JCS для Go
+### 4.1. JCS libraries for Go
 
-Для R09 — прокси модулей Go и API GitHub, прочитано 2026-11-02:
-- `github.com/gowebpki/jcs` — `@latest` v1.0.2 от 2026-09-21, лицензия Apache-2.0. В `go.mod` — `require github.com/stretchr/testify v1.12.1`. Issue #5 «RFC 8785: reversed surrogate pair becomes U+FFFD and invalid UTF-8 passes through» закрыт 2026-09-20. Число он читает как double: `jcs.go` на теге v1.0.2, строки 530 и 539, — `strconv.ParseFloat(value, 64)`, затем `NumberToJSON(ieeeF64)`;
-- `github.com/cyberphone/json-canonicalization` — тегов версий нет, `@latest` — псевдоверсия `v0.0.0-20261011152517-32a48195b9b2`. Лицензия по API GitHub — `NOASSERTION`, `go.mod` в репозитории нет. Issue #33 «Go import (as documented) broken» открыт с 2025-03-11.
+For R09 — the Go module proxy and the GitHub API, read 2026-11-02:
+- `github.com/gowebpki/jcs` — `@latest` v1.0.2 of 2026-09-21, the license Apache-2.0. In `go.mod` — `require github.com/stretchr/testify v1.12.1`. Issue #5 "RFC 8785: reversed surrogate pair becomes U+FFFD and invalid UTF-8 passes through" was closed 2026-09-20. It reads a number as a double: `jcs.go` at the tag v1.0.2, lines 530 and 539, — `strconv.ParseFloat(value, 64)`, then `NumberToJSON(ieeeF64)`;
+- `github.com/cyberphone/json-canonicalization` — there are no version tags, `@latest` is the pseudo-version `v0.0.0-20261011152517-32a48195b9b2`. The license by the GitHub API is `NOASSERTION`, and the repository has no `go.mod`. Issue #33 "Go import (as documented) broken" has been open since 2025-03-11.
 
 ### 4.2. go.starlark.net
 
-Для R11 — [google/starlark-go](https://github.com/google/starlark-go), лицензия BSD-3-Clause (API GitHub), прочитано 2026-11-02:
-- тегов версий нет. `https://proxy.golang.org/go.starlark.net/@latest` — `v0.0.0-20261021141710-4f4267fb140d`, коммит 4f4267fb140d от 2026-10-21; standalone закрепил `v0.0.0-20260908191801-89a6a09411d5` (`go.mod` standalone, коммит 89986bc);
-- pull request #663 «starlark: check steps/cancellation only on back-edges», слит 2026-10-05 коммитом de228787c8fb: «We only need to increment the step counter and check for cancellation in loops (back edges) and calls. We increment the counter by a constant scaled by the number of instructions between such checks» и «Clients may need to adjust their SetMaxSteps parameter to taste». В `starlark/interp.go` на 4f4267fb140d — `const stepCost = 10 // empirical average number of instructions per back-edge or call`, а на 89a6a09411d5, строка 109, — `thread.Steps++` на каждой инструкции;
-- `starlark/eval.go` на 4f4267fb140d. О `Cancel`: «There may be a delay before the interpreter observes the cancellation if the thread is currently in a call to a built-in function». О повторе списка и строки: «It's always possible to overeat in small bites but we'll try to stop someone swallowing the world in one gulp» и `const maxAlloc = 1 << 30`;
-- `starlark/interp.go` на 4f4267fb140d о рекурсии. При выключенной: «We look for the same function code, not function value, otherwise the user could defeat the check by writing the Y combinator». При включённой — `if len(thread.stack) > 100_000`, с pull request #619 от 2025-10-27: «Exceeding this limit should not crash the Go program»;
-- pull request #672, слит 2026-10-21: «calling one of them without an argument dereferenced a nil `Iterable` and panicked, e.g. `set([1]).difference()`».
+For R11 — [google/starlark-go](https://github.com/google/starlark-go), the license BSD-3-Clause (the GitHub API), read 2026-11-02:
+- there are no version tags. `https://proxy.golang.org/go.starlark.net/@latest` is `v0.0.0-20261021141710-4f4267fb140d`, commit 4f4267fb140d of 2026-10-21; standalone pinned `v0.0.0-20260908191801-89a6a09411d5` (`go.mod` of standalone, commit 89986bc);
+- pull request #663 "starlark: check steps/cancellation only on back-edges", merged 2026-10-05 by commit de228787c8fb: "We only need to increment the step counter and check for cancellation in loops (back edges) and calls. We increment the counter by a constant scaled by the number of instructions between such checks" and "Clients may need to adjust their SetMaxSteps parameter to taste". In `starlark/interp.go` at 4f4267fb140d there is `const stepCost = 10 // empirical average number of instructions per back-edge or call`, and at 89a6a09411d5, line 109, `thread.Steps++` on every instruction;
+- `starlark/eval.go` at 4f4267fb140d. On `Cancel`: "There may be a delay before the interpreter observes the cancellation if the thread is currently in a call to a built-in function". On the repetition of a list and of a string: "It's always possible to overeat in small bites but we'll try to stop someone swallowing the world in one gulp" and `const maxAlloc = 1 << 30`;
+- `starlark/interp.go` at 4f4267fb140d on recursion. When it is off: "We look for the same function code, not function value, otherwise the user could defeat the check by writing the Y combinator". When it is on — `if len(thread.stack) > 100_000`, since pull request #619 of 2025-10-27: "Exceeding this limit should not crash the Go program";
+- pull request #672, merged 2026-10-21: "calling one of them without an argument dereferenced a nil `Iterable` and panicked, e.g. `set([1]).difference()`".
 
 ### 4.3. go-yaml v4
 
-Для R21 — прокси модулей Go, `https://proxy.golang.org/go.yaml.in/yaml/v4/@latest`, прочитано 2026-11-04: `v4.0.0-rc.9` от 2026-11-02, коммит 2141fcc, тег `refs/tags/v4.0.0-rc.9`. Лицензия по API GitHub (`repos/yaml/go-yaml/license`) — Apache-2.0, а `NOTICE` модуля: «The following files were ported to Go from C files of libyaml, and thus are still covered by their original MIT license». `go.mod` модуля — `go 1.18`, без `require`. README на том же теге: «v4.0.0 *is not released yet.* It is intended to be released in October 2026», «v2 and v3 remain stable» и «The library supports most of YAML 1.2 and retains selected YAML 1.1 behavior».
+For R21 — the Go module proxy, `https://proxy.golang.org/go.yaml.in/yaml/v4/@latest`, read 2026-11-04: `v4.0.0-rc.9` of 2026-11-02, commit 2141fcc, the tag `refs/tags/v4.0.0-rc.9`. The license by the GitHub API (`repos/yaml/go-yaml/license`) is Apache-2.0, and the module's `NOTICE`: "The following files were ported to Go from C files of libyaml, and thus are still covered by their original MIT license". The module's `go.mod` is `go 1.18`, without `require`. The README at the same tag: "v4.0.0 *is not released yet.* It is intended to be released in October 2026", "v2 and v3 remain stable" and "The library supports most of YAML 1.2 and retains selected YAML 1.1 behavior".
 
 ### 4.4. go-yaml v4.0.0
 
-Для R45 — `https://proxy.golang.org/go.yaml.in/yaml/v4/@latest`, прочитано 2026-11-06: `v4.0.0` от 2026-11-04T18:36:35Z, коммит f2f9563, тег `refs/tags/v4.0.0`. От rc.9 — пять коммитов, `gh api repos/yaml/go-yaml/compare/v4.0.0-rc.9...v4.0.0`; `yts/known-failing-tests` v4.0.0 по-прежнему называет 2SXE и W5VH.
+For R45 — `https://proxy.golang.org/go.yaml.in/yaml/v4/@latest`, read 2026-11-06: `v4.0.0` of 2026-11-04T18:36:35Z, commit f2f9563, the tag `refs/tags/v4.0.0`. Five commits since rc.9, `gh api repos/yaml/go-yaml/compare/v4.0.0-rc.9...v4.0.0`; `yts/known-failing-tests` of v4.0.0 still names 2SXE and W5VH.
 
-### 4.5. Валидатор JSON Schema
+### 4.5. The JSON Schema validator
 
-Для R23 — прочитано 2026-11-04:
-- `github.com/santhosh-tekuri/jsonschema/v6` — `https://proxy.golang.org/github.com/santhosh-tekuri/jsonschema/v6/@latest`: `v6.0.3` от 2026-06-28, коммит b0fc661, `refs/tags/v6.0.3`. Лицензия по API GitHub (`repos/santhosh-tekuri/jsonschema/license`) — Apache-2.0. Его `go.mod` — `go 1.21`, `require github.com/dlclark/regexp2 v1.11.0 // used for testing` и `golang.org/x/text v0.14.0`. Bowtie, [bowtie.report](https://bowtie.report), прогон 2026-11-04 06:21 UTC: у draft 2020-12 go-jsonschema (v6.0.2) проходит 1300 тестов из 1300;
-- его исходник на v6.0.3, `validator.go`: у `propertyNames` — `verr.InstanceLocation = vd.vloc`, без копии, а `instanceLocation()` других ошибок — `slices.Clone(vd.vloc)`. Issue [#276](https://github.com/santhosh-tekuri/jsonschema/issues/276) «propertyNames and contentSchema errors: InstanceLocation is overwritten by later siblings» открыт с 2026-09-24; pull request #278 закрыт без мержа 2026-10-02, «Closing in favor of earlier community PR #269», а #269 открыт. Проба 2026-11-04 на `spec.Format` v0.9.2: `examples/task/invalid/parameter-named-if.yaml` получил `propertyNames at #/items/0` вместо `#/template/parameters`. Коммит 9ae86900d от 2026-10-31, после v6.0.3, — «validator/fix: big.Rat fails to parse large exponents causing panic»: до него `numValidate` читает число `new(big.Rat).SetString(fmt.Sprintf("%v", v))` и результат не проверяет. Как словарь включается — `Compiler.RegisterVocabulary` и `AssertVocabs`, а ошибку расширения даёт `ValidatorContext.AddError` (`vocab.go`);
-- `golang.org/x/text` — `@latest` `v0.43.0` от 2026-10-09; govulncheck v1.9.0 на v0.14.0: GO-2026-6629 «Panic parsing crafted input in x/text/secure/precis», исправлена в v0.41.0, и GO-2026-5970 «Infinite loop on invalid input», исправлена в v0.39.0, — «your code doesn't appear to call these vulnerabilities»; на v0.43.0 — «No vulnerabilities found». go-licenses v2.0.1: santhosh — Apache-2.0, x/text — BSD-3-Clause;
-- другие библиотеки: `github.com/kaptinlin/jsonschema` — `v0.9.10` от 2026-09-13, MIT, Bowtie его не проверяет; `github.com/google/jsonschema-go` — `v0.4.3` от 2026-04-17, MIT, валидация останавливается на первой ошибке; Corvus Go (`corvus-dotnet/Corvus.JsonSchema`, `src-go/`) — v0.1.4 от 2026-11-03, первый релиз v0.1.0 от 2026-10-08, Apache-2.0, шаблоны — по ECMA-262; `xeipuuv/gojsonschema` v1.2.0 — draft-04, -06 и -07; `qri-io/jsonschema` v0.2.1 — draft 2019-09.
+For R23 — read 2026-11-04:
+- `github.com/santhosh-tekuri/jsonschema/v6` — `https://proxy.golang.org/github.com/santhosh-tekuri/jsonschema/v6/@latest`: `v6.0.3` of 2026-06-28, commit b0fc661, `refs/tags/v6.0.3`. The license by the GitHub API (`repos/santhosh-tekuri/jsonschema/license`) is Apache-2.0. Its `go.mod` is `go 1.21`, `require github.com/dlclark/regexp2 v1.11.0 // used for testing` and `golang.org/x/text v0.14.0`. Bowtie, [bowtie.report](https://bowtie.report), the run of 2026-11-04 06:21 UTC: on draft 2020-12, go-jsonschema (v6.0.2) passes 1300 tests of 1300;
+- its source at v6.0.3, `validator.go`: for `propertyNames` — `verr.InstanceLocation = vd.vloc`, without a copy, while `instanceLocation()` of the other errors is `slices.Clone(vd.vloc)`. Issue [#276](https://github.com/santhosh-tekuri/jsonschema/issues/276) "propertyNames and contentSchema errors: InstanceLocation is overwritten by later siblings" has been open since 2026-09-24; pull request #278 was closed without a merge on 2026-10-02, "Closing in favor of earlier community PR #269", and #269 is open. A probe on 2026-11-04 on `spec.Format` v0.9.2: `examples/task/invalid/parameter-named-if.yaml` got `propertyNames at #/items/0` instead of `#/template/parameters`. Commit 9ae86900d of 2026-10-31, after v6.0.3, — "validator/fix: big.Rat fails to parse large exponents causing panic": before it, `numValidate` reads a number with `new(big.Rat).SetString(fmt.Sprintf("%v", v))` and does not check the result. How a vocabulary is turned on — `Compiler.RegisterVocabulary` and `AssertVocabs`, and an extension's error is given by `ValidatorContext.AddError` (`vocab.go`);
+- `golang.org/x/text` — `@latest` `v0.43.0` of 2026-10-09; govulncheck v1.9.0 on v0.14.0: GO-2026-6629 "Panic parsing crafted input in x/text/secure/precis", fixed in v0.41.0, and GO-2026-5970 "Infinite loop on invalid input", fixed in v0.39.0, — "your code doesn't appear to call these vulnerabilities"; on v0.43.0 — "No vulnerabilities found". go-licenses v2.0.1: santhosh — Apache-2.0, x/text — BSD-3-Clause;
+- other libraries: `github.com/kaptinlin/jsonschema` — `v0.9.10` of 2026-09-13, MIT, Bowtie does not check it; `github.com/google/jsonschema-go` — `v0.4.3` of 2026-04-17, MIT, validation stops at the first error; Corvus Go (`corvus-dotnet/Corvus.JsonSchema`, `src-go/`) — v0.1.4 of 2026-11-03, the first release v0.1.0 of 2026-10-08, Apache-2.0, patterns by ECMA-262; `xeipuuv/gojsonschema` v1.2.0 — draft-04, -06 and -07; `qri-io/jsonschema` v0.2.1 — draft 2019-09.
 
-### 4.6. go.starlark.net в песочнице
+### 4.6. go.starlark.net in the sandbox
 
-Для R28 — исходники `go.starlark.net` `v0.0.0-20261021141710-4f4267fb140d` из кэша модулей, прочитано 2026-11-04:
-- `starlark/library.go`, у `Universe`: «The Go application may add or remove items from the universe dictionary before Starlark evaluation begins»; в нём 33 имени — те, что перечисляет [текст формата](../spec/format/README.md), раздел 24;
-- `starlark/eval.go`: у `Thread.Print` — «If nil, fmt.Fprintln(os.Stderr, msg) is used instead»; у `OnMaxSteps` — «The default behavior is to call thread.Cancel("too many steps")»; `Cancel` — «Atomically set cancelReason, preserving earlier reason if any»; у `EvalExprOptions` — «Resolving an expression mutates it. Do not call EvalExprOptions more than once for the same expression», а `makeExprFunc` резолвит имена `resolve.ExprOptions(opts, expr, env.Has, Universe.Has)`;
-- `starlark/interp.go`: `checkSteps` — `thread.Steps += stepCost` и `thread.Steps >= thread.maxSteps`, а `stepCost = 10`;
-- `starlark/int_posix64.go`, сборка для linux и darwin на 64 битах: «It reserves a 4GB portion of the address space using mmap», `unix.Mmap(-1, 0, len, unix.PROT_READ, unix.MAP_PRIVATE|unix.MAP_ANON)`, а при ошибке — `log.Printf("Starlark failed to allocate 4GB address space: %v. Integer performance may suffer.", err)`;
-- `go.mod` модуля — `go 1.25.0` и `golang.org/x/sys v0.42.0` среди `require`; лицензия google/starlark-go по API GitHub — BSD-3-Clause.
+For R28 — the sources of `go.starlark.net` `v0.0.0-20261021141710-4f4267fb140d` from the module cache, read 2026-11-04:
+- `starlark/library.go`, on `Universe`: "The Go application may add or remove items from the universe dictionary before Starlark evaluation begins"; it holds 33 names — those that the [format text](../spec/format/README.md), section 24, lists;
+- `starlark/eval.go`: on `Thread.Print` — "If nil, fmt.Fprintln(os.Stderr, msg) is used instead"; on `OnMaxSteps` — "The default behavior is to call thread.Cancel("too many steps")"; `Cancel` — "Atomically set cancelReason, preserving earlier reason if any"; on `EvalExprOptions` — "Resolving an expression mutates it. Do not call EvalExprOptions more than once for the same expression", and `makeExprFunc` resolves the names with `resolve.ExprOptions(opts, expr, env.Has, Universe.Has)`;
+- `starlark/interp.go`: `checkSteps` — `thread.Steps += stepCost` and `thread.Steps >= thread.maxSteps`, and `stepCost = 10`;
+- `starlark/int_posix64.go`, the build for linux and darwin on 64 bits: "It reserves a 4GB portion of the address space using mmap", `unix.Mmap(-1, 0, len, unix.PROT_READ, unix.MAP_PRIVATE|unix.MAP_ANON)`, and on an error — `log.Printf("Starlark failed to allocate 4GB address space: %v. Integer performance may suffer.", err)`;
+- the module's `go.mod` — `go 1.25.0`, and `golang.org/x/sys v0.42.0` among `require`; the license of google/starlark-go by the GitHub API is BSD-3-Clause.
 
 ### 4.7. `golang.org/x/sys`
 
-Для R28 — прочитано 2026-11-04: `https://proxy.golang.org/golang.org/x/sys/@latest` — `v0.49.0` от 2026-10-06; лицензия golang/sys по API GitHub — BSD-3-Clause. govulncheck v1.9.0 на v0.42.0: GO-2026-5024 «Invoking integer overflow in NewNTUnicodeString in golang.org/x/sys/windows», исправлена в v0.44.0, платформа windows, — «your code doesn't appear to call these vulnerabilities»; на v0.49.0 — «No vulnerabilities found». go-licenses v2.0.1: go.starlark.net и `golang.org/x/sys/unix` — BSD-3-Clause.
+For R28 — read 2026-11-04: `https://proxy.golang.org/golang.org/x/sys/@latest` is `v0.49.0` of 2026-10-06; the license of golang/sys by the GitHub API is BSD-3-Clause. govulncheck v1.9.0 on v0.42.0: GO-2026-5024 "Invoking integer overflow in NewNTUnicodeString in golang.org/x/sys/windows", fixed in v0.44.0, the platform windows, — "your code doesn't appear to call these vulnerabilities"; on v0.49.0 — "No vulnerabilities found". go-licenses v2.0.1: go.starlark.net and `golang.org/x/sys/unix` — BSD-3-Clause.
 
 ### 4.8. protobuf-go
 
-Для R29 — исходники `google.golang.org/protobuf` v1.36.12 из кэша модулей, прочитано 2026-11-05:
-- `internal/errors/errors.go`, `InvalidUTF8`: «field %v contains invalid UTF-8» — так `proto.Marshal` отказывает строке не в UTF-8, а `TestNotUTF8IsNoMessage` держит это на наблюдении;
-- `internal/filedesc/desc.go`, `EnforceUTF8`: «If this method does not exist, the default is to enforce valid UTF-8»;
-- `encoding/protojson/decode.go`, `unmarshalEnum`: число JSON — `protoreflect.EnumNumber(n)`, если оно влезает в 32 бита, без поиска в перечислении. Так `protojson.Unmarshal` читает причину вектора `1000`;
-- лицензия — `LICENSE` модуля, BSD-3-Clause, как его называет go-licenses v2.0.1 (`ci-licenses`).
+For R29 — the sources of `google.golang.org/protobuf` v1.36.12 from the module cache, read 2026-11-05:
+- `internal/errors/errors.go`, `InvalidUTF8`: "field %v contains invalid UTF-8" — this is how `proto.Marshal` refuses a string not in UTF-8, and `TestNotUTF8IsNoMessage` holds it on an observation;
+- `internal/filedesc/desc.go`, `EnforceUTF8`: "If this method does not exist, the default is to enforce valid UTF-8";
+- `encoding/protojson/decode.go`, `unmarshalEnum`: a JSON number becomes `protoreflect.EnumNumber(n)` if it fits in 32 bits, without a lookup in the enum. So `protojson.Unmarshal` reads a vector's cause `1000`;
+- the license — the module's `LICENSE`, BSD-3-Clause, as go-licenses v2.0.1 names it (`ci-licenses`).
 
-## 5. Стандарты и спецификации
+## 5. Standards and specifications
 
 ### 5.1. Semantic Versioning 2.0.0
 
-Для R13 и architecture 3.5 — [semver.org/spec/v2.0.0.html](https://semver.org/spec/v2.0.0.html), прочитано 2026-11-02:
-- пункт 3: «Once a versioned package has been released, the contents of that version MUST NOT be modified»;
-- пункт 4: «Major version zero (0.y.z) is for initial development. Anything MAY change at any time»;
-- пункт 8: «Major version X (X.y.z | X > 0) MUST be incremented if any backward incompatible changes are introduced to the public API. It MAY also include minor and patch level changes» — часть, найденную сравнением, автор может поднять выше.
+For R13 and architecture 3.5 — [semver.org/spec/v2.0.0.html](https://semver.org/spec/v2.0.0.html), read 2026-11-02:
+- item 3: "Once a versioned package has been released, the contents of that version MUST NOT be modified";
+- item 4: "Major version zero (0.y.z) is for initial development. Anything MAY change at any time";
+- item 8: "Major version X (X.y.z | X > 0) MUST be incremented if any backward incompatible changes are introduced to the public API. It MAY also include minor and patch level changes" — the author may raise the version part that the comparison found to a higher one.
 
-### 5.2. Cargo о 0.y.z
+### 5.2. Cargo on 0.y.z
 
-Для R13 и architecture 3.5 — [The Cargo Book, «SemVer Compatibility»](https://doc.rust-lang.org/cargo/reference/semver.html), прочитано 2026-11-02: «Initial development releases starting with "0.y.z" can treat changes in "y" as a major release, and "z" as a minor release. "0.0.z" releases are always major changes. This is because Cargo uses the convention that only changes in the left-most non-zero component are considered incompatible». Так же — oasdiff: «Below `1.0.0`, semver gives the minor version the major's role» ([`docs/VERSIONING.md`](https://github.com/oasdiff/oasdiff/blob/2daca9b/docs/VERSIONING.md), коммит 2daca9b, прочитано 2026-11-02).
+For R13 and architecture 3.5 — [The Cargo Book, "SemVer Compatibility"](https://doc.rust-lang.org/cargo/reference/semver.html), read 2026-11-02: "Initial development releases starting with "0.y.z" can treat changes in "y" as a major release, and "z" as a minor release. "0.0.z" releases are always major changes. This is because Cargo uses the convention that only changes in the left-most non-zero component are considered incompatible". The same in oasdiff: "Below `1.0.0`, semver gives the minor version the major's role" ([`docs/VERSIONING.md`](https://github.com/oasdiff/oasdiff/blob/2daca9b/docs/VERSIONING.md), commit 2daca9b, read 2026-11-02).
 
-### 5.3. Инструменты, которые проверяют semver по содержимому
+### 5.3. Tools that check semver by the content
 
-Для R13, прочитано 2026-11-02:
-- gorelease — [pkg.go.dev/golang.org/x/exp/cmd/gorelease](https://pkg.go.dev/golang.org/x/exp/cmd/gorelease): «If no version is proposed with -version, gorelease suggests the lowest version consistent with semantic versioning». Находит наименьшую часть и предлагает версию;
-- apidiff — [pkg.go.dev/golang.org/x/exp/apidiff](https://pkg.go.dev/golang.org/x/exp/apidiff): «No tool can detect behavioral changes; and even if it could, whether a behavioral change is a breaking change or not depends on many factors, such as whether it closes a security hole or fixes a bug». У модуля поведение — проверка задачи, и её сравнение видит;
-- cargo-semver-checks, лицензия Apache-2.0 — [README](https://github.com/obi1kenobi/cargo-semver-checks/blob/161450e/README.md), коммит 161450e: «By default, `cargo-semver-checks` uses crates.io to look up the previous version of the crate, which is used as the baseline for semver-checking the current version of the crate», а прежнюю версию можно дать и папкой, `--baseline-root`. И: «A design goal of `cargo-semver-checks` is to not have false positives». Требует не меньше найденного, а автор задаёт версию сам;
-- oasdiff — тот же `docs/VERSIONING.md`: «a breaking change requires a major version increase», а под «What is not checked» — «Which version bump a non-breaking change deserves. Only breaking changes are checked»;
-- `elm bump` — [`terminal/src/Main.hs`](https://github.com/elm/compiler/blob/1c278bf/terminal/src/Main.hs) elm/compiler, коммит 1c278bf: «so there cannot be MAJOR changes hiding in PATCH releases in Elm!»; правило — [`builder/src/Deps/Diff.hs`](https://github.com/elm/compiler/blob/1c278bf/builder/src/Deps/Diff.hs), строки 308–312: `addMag = if null added then M.PATCH else M.MINOR`, `removeMag = if null removed then M.PATCH else M.MAJOR` и наибольшее из частей. Удаление — мажорная, добавление — минорная, и Elm требует ровно найденную версию;
-- версия данных — рецепт Frictionless Data Package Version, [specs.frictionlessdata.io/patterns](https://specs.frictionlessdata.io/patterns/): мажорная — «Combine, split, delete or change the meaning of data that is referenced by another data resource», патч — «Correct errors in existing data». Часть здесь объявляет автор, а инструмента нет;
-- [Conventional Commits 1.0.0](https://www.conventionalcommits.org/en/v1.0.0/): «fix: a commit of the type fix patches a bug in your codebase (this correlates with PATCH in Semantic Versioning)». Часть объявляет автор — типом коммита, — а содержимого инструмент не смотрит.
+For R13, read 2026-11-02:
+- gorelease — [pkg.go.dev/golang.org/x/exp/cmd/gorelease](https://pkg.go.dev/golang.org/x/exp/cmd/gorelease): "If no version is proposed with -version, gorelease suggests the lowest version consistent with semantic versioning". It finds the lowest part and proposes a version;
+- apidiff — [pkg.go.dev/golang.org/x/exp/apidiff](https://pkg.go.dev/golang.org/x/exp/apidiff): "No tool can detect behavioral changes; and even if it could, whether a behavioral change is a breaking change or not depends on many factors, such as whether it closes a security hole or fixes a bug". The behavior of a module is the check of a task, and the comparison sees it;
+- cargo-semver-checks, the license Apache-2.0 — [README](https://github.com/obi1kenobi/cargo-semver-checks/blob/161450e/README.md), commit 161450e: "By default, `cargo-semver-checks` uses crates.io to look up the previous version of the crate, which is used as the baseline for semver-checking the current version of the crate", and the previous version can also be given as a folder, `--baseline-root`. And: "A design goal of `cargo-semver-checks` is to not have false positives". It requires no less than what it found, and the author sets the version themselves;
+- oasdiff — the same `docs/VERSIONING.md`: "a breaking change requires a major version increase", and under "What is not checked" — "Which version bump a non-breaking change deserves. Only breaking changes are checked";
+- `elm bump` — [`terminal/src/Main.hs`](https://github.com/elm/compiler/blob/1c278bf/terminal/src/Main.hs) of elm/compiler, commit 1c278bf: "so there cannot be MAJOR changes hiding in PATCH releases in Elm!"; the rule — [`builder/src/Deps/Diff.hs`](https://github.com/elm/compiler/blob/1c278bf/builder/src/Deps/Diff.hs), lines 308–312: `addMag = if null added then M.PATCH else M.MINOR`, `removeMag = if null removed then M.PATCH else M.MAJOR` and the largest of the parts. A removal is major, an addition is minor, and Elm requires exactly the version it found;
+- a version of data — the recipe Frictionless Data Package Version, [specs.frictionlessdata.io/patterns](https://specs.frictionlessdata.io/patterns/): major — "Combine, split, delete or change the meaning of data that is referenced by another data resource", patch — "Correct errors in existing data". Here the author declares the part, and there is no tool;
+- [Conventional Commits 1.0.0](https://www.conventionalcommits.org/en/v1.0.0/): "fix: a commit of the type fix patches a bug in your codebase (this correlates with PATCH in Semantic Versioning)". The author declares the part — by the type of the commit, — and the tool does not look at the content.
 
 ### 5.4. YAML 1.2.2
 
-Для R21 — [yaml.org/spec/1.2.2](https://yaml.org/spec/1.2.2/), прочитано 2026-11-04:
-- 5.1: «To ensure JSON compatibility, YAML processors must allow all non-C0 characters inside quoted scalars»;
-- 5.2: «Byte order marks may appear at the start of any document» и «To allow for JSON compatibility, byte order marks are also allowed inside quoted scalars»; `nb-char ::= c-printable - b-char - c-byte-order-mark`;
-- 6.1: «To maintain portability, tab characters must not be used in indentation»;
+For R21 — [yaml.org/spec/1.2.2](https://yaml.org/spec/1.2.2/), read 2026-11-04:
+- 5.1: "To ensure JSON compatibility, YAML processors must allow all non-C0 characters inside quoted scalars";
+- 5.2: "Byte order marks may appear at the start of any document" and "To allow for JSON compatibility, byte order marks are also allowed inside quoted scalars"; `nb-char ::= c-printable - b-char - c-byte-order-mark`;
+- 6.1: "To maintain portability, tab characters must not be used in indentation";
 - 6.3: `s-flow-line-prefix(n) ::= s-indent(n) s-separate-in-line?`;
-- 7.4.2: «the ":" indicator must appear at most 1024 Unicode characters beyond the start of the key»;
-- 8.1.1.1: «It is an error for any of the leading empty lines to contain more spaces than the first non-empty line»;
-- 8.2.2: неявные ключи «are limited to a single line and must not span more than 1024 Unicode characters».
+- 7.4.2: "the ":" indicator must appear at most 1024 Unicode characters beyond the start of the key";
+- 8.1.1.1: "It is an error for any of the leading empty lines to contain more spaces than the first non-empty line";
+- 8.2.2: implicit keys "are limited to a single line and must not span more than 1024 Unicode characters".
 
-### 5.5. Набор тестов YAML
+### 5.5. The YAML test suite
 
-Для R21 — [yaml/yaml-test-suite](https://github.com/yaml/yaml-test-suite), релиз данных `data-2022-01-17`, коммит 5f49729, его же берёт v4 (`YTS-TAG ?= data-2022-01-17` в `GNUmakefile` v4.0.0-rc.9); лицензия — MIT, файл `License` на теге `v2022-01-17`, коммит 6d48918 (API GitHub, прочитано 2026-11-04). В релизе 402 случая, из них 94 с файлом `error`. v4 rc.9 на них, без проходов `internal/yaml`: пропускает пять неверных — 9C9N, QB6E, DK95/01, Y79Y/003 и S98Z, — и отвергает 14 верных, из них 12 — директивы и якоря.
+For R21 — [yaml/yaml-test-suite](https://github.com/yaml/yaml-test-suite), the data release `data-2022-01-17`, commit 5f49729, the one v4 takes too (`YTS-TAG ?= data-2022-01-17` in `GNUmakefile` of v4.0.0-rc.9); the license is MIT, the file `License` at the tag `v2022-01-17`, commit 6d48918 (the GitHub API, read 2026-11-04). The release has 402 cases, 94 of them with a file `error`. v4 rc.9 on them, without the passes of `internal/yaml`: it lets through five invalid ones — 9C9N, QB6E, DK95/01, Y79Y/003 and S98Z, — and rejects 14 valid ones, 12 of them directives and anchors.
 
-### 5.6. Сигнатуры медиафайлов
+### 5.6. The signatures of media files
 
-Для R22 — [WHATWG MIME Sniffing](https://mimesniff.spec.whatwg.org/), прочитано 2026-11-04: 6.2.3 «Signature for MP3 without ID3», «To match an mp3 header», шаг 1 — «If length is less than 4, return false». Так же — `isMp3Header` в `spec/tools/format-check/module.mjs` на v0.9.2: `bytes.length >= 4`.
+For R22 — [WHATWG MIME Sniffing](https://mimesniff.spec.whatwg.org/), read 2026-11-04: 6.2.3 "Signature for MP3 without ID3", "To match an mp3 header", step 1 — "If length is less than 4, return false". The same — `isMp3Header` in `spec/tools/format-check/module.mjs` at v0.9.2: `bytes.length >= 4`.
 
-### 5.7. Unicode нормализации
+### 5.7. Unicode for normalization
 
-Для R27 — прочитано 2026-11-04:
-- Go 1.27.3, `src/unicode/tables.go`: `const Version = "17.0.0"`; `CaseRanges` — «the table describing case mappings for all letters with non-self mappings», и `unicode.ToLower` по нему — простое отображение: проба даёт для U+0130 знак U+0069, один, а U+0085 — White_Space, U+FEFF — нет;
-- `golang.org/x/text` v0.43.0, `unicode/norm`: `tables17.0.0.go` — `//go:build go1.27`, `Version = "17.0.0"`, а `tables15.0.0.go` — `//go:build !go1.27`, `Version = "15.0.0"`; так же `cases` и `rangetable`. `normalize.go`, `decomposeSegment`: «It inserts 0x034f (Grapheme Joiner) when it encounters a sequence of more than 30 non-starters», а `composition.go` — `maxNonStarters = 30`. Проба: `"a"` и 31 знак U+0301 — на выходе `norm.NFKC` есть U+034F;
-- [UAX #15](https://www.unicode.org/reports/tr15/), раздел 13 «Stream-Safe Text Format», версия 18.0.0, ревизия 58, от 2026-08-12: «The Stream-Safe Text Process is the process of producing a Unicode string in Stream-Safe Text Format by processing that string from start to finish, inserting U+034F COMBINING GRAPHEME JOINER (CGJ) within long sequences of non-starters» и «The Stream-Safe Text Process preserves all of the four normalization forms defined in this annex (NFC, NFD, NFKC, NFKD). However, normalization and the Stream-Safe Text Process do not commute»;
-- вторая реализация `spec` — `spec/tools/format-check/verdicts.mjs` на v0.9.2: NFKC — `text.normalize("NFKC")` Node 24.21, ICU 78.3, Unicode 17.0 (R56 spec), без Stream-Safe Text Process; строчная буква — `toLowerCase` с особым случаем U+0130, «as Go's unicode.ToLower».
+For R27 — read 2026-11-04:
+- Go 1.27.3, `src/unicode/tables.go`: `const Version = "17.0.0"`; `CaseRanges` — "the table describing case mappings for all letters with non-self mappings", and `unicode.ToLower` by it is a simple mapping: a probe gives for U+0130 the character U+0069, a single one, and U+0085 is White_Space, U+FEFF is not;
+- `golang.org/x/text` v0.43.0, `unicode/norm`: `tables17.0.0.go` — `//go:build go1.27`, `Version = "17.0.0"`, and `tables15.0.0.go` — `//go:build !go1.27`, `Version = "15.0.0"`; the same for `cases` and `rangetable`. `normalize.go`, `decomposeSegment`: "It inserts 0x034f (Grapheme Joiner) when it encounters a sequence of more than 30 non-starters", and `composition.go` — `maxNonStarters = 30`. A probe: `"a"` and 31 characters U+0301 — the output of `norm.NFKC` has U+034F;
+- [UAX #15](https://www.unicode.org/reports/tr15/), section 13 "Stream-Safe Text Format", version 18.0.0, revision 58, of 2026-08-12: "The Stream-Safe Text Process is the process of producing a Unicode string in Stream-Safe Text Format by processing that string from start to finish, inserting U+034F COMBINING GRAPHEME JOINER (CGJ) within long sequences of non-starters" and "The Stream-Safe Text Process preserves all of the four normalization forms defined in this annex (NFC, NFD, NFKC, NFKD). However, normalization and the Stream-Safe Text Process do not commute";
+- the second implementation of `spec` — `spec/tools/format-check/verdicts.mjs` at v0.9.2: NFKC — `text.normalize("NFKC")` of Node 24.21, ICU 78.3, Unicode 17.0 (R56 spec), without the Stream-Safe Text Process; a lowercase letter — `toLowerCase` with a special case of U+0130, "as Go's unicode.ToLower".
 
-### 5.8. Строки proto3 и ProtoJSON
+### 5.8. Strings in proto3 and ProtoJSON
 
-Для R29 — прочитано 2026-11-05:
-- [Language Guide (proto 3)](https://protobuf.dev/programming-guides/proto3/), таблица «Scalar Value Types», `string`: «A string must always contain UTF-8 encoded or 7-bit ASCII text, and cannot be longer than 2³²»;
-- [ProtoJSON Format](https://protobuf.dev/programming-guides/json/), строка `enum`: «The name of the enum value as specified in proto is used. Parsers accept both enum names and integer values».
+For R29 — read 2026-11-05:
+- [Language Guide (proto 3)](https://protobuf.dev/programming-guides/proto3/), the table "Scalar Value Types", `string`: "A string must always contain UTF-8 encoded or 7-bit ASCII text, and cannot be longer than 2³²";
+- [ProtoJSON Format](https://protobuf.dev/programming-guides/json/), the row `enum`: "The name of the enum value as specified in proto is used. Parsers accept both enum names and integer values".
 
-## 6. Вторая реализация `spec`
+## 6. The second implementation of `spec`
 
-### 6.1. Вторая реализация `spec`
+### 6.1. The second implementation of `spec`
 
-Для R21 — `spec/tools/format-check/yaml.mjs` на v0.9.2, npm `yaml` 2.9.1, проба 2026-11-04 через её `readModuleFile`: `a: x<U+2028>  y` она читает как `"x\u2028  y"`; `%YAML 1.2` — `yaml.no-directives`; BOM после `...` — `yaml.encoding`; `&x.y` — `yaml.no-anchors`; пустой ключ `? ` дважды — `yaml.plain-strings` дважды и `yaml.unique-keys`; «не YAML» — `\U00110000`, управляющий знак в комментарии, неявный ключ длиннее 1024 знаков и недоотступленные строки продолжения. Файл с переводами строки CR она отвергает, `...` в начале потока считает документом, а U+FEFF в простом и блочном скаляре и в комментарии принимает.
+For R21 — `spec/tools/format-check/yaml.mjs` at v0.9.2, npm `yaml` 2.9.1, a probe on 2026-11-04 through its `readModuleFile`: it reads `a: x<U+2028>  y` as `"x\u2028  y"`; `%YAML 1.2` — `yaml.no-directives`; a BOM after `...` — `yaml.encoding`; `&x.y` — `yaml.no-anchors`; the empty key `? ` twice — `yaml.plain-strings` twice and `yaml.unique-keys`; "not YAML" — `\U00110000`, a control character in a comment, an implicit key longer than 1024 characters and under-indented continuation lines. It rejects a file with CR line breaks, counts `...` at the start of a stream as a document, and accepts U+FEFF in a plain and in a block scalar and in a comment.
 
-### 6.2. Вторая реализация `spec` и схемы
+### 6.2. The second implementation of `spec` and the schemas
 
-Для R23 — `spec/tools/format-check/` на v0.9.2, прочитано 2026-11-04: `schemas.mjs`, строки 368–375, — `new Ajv2020({allErrors: true, validateFormats: false, …})` и `ajv.addKeyword("x-open")`; `cases.mjs`, строки 144–156, — пример проходит, если `errors.some((error) => error.keyword === header.keyword && error.instancePath === header.pointer)`, а `expectedError`, строка 828, раскодирует место `decodeURIComponent`; `cases.mjs`, строки 219–239, — `module.file-ids` «read only from a file that passed its schema, so that a file the schema refuses breaks that and nothing more», а правила целого модуля — `if (values.partsOk)`. Открытый вид строит `openview.mjs` своим обходом, а ajv отвечает только, проходит ли подсхема (`passes`, строки 116–121).
+For R23 — `spec/tools/format-check/` at v0.9.2, read 2026-11-04: `schemas.mjs`, lines 368–375, — `new Ajv2020({allErrors: true, validateFormats: false, …})` and `ajv.addKeyword("x-open")`; `cases.mjs`, lines 144–156, — an example passes if `errors.some((error) => error.keyword === header.keyword && error.instancePath === header.pointer)`, and `expectedError`, line 828, decodes the place with `decodeURIComponent`; `cases.mjs`, lines 219–239, — `module.file-ids` "read only from a file that passed its schema, so that a file the schema refuses breaks that and nothing more", and the rules of the whole module — `if (values.partsOk)`. The open view is built by `openview.mjs` with a walk of its own, and ajv answers only whether a subschema passes (`passes`, lines 116–121).
