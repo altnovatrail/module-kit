@@ -169,6 +169,22 @@ For R61 — read 2026-11-16 for T48, from a clone of [altnovatrail/.github](http
 
 `.devcontainer/Dockerfile` of `module-kit`: the stage `toolchain` has `ARG GO_VERSION=1.27.4`, `ARG GO_SHA256_AMD64=…` and `ARG GO_SHA256_ARM64=…` once each, and its one `ENV` sets `PATH` and `GOTOOLCHAIN=local`. `spec/tools/release/verify.mjs` of `spec` v0.18.3: `export const MINIMUM = Object.freeze({ tag: "v0.1.7", … })`, so `release-verify` takes a signature of the shared `release.yml` at v0.1.30 too.
 
+### 3.14. The shared checks v0.1.31
+
+For R62 — read 2026-11-16 for T49, from a clone of [altnovatrail/.github](https://github.com/altnovatrail/.github) in a temporary directory.
+
+`gh release view v0.1.31 -R altnovatrail/.github` — published 2026-11-16, 16:11 UTC, the commit `93c848fb51a10a245968cf730b99cc709a7748bf`, the notes: "Move .github to spec v0.18.4, with the stage toolchain-core (T67)" and "The release and the checks without a browser in the stage toolchain-core (T66)". `gh release verify v0.1.31 -R altnovatrail/.github` — "Resolved tag v0.1.31 to sha1:93c848fb51a10a245968cf730b99cc709a7748bf", "Release v0.1.31 verified!".
+
+`docs/decisions.md` of `.github` v0.1.31, R47: «The checks that start no browser and run no test — "Go / lint", "Go / vuln" and "Go / licenses", the same three of `typescript.yml`, and `documents.yml` — run in `toolchain-core` where the Dockerfile has the stage and its stage `toolchain` holds more than it, and in `toolchain` otherwise, as before: the workflow reads it in the Dockerfile, with no input»; «Where `toolchain` is `FROM toolchain-core` with its `SHELL` alone — `spec`'s and `.github`'s, and every copy of the kind `go`, to which the kind adds no lines (`repo-template/kinds.json` spec) — the two images hold the same files […] So such a caller keeps the one entry and image of R42»; «`test`, `engines`, the targets, `fma-diff`, `arm64` and `rules` keep `toolchain`»; «The inputs and the checks keep their names». Row В40 of its `run/QUESTIONS.md`: a caller's move «has to keep in the core what its release and those checks need […] and put in `toolchain` only what its tests need»; sources 13.8 .github: «`engine`, `learner-model`, `module-kit` and `sim` install the four alone».
+
+`git diff v0.1.30 v0.1.31 -- .github/workflows/`, of the workflows `module-kit` calls:
+- `release.yml` — no input changes; «Work out the version» hands `spec`'s `toolchain.sh build` `TOOLCHAIN_STAGE: toolchain-core`, and «Build the files» builds `docker build --target "$stage"`, `stage=toolchain-core` where the tree's Dockerfile has a line that `grep -Eiq '^[[:space:]]*FROM[[:space:]].*[[:space:]]AS[[:space:]]+toolchain-core[[:space:]]*$'` finds, and `toolchain` otherwise;
+- `go.yml` — the one input is still `same-bits`; the job `toolchain` gets the steps «Toolchain stages», «Core image from the cache», «Core image into the cache» and «Core image for the jobs after this one», and `check` the step «Toolchain stage»; in the job `arm64` the steps «Toolchain image from the cache», «Toolchain image into the cache», «Go caches from the cache», «Go caches» and the mount of `ci-test` are as in v0.1.30, and «Toolchain image» runs `for stage in $STAGES` with `STAGES: toolchain`, the file `novatrail-$stage.tar`;
+- `documents.yml` — the step «Toolchain stages», the same reading of the Dockerfile, and the path and key `novatrail-${{ steps.stages.outputs.core }}.tar` and `${{ steps.stages.outputs.core }}-<OS>-<architecture>-<hash>`, with `TOOLCHAIN_STAGE` to the script;
+- `codeql.yml`, `secrets.yml`, `dco.yml` and `scorecard.yml` — unchanged.
+
+`spec/tools/release/verify.mjs` of `spec` v0.18.4: `export const MINIMUM = Object.freeze({ tag: "v0.1.7", … })`, so `release-verify` takes a signature of the shared `release.yml` at v0.1.31 too.
+
 ## 4. Go libraries
 
 ### 4.1. JCS libraries for Go

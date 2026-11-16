@@ -18,7 +18,7 @@
 
 The NovaTrail module format in code: the one Go library that holds the format's semantics, and the authors' CLI on top of it. It reads an author's module and checks it — the schema, a skill graph without cycles, references, the shared taxonomy, keys by solver and fallback texts by leak check — builds the module package and the module index, and compares a new version of a module with every published one by the format's rules of versions. It also fills seeded task templates and runs their solvers in a Starlark sandbox, and for the platform's service it builds the open view of a task, joins two readings of a learner's work into one observation and runs the check kinds on it, admits a verdict only by the provenance of its key and trusts a package by the chain of digests from a pinned index; signatures it leaves to spec's `release-verify`. It never calls an AI model: the library makes no network calls, the CLI only reads and writes a module's files, and neither holds learners' data.
 
-A component of [NovaTrail](https://github.com/altnovatrail/spec/tree/v0.18.3), a universal open platform for adaptive learning, interactive lessons and AI tutoring. It belongs to stage 1, Format and core, with spec, modules, learner-model, engine and sim; together with modules it tries the module format v0 on two unlike subjects at once.
+A component of [NovaTrail](https://github.com/altnovatrail/spec/tree/v0.18.4), a universal open platform for adaptive learning, interactive lessons and AI tutoring. It belongs to stage 1, Format and core, with spec, modules, learner-model, engine and sim; together with modules it tries the module format v0 on two unlike subjects at once.
 
 ## Status
 
@@ -53,7 +53,7 @@ The documents and the work plan are in English; the bodies of the plan's tasks a
 - [RUN.md](RUN.md) — the work plan, in epics.
 - `run/` — the plan's other tables: [the epics for later](run/EPICS.md), [the open questions](run/QUESTIONS.md) and [the technical debt](run/DEBT.md).
 
-The working rules, for people and coding agents alike, are in [CLAUDE.md](CLAUDE.md) and [AGENTS.md](AGENTS.md). The platform's shared vocabulary, formats, contracts and decisions are in [spec](https://github.com/altnovatrail/spec/tree/v0.18.3), checked out here as a git submodule at `v0.18.3`: clone this repository with `git clone --recurse-submodules`.
+The working rules, for people and coding agents alike, are in [CLAUDE.md](CLAUDE.md) and [AGENTS.md](AGENTS.md). The platform's shared vocabulary, formats, contracts and decisions are in [spec](https://github.com/altnovatrail/spec/tree/v0.18.4), checked out here as a git submodule at `v0.18.4`: clone this repository with `git clone --recurse-submodules`.
 
 ## License
 

@@ -113,3 +113,7 @@ What R59 changed in CI, measured before and after, by the pattern of measurement
   | CI, the run from its start to its end | 141–235 s | 187 s |
 
   Without the caches of Go, the jobs of v0.1.30 are within the spread of those of v0.1.24: what the run gains is CodeQL's, whose Go now comes from the archive in 2 s in place of a build of the stage. The time of the builds and tests with the caches of Go is what the first pull request after the first push to `main` on v0.1.30 shows; locally a filled cache took `release-files` from 78 s to 3 s.
+
+### 3.4. The stage `toolchain-core` and the shared checks v0.1.31, T49, 2026-11-16
+
+- **Locally.** In the devcontainer of `spec` v0.18.3, whose tools are those of the core of v0.18.4: `just ci-lint`, `ci-test`, `ci-vuln` and `ci-licenses` pass on `spec` v0.18.4, and `just release-files v0.0.0-ci` builds `dist/`. One run each.
