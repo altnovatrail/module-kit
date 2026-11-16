@@ -1063,7 +1063,8 @@ func kindsWithoutCase(cases []vector) []string {
 // they run in parallel, but for the verdicts of a predicate, which run one at a time and before the
 // rest, since a parallel subtest waits for its parent's function to return: two of them take the
 // predicate to its million steps, which under -race takes a good part of the sandbox's clock of a
-// second, and cases running beside them pushed one past it (sandbox.Predicate; R59).
+// second, and cases running beside them pushed one past it (sandbox.Predicate; R59). ci-test runs
+// them in a go test of their own, after the rest, so that no other package runs beside them (R60).
 func TestVectors(t *testing.T) {
 	cases, err := inventory(spec.Format, contracts.Vectors)
 	if err != nil {
