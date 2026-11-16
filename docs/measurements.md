@@ -62,3 +62,22 @@ How `module-kit` keeps what R143 spec and R145 spec saved, by the pattern of mea
 | Project | Window, UTC | Sessions | Calls, main / subagents | Context of a call, k, main / subagents | Compactions | Cost at API prices |
 |---|---|---|---|---|---|---|
 | `-workspaces-module-kit` — epic E3: T45, T46, measured in T46 before its pull request | 2026-11-16T00:00 … 2026-11-16T03:26 | 2 | 134 / 47 | 120.7 / 60.1 | 0 | $9.15 |
+
+## 3. The speed of CI
+
+What R59 changed in CI, measured before and after, by the pattern of measurements 3.1 spec.
+
+### 3.1. The parallel builds and tests of T47, 2026-11-16
+
+- **Locally, not as a comparison of times.** The devcontainer on a host of 20 cores whose load average was 63–79 while it ran, from the other containers on it: one build of `release-files v0.0.0-ci` with an empty `GOCACHE` took 52.6–81.1 s one build after another and 58.5–81.0 s at once on four cores (`taskset -c 0-3`), 68.6–92.8 s and 32.7–33.7 s on twenty, two runs each — too unsteady to give a gain. Both gave `SHA256SUMS` with the same sha256, `e9b0a52b8d56…`.
+- **The clock of a predicate.** `go test -race ./internal/vectors` with `t.Parallel()` in every case of `TestVectors` failed `format/vectors/verdicts/predicate/steps-below-the-limit.yaml`: "unchecked, and the vector gives correct", in 1.04 s, over the clock of a second of `sandbox.Predicate`. Alone, under `-race`, the case took 0.72 s and `steps-reach-the-limit.yaml` 0.66 s, the two other predicate cases 0.15 s. With the cases of `verdicts` one at a time, `just ci-test` passed six times of six on four cores and eight of nine on twenty; the one failure, on twenty, was run with its output thrown away, and its cause is not known. With only `verdicts/predicate/` one at a time, as R59 has it after the review, `go test -race` of `internal/vectors` and `module` passed three times of three on four cores, and CI twice. On four cores, with `TestChecksTheFormat` of `module` running its parallel subtests beside it, `steps-below-the-limit.yaml` took 0.31–0.42 s and `steps-reach-the-limit.yaml` 0.24–0.26 s, five runs each, built as `ci-test` builds them, with `-covermode=atomic -coverpkg=./...`. That these are shorter than the 0.72 s alone is not explained by the runs themselves, taken minutes apart on the same busy host: the host's load is the likely difference, and the margin on a runner of CI is not measured (Д20 in [run/DEBT.md](../run/DEBT.md)).
+- **In CI.** The steps of the two changed jobs, from `actions/runs/<id>/jobs`, and the times of the two longest packages, from the log of "Go / test"; read 2026-11-16. Before — the eleven last successful runs of CI before T47, of `main` and of pull requests, 2026-11-12 … 2026-11-16, all of the same Go and the same tests but for T47's; after — the two runs of T47's pull request #79, 326a1be and 3f80b07. Standard runners `ubuntu-24.04`, four cores.
+
+  | | Before, 11 runs: range, median | After, 2 runs |
+  |---|---|---|
+  | "Binaries / build", the step «Release files and samples» | 44–72 s, 52 s | 47 s, 70 s |
+  | "Go / test", the step `ci-test` | 65–95 s, 94 s | 65 s, 66 s |
+  | `internal/vectors` in `ci-test` | 28.8–44.2 s, 43.0 s | 22.1 s, 22.2 s |
+  | `module` in `ci-test` | 40.4–57.2 s, 55.2 s | 37.5 s, 37.9 s |
+
+  The runs before fall in two groups, the same runner being faster or slower: `internal/vectors` 28.8–32.5 s or 43.0–44.2 s. The two packages after are below either group; `ci-test` is at the faster group's floor, since it also compiles the module under `-race` and waits for `module`, whose `FuzzCheck` stays a test of one goroutine. The builds at once gave no gain that the spread shows: four cores are what one `go build` already keeps busy.

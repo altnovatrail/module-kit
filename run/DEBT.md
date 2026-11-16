@@ -7,8 +7,9 @@ Table 4 of [RUN.md](../RUN.md): what was put off on purpose, its risk, when to r
 
 ## Table 4. Technical debt
 
-Numbers are not reused: next — Д20.
+Numbers are not reused: next — Д21.
 
 | ID | Debt | From | Risk while open | When to return |
 |---|---|---|---|---|
 | Д10 | Starlark memory in the process is unbounded (R11): a builtin takes hundreds of megabytes in a few steps, and neither steps nor the clock stop it | T03 | A mistake in an official module's task can bring `api`'s process down out of memory, and a solver a run of the CLI in CI of `modules` | At stage 4, when third parties write modules. `spec` answered В12 by an amendment to О-9: a third-party module's Starlark then runs in a process of its own with a memory limit, and how is for tasks of `api` and `module-registry` (R17). Until then the tasks and solvers of official modules go through the review of `modules` |
+| Д20 | The verdicts of a predicate at its million steps, `verdicts/predicate/steps-*`, run under `-race` within the clock of a second of `sandbox.Predicate` by a margin measured only locally: 0.31–0.42 s on four cores beside the parallel tests of `module` (measurements 3.1). One run of `just ci-test` of fifteen failed with its output thrown away, its cause not found | T47 | `ci-test` fails at random on a slower or busier runner: "unchecked" where the vector gives "correct" | When CI fails so, or at T48: the log of the failed case. Then, by a decision: the cases of the clock in a test of their own run after the others (`-run`), or `ci-test` with `-p` lower — what the check proves stays (R59) |

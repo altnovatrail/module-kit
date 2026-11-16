@@ -217,7 +217,9 @@ func partFiles(t testing.TB) map[string][2]string {
 // but the rule it is a case of: each of them breaks that rule and nothing else, its files are valid
 // against their schemas, and a valid example and a module that is no case break nothing at all. An
 // invalid example breaks its schema alone (format/README.md, sections 8 and 9). That a case breaks
-// its rule, and an invalid example the keyword it names, the test of vectors checks.
+// its rule, and an invalid example the keyword it names, the test of vectors checks. Each module
+// and each file is a subtest of its own, named by its path in spec.Format, and they run in
+// parallel: they share nothing but spec.Format, which is read-only (R59).
 func TestChecksTheFormat(t *testing.T) {
 	// beside says whether a breach is other than the one its case may have: of its rule, or, for an
 	// invalid example, of its schema.
@@ -228,40 +230,46 @@ func TestChecksTheFormat(t *testing.T) {
 		return rule == "" || b.Rule != rule || b.Keyword != ""
 	}
 	folders := moduleFolders(t)
-	for _, name := range slices.Sorted(maps.Keys(folders)) {
-		folder, err := fs.Sub(spec.Format, name)
-		if err != nil {
-			t.Fatal(err)
-		}
-		report, err := Check(context.Background(), folder)
-		if err != nil {
-			t.Fatalf("%s: %v", name, err)
-		}
-		for _, b := range report.Breaches {
-			if beside(b, folders[name], false) {
-				t.Errorf("%s: %s", name, b)
-			}
-		}
-	}
 	files := partFiles(t)
-	for _, name := range slices.Sorted(maps.Keys(files)) {
-		data, err := fs.ReadFile(spec.Format, name)
-		if err != nil {
-			t.Fatal(err)
-		}
-		report, err := CheckFile(files[name][0], data)
-		if err != nil {
-			t.Fatalf("%s: %v", name, err)
-		}
-		invalid := strings.HasPrefix(name, "examples/") && strings.Contains(name, "/invalid/")
-		for _, b := range report.Breaches {
-			if beside(b, files[name][1], invalid) {
-				t.Errorf("%s: %s", name, b)
-			}
-		}
-		if invalid && len(report.Breaches) == 0 {
-			t.Errorf("%s: an invalid example breaks nothing", name)
-		}
-	}
 	t.Logf("%d modules and %d files of a part", len(folders), len(files))
+	for _, name := range slices.Sorted(maps.Keys(folders)) {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+			folder, err := fs.Sub(spec.Format, name)
+			if err != nil {
+				t.Fatal(err)
+			}
+			report, err := Check(context.Background(), folder)
+			if err != nil {
+				t.Fatal(err)
+			}
+			for _, b := range report.Breaches {
+				if beside(b, folders[name], false) {
+					t.Error(b)
+				}
+			}
+		})
+	}
+	for _, name := range slices.Sorted(maps.Keys(files)) {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+			data, err := fs.ReadFile(spec.Format, name)
+			if err != nil {
+				t.Fatal(err)
+			}
+			report, err := CheckFile(files[name][0], data)
+			if err != nil {
+				t.Fatal(err)
+			}
+			invalid := strings.HasPrefix(name, "examples/") && strings.Contains(name, "/invalid/")
+			for _, b := range report.Breaches {
+				if beside(b, files[name][1], invalid) {
+					t.Error(b)
+				}
+			}
+			if invalid && len(report.Breaches) == 0 {
+				t.Error("an invalid example breaks nothing")
+			}
+		})
+	}
 }
