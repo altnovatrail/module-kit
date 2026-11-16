@@ -39,26 +39,31 @@ release-files version:
     mkdir dist
     # The six builds run at once over the one build cache, which go build shares safely between
     # processes: each target compiles packages of its own, and one build after another leaves cores
-    # idle in each link. A binary is the same as one built alone. Each build's status is waited for,
-    # and a failure names its platform (R59).
+    # idle in each link. A binary is the same as one built alone. Each build writes what it says to
+    # a log of its own, outside dist/, which a failure prints under its platform; a recipe that stops
+    # before the builds end stops them too (R59).
+    logs="$(mktemp -d)"
     pids=()
+    trap 'kill "${pids[@]}" 2> /dev/null || true; rm -rf "$logs"' EXIT
     platforms=(linux/amd64 linux/arm64 darwin/amd64 darwin/arm64 windows/amd64 windows/arm64)
-    for platform in "${platforms[@]}"; do
-        os="${platform%/*}"
-        arch="${platform#*/}"
+    for i in "${!platforms[@]}"; do
+        os="${platforms[$i]%/*}"
+        arch="${platforms[$i]#*/}"
         name="module-kit_${version}_${os}_${arch}"
         if [ "$os" = windows ]; then
             name="${name}.exe"
         fi
         # No VCS stamp, so that a build from a checkout matches one from the release's tree.
         CGO_ENABLED=0 GOOS="$os" GOARCH="$arch" go build -trimpath -buildvcs=false \
-            -ldflags "-s -w -X main.version=${version}" -o "dist/${name}" ./cmd/module-kit &
+            -ldflags "-s -w -X main.version=${version}" -o "dist/${name}" ./cmd/module-kit \
+            > "$logs/$i" 2>&1 &
         pids+=("$!")
     done
     failed=0
     for i in "${!pids[@]}"; do
         if ! wait "${pids[$i]}"; then
-            echo "release-files: the build for ${platforms[$i]} failed" >&2
+            echo "release-files: the build for ${platforms[$i]} failed:" >&2
+            cat "$logs/$i" >&2
             failed=1
         fi
     done
