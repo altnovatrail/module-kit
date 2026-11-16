@@ -81,3 +81,11 @@ What R59 changed in CI, measured before and after, by the pattern of measurement
   | `module` in `ci-test` | 40.4–57.2 s, 55.2 s | 37.5 s, 37.9 s |
 
   The runs before fall in two groups, the same runner being faster or slower: `internal/vectors` 28.8–32.5 s or 43.0–44.2 s. The two packages after are below either group; `ci-test` is at the faster group's floor, since it also compiles the module under `-race` and waits for `module`, whose `FuzzCheck` stays a test of one goroutine. The builds at once gave no gain that the spread shows: four cores are what one `go build` already keeps busy.
+
+### 3.2. The tests at the clock of a predicate apart, T50, 2026-11-16
+
+- **Locally.** The devcontainer on a host of 20 cores whose load average was 74–109 while it ran, from the other containers on it; every run on four cores, `taskset -c 0-3`, with the flags of `ci-test` and `-v`, eight runs each.
+  - Before, as R59 has it — one `go test ./...`: 93–135 s, all green; the last six ran beside another `go test` on four other cores. `steps-below-the-limit.yaml` took 0.33–0.87 s of the clock of a second, `steps-reach-the-limit.yaml` 0.27–0.86 s, `TestConcurrentEval` of `internal/sandbox` 0.40–0.82 s and `TestCompile` 0.29–0.68 s.
+  - The first layout of T50, the verdicts of a predicate alone after the rest, on the other four cores beside those runs: one run of three failed in `TestConcurrentEval` — 32 evaluations at once, each "sandbox: the clock stopped the evaluation", in 1.17 s. So the predicate cases were not the only tests at the clock, and the layout of R60 takes `internal/sandbox` and `verdict` out too.
+  - After, as R60 has it, alone on the four cores: the rest 81–91 s, `internal/sandbox` and `verdict` one at a time 4 s, the verdicts of a predicate 2 s; all green. `steps-below-the-limit.yaml` took 0.26–0.32 s, `steps-reach-the-limit.yaml` 0.22–0.26 s, `TestConcurrentEval` 0.23–0.39 s and `TestCompile` 0.24–0.31 s.
+  - The joined profile gives the same coverage as one run, function by function: `go tool cover -func` 98.1% for both, and no line of the two lists differs.

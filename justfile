@@ -198,15 +198,50 @@ ci-lint:
         exit 1
     fi
 
+# What ci-test runs after the rest (R60): the packages whose tests take Starlark to the clock of a
+# second of sandbox.Predicate — a predicate to its million steps, 32 evaluations at once —, and the
+# cases of TestVectors that take a predicate there. Each element of a -run pattern is one element
+# of a test's name, and a case's name is its path in spec. A package whose tests come to do so
+# too goes into CLOCK_PACKAGES.
+CLOCK_PACKAGES := "./internal/sandbox ./verdict"
+PREDICATE_CASES := '^TestVectors$/^format$/^vectors$/^verdicts$/^predicate$'
+
 # The coverage goes into coverage/go.out, one Go profile, which the job coverage of .github's shared
 # go.yml sends to Codecov, as "Go / coverage" (R48 spec; R18). Go counts statements and leaves the
 # tests themselves out; a package that no test runs is in it too, its statements at zero. Every
 # test counts for every package of the module, -coverpkg=./...: the test of vectors in
 # internal/vectors runs the code of the other packages, and its lines count where they are (R20).
+# The tests at the clock run after the rest, one package at a time with nothing beside them: under
+# -race a Starlark step is several times slower, and packages running beside them pushed one past
+# the clock (R11, R60). The run of PREDICATE_CASES prints each case with its time, the margin on
+# this machine, and fails if it ran none, so that a folder spec renames cannot drop them unseen.
+# The profiles of the later runs join coverage/go.out without their mode line, as go test joins
+# the profiles of its packages.
 # Run the tests, with the race detector, and write their coverage.
 ci-test:
+    #!/usr/bin/env bash
+    set -euo pipefail
     mkdir -p coverage
-    go test -race -count=1 -covermode=atomic -coverpkg=./... -coverprofile=coverage/go.out ./...
+    later=$(mktemp -d)
+    trap 'rm -rf "$later"' EXIT
+    flags=(-race -count=1 -covermode=atomic -coverpkg=./...)
+    clock=$(go list {{ CLOCK_PACKAGES }})
+    rest=$(go list ./... | grep -vxF "$clock")
+    mapfile -t rest <<<"$rest"
+    echo "ci-test: the module but for the tests at the clock of a predicate"
+    go test "${flags[@]}" -skip '{{ PREDICATE_CASES }}' -coverprofile=coverage/go.out "${rest[@]}"
+    echo "ci-test: {{ CLOCK_PACKAGES }}, one at a time"
+    go test "${flags[@]}" -p 1 -coverprofile="$later/clock.out" {{ CLOCK_PACKAGES }}
+    echo "ci-test: the verdicts of a predicate of TestVectors"
+    go test "${flags[@]}" -run '{{ PREDICATE_CASES }}' -v -coverprofile="$later/predicate.out" \
+        ./internal/vectors | tee "$later/predicate.log"
+    if ! grep -q -- '--- PASS: TestVectors/' "$later/predicate.log"; then
+        echo "ci-test: PREDICATE_CASES ran no case of TestVectors (R60)" >&2
+        exit 1
+    fi
+    for profile in "$later/clock.out" "$later/predicate.out"; do
+        tail -n +2 "$profile" >> coverage/go.out
+    done
 
 # Fail on a known vulnerability in code this module reaches.
 ci-vuln:
