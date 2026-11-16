@@ -1059,7 +1059,11 @@ func kindsWithoutCase(cases []vector) []string {
 // contracts.Vectors, passes, and none is skipped: the first release of the line 0.2 passes them
 // all, and so does each release after it, so a vector a new tag of spec brings comes with its code.
 // A file of a kind the test does not know fails it, and so does a kind left with no case (R16;
-// R20; R42).
+// R20; R42). The cases share nothing but the read-only file systems and tables of the test, so
+// they run in parallel, but for the kind verdicts, whose cases run one at a time and before the
+// rest, since a parallel subtest waits for its parent's function to return: two of them take the
+// predicate to its million steps, which under -race takes most of the sandbox's clock of a second,
+// and cases running beside them would push it past the clock (sandbox.Predicate; R59).
 func TestVectors(t *testing.T) {
 	cases, err := inventory(spec.Format, contracts.Vectors)
 	if err != nil {
@@ -1070,6 +1074,9 @@ func TestVectors(t *testing.T) {
 	}
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
+			if c.kind != "verdicts" {
+				t.Parallel()
+			}
 			run, ok := runners[c.kind]
 			if !ok {
 				t.Fatalf("no runner passes the kind %s", c.kind)

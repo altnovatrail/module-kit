@@ -44,6 +44,45 @@ A task starts with «Выполни задачу T01 из RUN.md» in a new sess
 - **A done epic** goes to `docs/plan/<epic>.md` (R59 canvas-api): bodies and gist sentences are there already (rule 9); move its description and table of tasks verbatim; questions and debt stay in `run/`; until the next epic, table 1 reads «Current epic — none» and names the last done epic. Measure the epic's sessions — `just -f spec/justfile tokens-report --since <first day of the epic> --row` — as a row of [docs/measurements.md](docs/measurements.md), after measurements 1.9 spec; a new analysis by the threshold of R145 spec.
 - Never read an archive whole: find a task by heading — `grep -n '^#### T03\.' RUN.md docs/plan/*.md`; from another repository — «T03 module-kit». Task numbers are global, never reused, and taken free at the moment of writing.
 
-## Table 1. Current epic — none
+## Table 1. Current epic — E4. Скорость CI: строка 7.18
 
-Last done epic: E3, [docs/plan/E3.md](docs/plan/E3.md). Next — the author picks it from [run/EPICS.md](run/EPICS.md), empty now, and splits it into tasks (Epics, «Next epic»).
+| Статус | ID | Задача | Кто | План | Зависит от |
+|---|---|---|---|---|---|
+| [x] | T47 | Скорость CI: строка 7.18 — тело в [docs/plan/E4.md](docs/plan/E4.md) | Claude | — | — |
+| [ ] | T48 | CI — на релизе `.github` строки 7.13 | Claude | — | T47; релиз `.github` строки 7.13 |
+| [ ] | T49 | Переход на тег `spec` строки 7.14 — стадия `toolchain-core` | Claude | — | T48; тег `spec` строки 7.14 |
+
+## Epic E4. Скорость CI: строка 7.18
+
+**Почему эпик такой.** Строка 7.18 COORDINATION.md spec — скорость CI `module-kit` по замерам measurements 3.1 spec; слово автора 2026-11-16 — ускорение CI сейчас, в прогоне оркестратора T171 spec (R76 spec, шестая поправка 2026-11-15; R156 spec). Текущего эпика не было, а задача не из эпика — первая задача следующего (R56): T47 начала эпик E4 и сделала то, что не ждёт ни релиза `.github`, ни тега `spec`; T48 и T49 ждут их, и оркестратор запустит каждую, когда выйдет то, чего она ждёт. T49 — последняя: она меняет `.devcontainer/` (R59).
+
+**Не входит:** что проверки доказывают — те же случаи, `-race`, покрытие и байты бинарников; код библиотеки и CLI.
+
+#### T48. CI — на релизе `.github` строки 7.13
+
+- **Цель:** CI `module-kit` вызывает общие проверки `.github` на релизе строки 7.13 COORDINATION.md spec — кеш Go томом в контейнер, один путь и тег файла образа `toolchain`, сверка файлов релиза и подписи параллельно, — и «Binaries / build» берёт то же, что первый job `go.yml` этого релиза; что проверки доказывают, не меняется.
+- **Почему:** строка 7.18 COORDINATION.md spec — «переход на `.github` строки 7.13», зависит от 7.13 «для кеша»; T47 сделала остальное (R59). Время Go / test и сборок уходит в компиляцию с пустым `GOCACHE` (measurements 3.1 spec).
+- **Зависит от:** релиза `.github` строки 7.13: оркестратор запустит задачу, когда он выйдет.
+- **Сделать:**
+  1. `gh release verify <тег> -R altnovatrail/.github`; что релиз меняет во входах и шагах `go.yml`, `documents.yml`, `release.yml`, `codeql.yml` против v0.1.24 — запись в [docs/sources.md](docs/sources.md), как запись 3.12.
+  2. Все `uses:` `.github/workflows/` — на SHA его тега. Если Dependabot уже открыл pull request группы `shared-workflows` — взять его изменения в эту ветку и назвать его в отчёте.
+  3. «Binaries / build» — шаги «Toolchain image…» по первому job нового `go.yml`, байт в байт (R58): новый путь и тег файла образа, без сохранения из pull request; кеш Go — тот же том и ключ, если `go.yml` даёт его шагами, которые можно скопировать; `awk` шага «Cache steps as in the shared go.yml» — если границы шагов изменились.
+  4. Если этот релиз запускает проверки в стадии `toolchain-core`, которой в `.devcontainer/Dockerfile` ещё нет, — взять последний релиз строки 7.13 без неё; если такого нет — T48 и T49 идут одной задачей, T49: она переводит и тег `spec`, и `uses:`, а T48 — `[-]` с этой причиной.
+  5. Решение журнала и поправка к R58; [.claude/rules/ci.md](.claude/rules/ci.md) и architecture 3.1 — где они называют версию или шаги.
+- **Не делать:** `.devcontainer/` — это T49.
+- **Как проверить:** проверки тронутых частей — правила [go](.claude/rules/go.md) и [ci](.claude/rules/ci.md); CI pull request зелёный, и в логе — попадание или промах кеша Go и образа; время изменённых job до и после — в отчёте, по прогонам `main` и pull request; `just -f spec/justfile docs-check-repo`; `/code-review high`, один круг.
+- **Разделы:** строки 7.13 и 7.18 COORDINATION.md spec; measurements 3.1 spec; R76 spec, R156 spec; R58, R59.
+
+#### T49. Переход на тег `spec` строки 7.14 — стадия `toolchain-core`
+
+- **Цель:** `module-kit` на теге `spec` строки 7.14 (T166 spec): `.devcontainer/Dockerfile` со стадией `toolchain-core`, и проверки без браузера и Go-тестов — lint, vuln, licenses, документы — и релиз идут в ней, как их запускает релиз `.github` строки 7.13.
+- **Почему:** строка 7.13 COORDINATION.md spec — «с тегом `spec` строки 7.14 — релиз и проверки без браузера и Go-тестов (lint, vuln, licenses, документы) в стадии `toolchain-core`»; переход меняет `.devcontainer/`, и его делает последняя задача эпика (текст T47, шаг 2; R59).
+- **Зависит от:** T48 и тега `spec` строки 7.14; если стадию `toolchain-core` вызывает релиз `.github` новее, чем взяла T48, — и его.
+- **Сделать:**
+  1. Как T45: `gh release verify <тег> -R altnovatrail/spec`; подмодуль `spec/` и модули Go `spec`, `spec/contracts` — на тег; тег — везде, где репозиторий его называет; что теги после v0.18.3 несут этому репозиторию — `git -C spec log --oneline v0.18.3..<тег>`, `grep -n '`module-kit`' spec/run/DEBT.md`, карточка architecture 3.7 spec.
+  2. `.devcontainer/` — байт в байт заготовка `just new-repo-draft module-kit go 3.7 <тег>` на клоне `spec` во временной папке (R51, R54).
+  3. Если стадию вызывает релиз `.github` новее T48 — его `uses:` и копия шагов «Binaries / build», как в T48; шаг «Release files and samples» — в той же стадии, что `release.yml`, раз он собирает как релиз (R41).
+  4. Решение журнала о переходе, поправки к записям, которые он меняет; строки таблиц 3 и 4, которые тег закрывает.
+- **Мой шаг:** после мержа — «Rebuild Container»: `.devcontainer/` изменился; оркестратор ждёт этого перед следующей задачей.
+- **Как проверить:** проверки частей go и ci; `just -f spec/justfile docs-check-repo` на новом теге; CI pull request зелёный, «Devcontainer» на amd64 и arm64 — тоже; время изменённых job до и после — в отчёте; `/code-review high`, один круг.
+- **Разделы:** строки 7.13, 7.14 и 7.18 COORDINATION.md spec; T166 spec; R76 spec, R156 spec; R57, R59.

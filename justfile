@@ -37,7 +37,13 @@ release-files version:
     unset GOAMD64 GOARM64 GOOS GOARCH
     rm -rf dist
     mkdir dist
-    for platform in linux/amd64 linux/arm64 darwin/amd64 darwin/arm64 windows/amd64 windows/arm64; do
+    # The six builds run at once over the one build cache, which go build shares safely between
+    # processes: each target compiles packages of its own, and one build after another leaves cores
+    # idle in each link. A binary is the same as one built alone. Each build's status is waited for,
+    # and a failure names its platform (R59).
+    pids=()
+    platforms=(linux/amd64 linux/arm64 darwin/amd64 darwin/arm64 windows/amd64 windows/arm64)
+    for platform in "${platforms[@]}"; do
         os="${platform%/*}"
         arch="${platform#*/}"
         name="module-kit_${version}_${os}_${arch}"
@@ -46,8 +52,19 @@ release-files version:
         fi
         # No VCS stamp, so that a build from a checkout matches one from the release's tree.
         CGO_ENABLED=0 GOOS="$os" GOARCH="$arch" go build -trimpath -buildvcs=false \
-            -ldflags "-s -w -X main.version=${version}" -o "dist/${name}" ./cmd/module-kit
+            -ldflags "-s -w -X main.version=${version}" -o "dist/${name}" ./cmd/module-kit &
+        pids+=("$!")
     done
+    failed=0
+    for i in "${!pids[@]}"; do
+        if ! wait "${pids[$i]}"; then
+            echo "release-files: the build for ${platforms[$i]} failed" >&2
+            failed=1
+        fi
+    done
+    if [ "$failed" -ne 0 ]; then
+        exit 1
+    fi
     # Apache-2.0 asks a copy of itself to go with the work, and Go's BSD license asks a binary
     # that holds its standard library to reproduce its notice; so do the licenses of the modules
     # the binaries are built from, which release-licenses names (R38).
