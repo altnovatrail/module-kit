@@ -19,17 +19,17 @@ concurrency:
 jobs:
   secrets:
     name: Secrets
-    uses: altnovatrail/.github/.github/workflows/secrets.yml@8311cbfc01082e9b196c0af8d7b49192115cc84c # v0.1.30
+    uses: altnovatrail/.github/.github/workflows/secrets.yml@93c848fb51a10a245968cf730b99cc709a7748bf # v0.1.31
 
   # A pull request's commits are what it checks; a push to main has been checked as one.
   dco:
     name: DCO
     if: github.event_name == 'pull_request'
-    uses: altnovatrail/.github/.github/workflows/dco.yml@8311cbfc01082e9b196c0af8d7b49192115cc84c # v0.1.30
+    uses: altnovatrail/.github/.github/workflows/dco.yml@93c848fb51a10a245968cf730b99cc709a7748bf # v0.1.31
 
   documents:
     name: Documents
-    uses: altnovatrail/.github/.github/workflows/documents.yml@8311cbfc01082e9b196c0af8d7b49192115cc84c # v0.1.30
+    uses: altnovatrail/.github/.github/workflows/documents.yml@93c848fb51a10a245968cf730b99cc709a7748bf # v0.1.31
 
   # The repository's Go code, by its own ci- recipes in its toolchain stage, and the coverage of
   # its tests, which the shared workflow sends to Codecov (R16 .github). id-token: write is for its
@@ -40,7 +40,7 @@ jobs:
     permissions:
       contents: read
       id-token: write
-    uses: altnovatrail/.github/.github/workflows/go.yml@8311cbfc01082e9b196c0af8d7b49192115cc84c # v0.1.30
+    uses: altnovatrail/.github/.github/workflows/go.yml@93c848fb51a10a245968cf730b99cc709a7748bf # v0.1.31
 
   # The six binaries of a release, each run on a runner of its own system (Д6 in RUN.md; R41 in
   # docs/decisions.md). The build job builds them as release.yml does, by release-files in the
@@ -105,8 +105,33 @@ jobs:
           fi
           exit "$failed"
 
+      # The shared release.yml builds the release's files in the stage toolchain-core, and this job
+      # in toolchain, from the entry that go.yml fills (R47 .github). The two hold the same files
+      # while toolchain is FROM toolchain-core with its SHELL alone, as in every copy of the kind
+      # go: the step reads the Dockerfile as the step «Toolchain stages» of go.yml does, and fails
+      # once toolchain holds more than the core, so that this job then builds in the core (R62 in
+      # docs/decisions.md).
+      - name: The stage of the release
+        run: |
+          if awk '
+              { sub(/\r$/, "") }
+              /^[[:space:]]*(#|$)/ { next }
+              toupper($1) == "FROM" {
+                  stage = (NF >= 4 && toupper($(NF - 1)) == "AS") ? tolower($NF) : ""
+                  if (stage == "toolchain-core") core = 1
+                  if (stage == "toolchain" && tolower($(NF - 2)) != "toolchain-core") adds = 1
+                  next
+              }
+              stage == "toolchain" && toupper($1) != "SHELL" { adds = 1 }
+              END { exit !(core && adds) }
+          ' .devcontainer/Dockerfile; then
+              echo "::error::The stage toolchain of .devcontainer/Dockerfile holds more than toolchain-core, in which release.yml builds the release's files: build «Release files and samples» in toolchain-core (R47 .github, R62)."
+              exit 1
+          fi
+          echo "The release's files: toolchain holds what toolchain-core does, and this job builds in it."
+
       # The toolchain stage from the cache of GitHub Actions, by the steps of the job arm64 of the
-      # shared go.yml of v0.1.30 (R42 .github; the 2026-11-09 amendment to R31 in spec; R58, R61 in
+      # shared go.yml of v0.1.31 (R42 .github; the 2026-11-09 amendment to R31 in spec; R58, R61 in
       # docs/decisions.md): the same file, image, path and key as every job of go.yml and
       # documents.yml, so the entry is the one they fill and read, and the image is built from the
       # Dockerfile only on a miss. Only a push to main writes and saves the file, and a pull request
@@ -121,26 +146,39 @@ jobs:
       - name: Toolchain image
         env:
           SAVE: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+          STAGES: toolchain
         run: |
-          tar=$RUNNER_TEMP/novatrail-toolchain.tar
-          restored=false
-          if [ -f "$tar" ]; then
-              restored=true
-              if docker load --quiet --input "$tar" && docker image inspect novatrail-toolchain > /dev/null; then
+          # Each stage STAGES names, from its own file, novatrail-<stage>.tar, and as the one image
+          # novatrail-toolchain, as spec's toolchain.sh names either stage (R47): the job toolchain
+          # builds and saves one, then the other, and every other job takes one.
+          for stage in $STAGES; do
+              case $stage in
+                  toolchain | toolchain-core) ;;
+                  *)
+                      echo "::error::STAGES names ${stage}, which is neither toolchain nor toolchain-core."
+                      exit 1
+                      ;;
+              esac
+              tar=$RUNNER_TEMP/novatrail-$stage.tar
+              restored=false
+              if [ -f "$tar" ]; then
+                  restored=true
+                  if docker load --quiet --input "$tar" && docker image inspect novatrail-toolchain > /dev/null; then
+                      rm -f -- "$tar"
+                      echo "Toolchain image: ${stage} loaded from its file."
+                      continue
+                  fi
+                  echo "::warning::The file of the ${stage} stage does not load as the image novatrail-toolchain: the image is built from the Dockerfile. A file from the cache does so on every run until its entry is deleted (gh cache delete) or the Dockerfile changes."
                   rm -f -- "$tar"
-                  echo "Toolchain image: loaded from its file."
-                  exit 0
               fi
-              echo "::warning::The file of the toolchain stage does not load as the image novatrail-toolchain: the image is built from the Dockerfile. A file from the cache does so on every run until its entry is deleted (gh cache delete) or the Dockerfile changes."
-              rm -f -- "$tar"
-          fi
-          docker build --target toolchain --tag novatrail-toolchain - < .devcontainer/Dockerfile
-          # Only a job that saves writes the file. A file that came has its entry or its artifact
-          # already, which no save replaces.
-          if [ "$SAVE" = true ] && [ "$restored" = false ] && ! docker save --output "$tar" novatrail-toolchain; then
-              echo "::warning::The image of the toolchain stage could not be saved: the jobs after this one and the next run build it again."
-              rm -f -- "$tar"
-          fi
+              docker build --target "$stage" --tag novatrail-toolchain - < .devcontainer/Dockerfile
+              # Only a job that saves writes the file. A file that came has its entry or its artifact
+              # already, which no save replaces.
+              if [ "$SAVE" = true ] && [ "$restored" = false ] && ! docker save --output "$tar" novatrail-toolchain; then
+                  echo "::warning::The image of the ${stage} stage could not be saved: the jobs after this one and the next run build it again."
+                  rm -f -- "$tar"
+              fi
+          done
 
       - name: Toolchain image into the cache
         if: steps.toolchain.outputs.cache-hit != 'true' && github.event_name == 'push' && github.ref == 'refs/heads/main'
