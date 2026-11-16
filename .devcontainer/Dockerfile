@@ -108,9 +108,10 @@ ENV PATH="/usr/local/node/bin:/usr/local/go/bin:/home/vscode/.local/bin:${PATH}"
 
 # -- toolchain: the core, plus what the repository's tests need ---------------
 #
-# spec's tests need nothing the core lacks, so here the stage adds nothing. A copy's kind adds its
-# lines at the end of this stage (repo-template/kinds.json): what they install, a release never
-# builds.
+# What the repository's tests need beyond the core: in spec, nothing; in a copy, the lines its kind
+# adds at the end of this stage, if it adds any. What they install, a release never builds, and
+# neither do the checks that run no browser: what the release and those ci- recipes call belongs in
+# toolchain-core.
 
 FROM toolchain-core AS toolchain
 
@@ -169,7 +170,7 @@ RUN arch="$(dpkg --print-architecture)"; \
     rm -rf "$workdir"
 
 # gopls is the language server that the Go extension in devcontainer.json starts. It is built
-# with the Go of the toolchain stage, and only here: the checks do not need it. This step and
+# with the Go that toolchain-core installs, and only here: the checks do not need it. This step and
 # gopls/ beside this file are the go kind's of spec's repo-template, and a move to a tag of spec
 # brings them with the rest of the devcontainer (R102 spec).
 ARG GOPLS_VERSION=0.24.0
