@@ -90,3 +90,26 @@ What R59 changed in CI, measured before and after, by the pattern of measurement
   - After, as R60 has it, alone on the four cores: the rest 81–91 s, `internal/sandbox` and `verdict` one at a time 4 s, the verdicts of a predicate 2 s; all green. `steps-below-the-limit.yaml` took 0.26–0.32 s, `steps-reach-the-limit.yaml` 0.22–0.26 s, `TestConcurrentEval` 0.23–0.39 s and `TestCompile` 0.24–0.31 s.
   - The joined profile gives the same coverage as one run, function by function: `go tool cover -func` 98.1% for both, and no line of the two lists differs.
 - **In CI.** The run of T50's pull request #80, a8a3231, read 2026-11-16 from `actions/jobs/<id>` and the log of "Go / test", a standard runner `ubuntu-24.04` of four cores: the step `ci-test` 71 s, against 65 s and 66 s on T47's pull request (measurements 3.1); in it, `internal/vectors` 21.3 s and `module` 37.3 s in the first run, `internal/sandbox` 1.5 s and `verdict` 1.2 s one at a time, and the verdicts of a predicate 1.4 s, `steps-below-the-limit.yaml` 0.15 s and `steps-reach-the-limit.yaml` 0.12 s of the clock of a second. One run: the price of the two later runs is some 5 s, within the spread of measurements 3.1.
+
+### 3.3. The shared checks v0.1.30, T48, 2026-11-16
+
+- **Locally.** The devcontainer on a host of 20 cores whose load average was 72–92 while it ran, from the other containers on it: `just release-files v0.0.0-ci` with `GOMODCACHE` and `GOCACHE` in an empty folder took 78 s, and again over the folder it had filled 3 s; both gave `SHA256SUMS` with the same sha256, `e9b0a52b8d56…`, that of measurements 3.1, and `just binaries-samples` over the same folder wrote its four samples. One run each.
+- **In CI.** The jobs and their steps, from `actions/runs/<id>/jobs`, read 2026-11-16, standard runners `ubuntu-24.04`. Before — the four last runs of CI before T48, on `.github` v0.1.24: `main` 1e9c772 and eebc3e2, and T50's pull request #80, a8a3231 and 645319a; for "CodeQL / analyze (go)", the runs of `main` 1e9c772 and eebc3e2 and of 645319a. After — the first run of T48's pull request #81, 9950769. In it the image of `toolchain` came from the cache — «Cache restored from key: toolchain-Linux-X64-f85d62b0…», «Toolchain image: loaded from its file.» — in every job, from the entry of `main` that `documents.yml` of v0.1.24 had saved under the same path, 409,094,492 B of 2026-11-16 03:41 UTC (`gh cache list`); the caches of Go missed in every job — «Cache not found for input keys: go-Linux-X64-binaries-…», «Go caches: none in the cache; the job starts with empty ones.» —, since only a push to `main` saves them and none has run on v0.1.30 yet.
+
+  | | Before, 4 runs: range | After, 1 run |
+  |---|---|---|
+  | "Binaries / build", the job | 77–98 s | 88 s |
+  | — the step «Toolchain image» | 12–18 s | 12 s |
+  | — the step «Release files and samples» | 47–64 s | 47 s |
+  | "Go / test", the job | 103–141 s | 100 s |
+  | — the step `ci-test` | 71–103 s | 72 s |
+  | "Go / lint", the job | 55–133 s | 43 s |
+  | "Go / vuln", the job | 48–62 s | 44 s |
+  | "Go / licenses", the job | 43–68 s | 67 s |
+  | "Documents / docs-check-repo", the job | 43–61 s | 49 s |
+  | "Go / toolchain", the job, new | — | 10 s |
+  | "CodeQL / analyze (go)", the job, 3 runs before | 76–87 s | 50 s |
+  | — the step «Go of the caller's toolchain stage» | 23–29 s | 2 s |
+  | CI, the run from its start to its end | 141–235 s | 187 s |
+
+  Without the caches of Go, the jobs of v0.1.30 are within the spread of those of v0.1.24: what the run gains is CodeQL's, whose Go now comes from the archive in 2 s in place of a build of the stage. The time of the builds and tests with the caches of Go is what the first pull request after the first push to `main` on v0.1.30 shows; locally a filled cache took `release-files` from 78 s to 3 s.
