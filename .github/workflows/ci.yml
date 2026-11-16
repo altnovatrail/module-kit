@@ -44,8 +44,8 @@ jobs:
 
   # The six binaries of a release, each run on a runner of its own system (Д6 in RUN.md; R41 in
   # docs/decisions.md). The build job builds them as release.yml does, by release-files in the
-  # toolchain stage, with the samples from spec's Go module, and runs the binary of linux/amd64
-  # first: what it builds is the reference that every other runner's must equal, byte for byte.
+  # toolchain stage, which holds what the release's toolchain-core does (R62), with the samples
+  # from spec's Go module, and runs the binary of linux/amd64 first: what it builds is the reference that every other runner's must equal, byte for byte.
   binaries-build:
     name: Binaries / build
     runs-on: ubuntu-24.04
@@ -91,6 +91,16 @@ jobs:
                   failed=1
               fi
           done
+          # The program of the awk of «The stage of the release» against that of the step «Toolchain
+          # stages» of the job toolchain, which reads the Dockerfile for the stage of the checks as
+          # release.yml reads it for the release (R62).
+          program() { sed -n "/awk '\$/,/^ *' \.devcontainer\/Dockerfile/p" | sed '1d;$d;s/^ *//'; }
+          step "$RUNNER_TEMP/go.yml" toolchain "Toolchain stages" | program > "$RUNNER_TEMP/shared-awk"
+          step .github/workflows/ci.yml binaries-build "The stage of the release" | program > "$RUNNER_TEMP/own-awk"
+          if [ ! -s "$RUNNER_TEMP/shared-awk" ] || ! diff "$RUNNER_TEMP/shared-awk" "$RUNNER_TEMP/own-awk"; then
+              echo "::error::The awk of «The stage of the release» of the job Binaries / build is not that of «Toolchain stages» of the job toolchain of the shared go.yml at ${sha}: copy it from there (R62)."
+              failed=1
+          fi
           # The lines of the recipe's docker run in arm64 that mount the Go caches and point Go into them.
           step "$RUNNER_TEMP/go.yml" arm64 ci-test | grep -F /go-cache > "$RUNNER_TEMP/shared-mount" || true
           step .github/workflows/ci.yml binaries-build "Release files and samples" > "$RUNNER_TEMP/own-run"
@@ -108,12 +118,14 @@ jobs:
       # The shared release.yml builds the release's files in the stage toolchain-core, and this job
       # in toolchain, from the entry that go.yml fills (R47 .github). The two hold the same files
       # while toolchain is FROM toolchain-core with its SHELL alone, as in every copy of the kind
-      # go: the step reads the Dockerfile as the step «Toolchain stages» of go.yml does, and fails
-      # once toolchain holds more than the core, so that this job then builds in the core (R62 in
-      # docs/decisions.md).
+      # go: the step reads the Dockerfile by the awk of the step «Toolchain stages» of the job
+      # toolchain of go.yml, which «Cache steps as in the shared go.yml» holds to it, and fails once
+      # toolchain holds more than the core, so that this job then builds in the core, or when the
+      # Dockerfile cannot be read (R62 in docs/decisions.md).
       - name: The stage of the release
         run: |
-          if awk '
+          status=0
+          awk '
               { sub(/\r$/, "") }
               /^[[:space:]]*(#|$)/ { next }
               toupper($1) == "FROM" {
@@ -124,11 +136,18 @@ jobs:
               }
               stage == "toolchain" && toupper($1) != "SHELL" { adds = 1 }
               END { exit !(core && adds) }
-          ' .devcontainer/Dockerfile; then
-              echo "::error::The stage toolchain of .devcontainer/Dockerfile holds more than toolchain-core, in which release.yml builds the release's files: build «Release files and samples» in toolchain-core (R47 .github, R62)."
-              exit 1
-          fi
-          echo "The release's files: toolchain holds what toolchain-core does, and this job builds in it."
+          ' .devcontainer/Dockerfile || status=$?
+          case $status in
+              0)
+                  echo "::error::The stage toolchain of .devcontainer/Dockerfile holds more than toolchain-core, in which release.yml builds the release's files: build «Release files and samples» in toolchain-core (R47 .github, R62)."
+                  exit 1
+                  ;;
+              1) echo "The release's files: toolchain holds what toolchain-core does, and this job builds in it." ;;
+              *)
+                  echo "::error::awk gave ${status} on .devcontainer/Dockerfile, which the step could not read for its stages (R62)."
+                  exit 1
+                  ;;
+          esac
 
       # The toolchain stage from the cache of GitHub Actions, by the steps of the job arm64 of the
       # shared go.yml of v0.1.31 (R42 .github; the 2026-11-09 amendment to R31 in spec; R58, R61 in
@@ -149,8 +168,8 @@ jobs:
           STAGES: toolchain
         run: |
           # Each stage STAGES names, from its own file, novatrail-<stage>.tar, and as the one image
-          # novatrail-toolchain, as spec's toolchain.sh names either stage (R47): the job toolchain
-          # builds and saves one, then the other, and every other job takes one.
+          # novatrail-toolchain, as spec's toolchain.sh names either stage (R47 .github): here, as
+          # in the job arm64, toolchain alone.
           for stage in $STAGES; do
               case $stage in
                   toolchain | toolchain-core) ;;

@@ -44,31 +44,6 @@ A task starts with «Выполни задачу T01 из RUN.md» in a new sess
 - **A done epic** goes to `docs/plan/<epic>.md` (R59 canvas-api): bodies and gist sentences are there already (rule 9); move its description and table of tasks verbatim; questions and debt stay in `run/`; until the next epic, table 1 reads «Current epic — none» and names the last done epic. Measure the epic's sessions — `just -f spec/justfile tokens-report --since <first day of the epic> --row` — as a row of [docs/measurements.md](docs/measurements.md), after measurements 1.9 spec; a new analysis by the threshold of R145 spec.
 - Never read an archive whole: find a task by heading — `grep -n '^#### T03\.' RUN.md docs/plan/*.md`; from another repository — «T03 module-kit». Task numbers are global, never reused, and taken free at the moment of writing.
 
-## Table 1. Current epic — E4. Скорость CI: строка 7.18
+## Table 1. Current epic — none
 
-| Статус | ID | Задача | Кто | План | Зависит от |
-|---|---|---|---|---|---|
-| [x] | T47 | Скорость CI: строка 7.18 — тело в [docs/plan/E4.md](docs/plan/E4.md) | Claude | — | — |
-| [x] | T50 | Д20: тесты на часах предиката — после остальных в `ci-test` — тело в [docs/plan/E4.md](docs/plan/E4.md) | Claude | — | — |
-| [x] | T48 | CI — на релизе `.github` строки 7.13 — тело в [docs/plan/E4.md](docs/plan/E4.md) | Claude | — | T47; релиз `.github` строки 7.13 |
-| [ ] | T49 | Переход на тег `spec` строки 7.14 — стадия `toolchain-core` | Claude | — | T48; тег `spec` строки 7.14; релиз `.github` с T66 `.github` |
-
-## Epic E4. Скорость CI: строка 7.18
-
-**Почему эпик такой.** Строка 7.18 COORDINATION.md spec — скорость CI `module-kit` по замерам measurements 3.1 spec; слово автора 2026-11-16 — ускорение CI сейчас, в прогоне оркестратора T171 spec (R76 spec, шестая поправка 2026-11-15; R156 spec). Текущего эпика не было, а задача не из эпика — первая задача следующего (R56): T47 начала эпик E4 и сделала то, что не ждёт ни релиза `.github`, ни тега `spec`; T48 и T49 ждут их, и оркестратор запустит каждую, когда выйдет то, чего она ждёт. T49 — последняя: она меняет `.devcontainer/` (R59). T50 — не из строки: ночная работа по слову автора 2026-11-16 закрыла Д20, долг T47, — задача вне эпика стоит в таблице текущего (R56, R60).
-
-**Не входит:** что проверки доказывают — те же случаи, `-race`, покрытие и байты бинарников; код библиотеки и CLI.
-
-#### T49. Переход на тег `spec` строки 7.14 — стадия `toolchain-core`
-
-- **Цель:** `module-kit` на теге `spec` строки 7.14 (T166 spec): `.devcontainer/Dockerfile` со стадией `toolchain-core`, и проверки без браузера и Go-тестов — lint, vuln, licenses, документы — и релиз идут в ней, как их запускает релиз `.github` строки 7.13.
-- **Почему:** строка 7.13 COORDINATION.md spec — «с тегом `spec` строки 7.14 — релиз и проверки без браузера и Go-тестов (lint, vuln, licenses, документы) в стадии `toolchain-core`»; переход меняет `.devcontainer/`, и его делает последняя задача эпика (текст T47, шаг 2; R59).
-- **Зависит от:** T48 и тега `spec` строки 7.14; и релиза `.github` с T66 `.github` — стадия `toolchain-core` в релизе и проверках, последняя часть строки 7.13: T48 взяла v0.1.30 без неё, потому что T66 нужен переход `.github` на тег `spec` строки 7.14, а он меняет `.devcontainer/`, которую ночью не меняют (T171 spec; R61).
-- **Сделать:**
-  1. Как T45: `gh release verify <тег> -R altnovatrail/spec`; подмодуль `spec/` и модули Go `spec`, `spec/contracts` — на тег; тег — везде, где репозиторий его называет; что теги после v0.18.3 несут этому репозиторию — `git -C spec log --oneline v0.18.3..<тег>`, `grep -n '`module-kit`' spec/run/DEBT.md`, карточка architecture 3.7 spec.
-  2. `.devcontainer/` — байт в байт заготовка `just new-repo-draft module-kit go 3.7 <тег>` на клоне `spec` во временной папке (R51, R54).
-  3. Релиз `.github` с T66 — его `uses:` и копия шагов «Binaries / build» из job `arm64` его `go.yml`, как в T48 (R61): если T66 меняет путь или имя файла образа, шаг «Cache steps as in the shared go.yml» потребует новых шагов; шаг «Release files and samples» — в той же стадии, что `release.yml`, раз он собирает как релиз (R41). Что T66 даёт вызывающему и какие у неё входы — RUN.md, `docs/plan/` и журнал решений `.github` на её теге.
-  4. Решение журнала о переходе, поправки к записям, которые он меняет; строки таблиц 3 и 4, которые тег закрывает.
-- **Мой шаг:** после мержа — «Rebuild Container»: `.devcontainer/` изменился; оркестратор ждёт этого перед следующей задачей.
-- **Как проверить:** проверки частей go и ci; `just -f spec/justfile docs-check-repo` на новом теге; CI pull request зелёный, «Devcontainer» на amd64 и arm64 — тоже; время изменённых job до и после — в отчёте; `/code-review high`, один круг.
-- **Разделы:** строки 7.13, 7.14 и 7.18 COORDINATION.md spec; T166 spec; R76 spec, R156 spec; R57, R59, R61.
+Last done epic: E4, [docs/plan/E4.md](docs/plan/E4.md). Next — the author picks it from [run/EPICS.md](run/EPICS.md), empty now, and splits it into tasks (Epics, «Next epic»).

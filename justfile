@@ -1,5 +1,7 @@
 # module-kit's own recipes. The ci- ones are what .github's shared go.yml runs, one job each, in
-# the toolchain stage of .devcontainer/Dockerfile (R16 .github; R04): their names are the same in
+# the toolchain stage of .devcontainer/Dockerfile, and ci-lint, ci-vuln and ci-licenses in
+# toolchain-core once toolchain holds more than it (R16 .github, R47 .github; R04): so a tool they
+# run goes into the core, and one only the tests need, into toolchain. Their names are the same in
 # every Go repository of NovaTrail, and what they run is this repository's own.
 
 # The tools only the checks need, at exact versions. Each is a Go program run straight from its
@@ -17,9 +19,9 @@ default:
 build:
     go build -o bin/module-kit ./cmd/module-kit
 
-# What .github's shared release.yml runs to build a release, in the toolchain stage of the commit
-# it releases, from that commit's tree with no git in it, and then signs every file (R07; R18
-# .github). dist/ is made afresh and holds plain files alone: the CLI for each platform below,
+# What .github's shared release.yml runs to build a release, in the toolchain-core stage of the
+# commit it releases, from that commit's tree with no git in it, and then signs every file (R07;
+# R18 .github, R47 .github). dist/ is made afresh and holds plain files alone: the CLI for each platform below,
 # built without cgo and named module-kit_<version>_<os>_<arch>, the licenses a binary has to come
 # with, and SHA256SUMS over the rest.
 # Build a release's files into dist/, for a version such as v0.1.0.
