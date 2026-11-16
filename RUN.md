@@ -44,27 +44,6 @@ A task starts with «Выполни задачу T01 из RUN.md» in a new sess
 - **A done epic** goes to `docs/plan/<epic>.md` (R59 canvas-api): bodies and gist sentences are there already (rule 9); move its description and table of tasks verbatim; questions and debt stay in `run/`; until the next epic, table 1 reads «Current epic — none» and names the last done epic. Measure the epic's sessions — `just -f spec/justfile tokens-report --since <first day of the epic> --row` — as a row of [docs/measurements.md](docs/measurements.md), after measurements 1.9 spec; a new analysis by the threshold of R145 spec.
 - Never read an archive whole: find a task by heading — `grep -n '^#### T03\.' RUN.md docs/plan/*.md`; from another repository — «T03 module-kit». Task numbers are global, never reused, and taken free at the moment of writing.
 
-## Table 1. Current epic — E3. Переход на `spec` v0.18.3
+## Table 1. Current epic — none
 
-| Статус | ID | Задача | Кто | План | Зависит от |
-|---|---|---|---|---|---|
-| [x] | T45 | Переход на тег `spec` v0.18.3 — тело в [docs/plan/E3.md](docs/plan/E3.md) | Claude | — | — |
-| [ ] | T46 | CI — на последнем релизе `.github`, v0.1.24 | Claude | — | T45 |
-
-## Epic E3. Переход на `spec` v0.18.3
-
-**Почему эпик такой.** Волна 0 прогона «Сделай эпик E14» оркестратора `spec` (R156 spec; слово автора 2026-11-16) переводит каждый репозиторий на последний тег `spec`. Текущего эпика у `module-kit` не было, а задача не из эпика — первая задача следующего (R56): T45 начала эпик E3, и в нём же следующая задача, которую назвал её текст, — CI на последнем релизе `.github` (R57).
-
-**Не входит:** код библиотеки и CLI — формат тот же, 0.4.
-
-#### T46. CI — на последнем релизе `.github`, v0.1.24
-
-- **Цель:** CI `module-kit` вызывает общие проверки `.github` на его последнем релизе, v0.1.24, с образом стадии `toolchain` из кеша GitHub Actions, а Dependabot поднимает все ссылки на `.github` одним пул-реквестом.
-- **Почему:** Д146 spec — пока `uses:` стоят на v0.1.15, каждое задание собирает образ из сети, и сбой nodejs.org, GitHub или снимка Ubuntu роняет проверки; Д88 spec — без группы каждая ссылка на `.github` — свой пул-реквест Dependabot. Так же сделала T68 `sim`.
-- **Сделать:**
-  1. `gh release verify v0.1.24 -R altnovatrail/.github`; что релизы v0.1.16–v0.1.24 меняют во входах и шагах `go.yml`, `documents.yml`, `release.yml`, `codeql.yml`, `scorecard.yml`, `secrets.yml`, `dco.yml` — запись в [docs/sources.md](docs/sources.md).
-  2. Все `uses:` `.github/workflows/` — с `89d3cee # v0.1.15` на SHA тега v0.1.24 (`fab102d`, проверить); задание `ci.yml`, которое собирает образ само, «Binaries / build», — брать его из того же кеша, по шагам `go.yml` v0.1.24, если ключ и путь совпадают.
-  3. `.github/dependabot.yml` — группа `shared-workflows`, `patterns: ["altnovatrail/.github/*"]`, под `github-actions` (Д88 spec).
-  4. Решение журнала; [.claude/rules/ci.md](.claude/rules/ci.md) и architecture 3.1 — где они называют версию или шаги; строки таблицы 4, которые задача закрывает.
-- **Как проверить:** CI пул-реквеста зелёный — задания «Go», «Documents», «Binaries»; в логе задания — попадание или промах кеша образа; `just -f spec/justfile docs-check-repo` — зелёный; `/code-review high`, один круг.
-- **Разделы:** Д146 spec, Д88 spec; R31 spec и его поправка 2026-11-09; R18, R41, R44; T68 `sim`.
+Last done epic: E3, [docs/plan/E3.md](docs/plan/E3.md). Next — the author picks it from [run/EPICS.md](run/EPICS.md), empty now, and splits it into tasks (Epics, «Next epic»).

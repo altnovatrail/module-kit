@@ -2,7 +2,7 @@
 
 > The results of the measurements of `module-kit`: what was measured, how, on what, and what numbers came out. The documents that describe how things are built — [architecture.md](architecture.md) and the decision log — refer here as to a section: `measurements 1.1` (R143 spec). An external fact a measurement rests on is a record of [sources.md](sources.md).
 >
-> Until T43 these measurements stood as items in [architecture.md](architecture.md), section 4, among the sources. The measurement of the tokens spent by an epic's sessions goes here when the epic is archived, as a row of a table on the model of measurements 1.9 spec (RUN.md, «Как устроен план: эпики»).
+> Until T43 these measurements stood as items in [architecture.md](architecture.md), section 4, among the sources. The measurement of the tokens spent by an epic's sessions goes here when the epic is archived, as a row of a table on the model of measurements 1.9 spec (RUN.md, Epics; section 2).
 
 ## 1. Code and libraries
 
@@ -50,3 +50,15 @@ For R21 — 2026-11-04, in the session's folder, over 2302 YAML files of `spec.F
 ### 1.3. The size of `spec.Format`
 
 For R23 — `find spec/format -type f -printf '%s\n'` at v0.9.2, 2026-11-04: `format/` — 5,682,239 bytes in 2821 files, of them `vectors/versions/` — 4,072,532, and `schemas/` — 111,654 in 20; `admission/` — 66,210. `spec.go` at the same tag — `//go:embed all:format all:admission` into one `embed.FS`, from which `fs.Sub` gives `Format` and `Admission`.
+
+## 2. Claude Code sessions
+
+How `module-kit` keeps what R143 spec and R145 spec saved, by the pattern of measurements 1.9 spec (R55): budgets of size in `docs-check` on every pull request, by the block `repository` of `spec/tools/docs-check/budgets.json` and [docs-budgets.json](../docs-budgets.json), and a measurement of the sessions at each epic's archive (RUN.md, Epics).
+
+### 2.1. The measurement of sessions
+
+`just -f spec/justfile tokens-report --since … --row` prints one row of the table below, for the epic's window, at its archive. The first row is epic E3, the first archived after RUN.md, Epics, named the measurement; E1 and E2 were archived before it.
+
+| Project | Window, UTC | Sessions | Calls, main / subagents | Context of a call, k, main / subagents | Compactions | Cost at API prices |
+|---|---|---|---|---|---|---|
+| `-workspaces-module-kit` — epic E3: T45, T46, measured in T46 before its pull request | 2026-11-16T00:00 … 2026-11-16T03:26 | 2 | 134 / 47 | 120.7 / 60.1 | 0 | $9.15 |
