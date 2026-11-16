@@ -1,5 +1,6 @@
 # NovaTrail's shared checks (R03 .github), pinned to a release of .github by SHA with its version
-# beside it; Dependabot moves both. The repository's own jobs go beside them.
+# beside it; Dependabot moves both. The repository's own jobs go beside them; the steps of the cache
+# that "Binaries / build" copies from the shared go.yml move by hand, and the job checks them.
 name: CI
 
 on:
@@ -18,17 +19,17 @@ concurrency:
 jobs:
   secrets:
     name: Secrets
-    uses: altnovatrail/.github/.github/workflows/secrets.yml@89d3ceee0b9977b3334488a4133d084d76474e0d # v0.1.15
+    uses: altnovatrail/.github/.github/workflows/secrets.yml@fab102d8bbb4659575e107ee488e072aaaa71821 # v0.1.24
 
   # A pull request's commits are what it checks; a push to main has been checked as one.
   dco:
     name: DCO
     if: github.event_name == 'pull_request'
-    uses: altnovatrail/.github/.github/workflows/dco.yml@89d3ceee0b9977b3334488a4133d084d76474e0d # v0.1.15
+    uses: altnovatrail/.github/.github/workflows/dco.yml@fab102d8bbb4659575e107ee488e072aaaa71821 # v0.1.24
 
   documents:
     name: Documents
-    uses: altnovatrail/.github/.github/workflows/documents.yml@89d3ceee0b9977b3334488a4133d084d76474e0d # v0.1.15
+    uses: altnovatrail/.github/.github/workflows/documents.yml@fab102d8bbb4659575e107ee488e072aaaa71821 # v0.1.24
 
   # The repository's Go code, by its own ci- recipes in its toolchain stage, and the coverage of
   # its tests, which the shared workflow sends to Codecov (R16 .github). id-token: write is for its
@@ -39,7 +40,7 @@ jobs:
     permissions:
       contents: read
       id-token: write
-    uses: altnovatrail/.github/.github/workflows/go.yml@89d3ceee0b9977b3334488a4133d084d76474e0d # v0.1.15
+    uses: altnovatrail/.github/.github/workflows/go.yml@fab102d8bbb4659575e107ee488e072aaaa71821 # v0.1.24
 
   # The six binaries of a release, each run on a runner of its own system (Д6 in RUN.md; R41 in
   # docs/decisions.md). The build job builds them as release.yml does, by release-files in the
@@ -54,8 +55,62 @@ jobs:
         with:
           persist-credentials: false
 
+      # The three steps of the cache below are a copy of the first job of the shared go.yml, and
+      # Dependabot moves the SHA of go.yml, not the copy: this step holds the copy to the go.yml of
+      # the SHA the job "Go" pins, so that a move of .github that changed them fails here, and the
+      # pull request takes the new steps by hand (R58 in docs/decisions.md).
+      - name: Cache steps as in the shared go.yml
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          steps() { awk '/^      - name: Toolchain image from the cache$/ { f = 1 } f { print } f && /cache-primary-key/ { exit }' "$1"; }
+          sha=$(grep -o 'altnovatrail/\.github/\.github/workflows/go\.yml@[0-9a-f]\{40\}' .github/workflows/ci.yml | cut -d@ -f2)
+          gh api -H 'Accept: application/vnd.github.raw' \
+              "repos/altnovatrail/.github/contents/.github/workflows/go.yml?ref=$sha" > "$RUNNER_TEMP/go.yml"
+          if [ -z "$(steps "$RUNNER_TEMP/go.yml")" ] || ! diff <(steps "$RUNNER_TEMP/go.yml") <(steps .github/workflows/ci.yml); then
+              echo "::error::The steps «Toolchain image…» of the job Binaries / build are not those of the shared go.yml at ${sha}: copy them from its first job, or record why not (R58)."
+              exit 1
+          fi
+
+      # The toolchain stage from the cache of GitHub Actions, by the steps of the shared go.yml of
+      # v0.1.24 (R36 .github; the 2026-11-09 amendment to R31 in spec; R58 in docs/decisions.md):
+      # the same file, path and key, so the entry is the one go.yml's jobs fill and read, and the
+      # image is built from the Dockerfile only on a miss. The entry of main is filled by CI on a
+      # push to main, and a pull request reads it.
+      - name: Toolchain image from the cache
+        id: toolchain
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ${{ runner.temp }}/toolchain.tar
+          key: toolchain-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('.devcontainer/Dockerfile') }}
+
       - name: Toolchain image
-        run: docker build --target toolchain --tag toolchain - < .devcontainer/Dockerfile
+        run: |
+          tar=$RUNNER_TEMP/toolchain.tar
+          restored=false
+          if [ -f "$tar" ]; then
+              restored=true
+              if docker load --quiet --input "$tar" && docker image inspect toolchain > /dev/null; then
+                  rm -f -- "$tar"
+                  echo "Toolchain image: loaded from the cache."
+                  exit 0
+              fi
+              echo "::warning::The cache's file of the toolchain stage does not load as the image toolchain: the image is built from the Dockerfile, on every run until the entry is deleted (gh cache delete) or the Dockerfile changes."
+              rm -f -- "$tar"
+          fi
+          docker build --target toolchain --tag toolchain - < .devcontainer/Dockerfile
+          # A file the cache gave has its entry already, which no save replaces.
+          if [ "$restored" = false ] && ! docker save --output "$tar" toolchain; then
+              echo "::warning::The image of the toolchain stage could not be saved for the cache: the next run builds it again."
+              rm -f -- "$tar"
+          fi
+
+      - name: Toolchain image into the cache
+        if: steps.toolchain.outputs.cache-hit != 'true'
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ${{ runner.temp }}/toolchain.tar
+          key: ${{ steps.toolchain.outputs.cache-primary-key }}
 
       # As go.yml runs a recipe: as the runner's user, with its home in /tmp, and nothing of the
       # step's environment.
