@@ -20,4 +20,4 @@ The shared `go.yml` of `.github` runs four recipes of the justfile, one job each
 
 The tools of the checks run by `go run` at exact versions and are raised by hand (R04). spec's Go modules and go.starlark.net are not raised by Dependabot: the modules move with a tag of spec, and the interpreter's version is the format's, which a test holds (R20, R28). The code's copies of the format's schemas, `internal/schema/schemas/`, and of `page.yaml`, `page/page.yaml`, are held to spec's by their tests (R23, R52). A new third-party module carries a license compatible with Apache-2.0 (RULES.md, Licenses) and a record of where it was read in `docs/sources.md`; a file the code embeds by `//go:embed` goes into the `paths` of the release (`.claude/rules/ci.md`).
 
-A session gets gopls's diagnostics after each edit of a Go file, through the plugin `gopls-lsp` that `.claude/settings.json` turns on (R55); they do not stand in for the four checks.
+A session gets gopls's diagnostics after each edit of a Go file, through the plugin `gopls-lsp` that `CLAUDE_CODE_PLUGIN_DIRS` of `.devcontainer/devcontainer.json` loads (R55, R57); they do not stand in for the four checks.
