@@ -59,33 +59,51 @@ jobs:
       # the shared go.yml, the one job there that takes the image on its own rather than from the
       # job toolchain, which a job of the caller cannot need; only the check in the key of the Go
       # caches is this job's, binaries. Dependabot moves the SHA of go.yml, not the copy: this step
-      # holds the copy, comments and blank lines aside, to the go.yml of the SHA the job "Go" pins,
-      # so that a move of .github that changed them fails here, and the pull request takes the new
-      # steps by hand (R58, R61 in docs/decisions.md).
+      # holds each of the six steps, comments and blank lines aside, and the mount of the Go caches
+      # in «Release files and samples» to the go.yml of the SHA the job "Go" pins, so that a move
+      # of .github that changed them fails here, and the pull request takes the new steps by hand
+      # (R58, R61 in docs/decisions.md).
       - name: Cache steps as in the shared go.yml
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          # The steps of job $2 of file $1 from «Toolchain image from the cache» to the end of «Go caches».
-          steps() {
-              awk -v job="  $2:" '
+          # Step $3 of job $2 of file $1, from its name to the next step or the end of the job,
+          # without comments and blank lines.
+          step() {
+              awk -v job="  $2:" -v name="      - name: $3" '
                   $0 == job { j = 1; next }
                   j && /^  [^ #]/ { exit }
-                  j && $0 == "      - name: Toolchain image from the cache" { f = 1 }
-                  f && $0 == "      - name: Go caches" { g = 1 }
-                  g && $0 == "" { exit }
+                  f && /^      [-#]/ { exit }
+                  j && $0 == name { f = 1 }
                   f && $0 != "" && !/^[[:space:]]*#/ { print }
               ' "$1"
           }
           sha=$(grep -o 'altnovatrail/\.github/\.github/workflows/go\.yml@[0-9a-f]\{40\}' .github/workflows/ci.yml | cut -d@ -f2)
           gh api -H 'Accept: application/vnd.github.raw' \
               "repos/altnovatrail/.github/contents/.github/workflows/go.yml?ref=$sha" > "$RUNNER_TEMP/go.yml"
-          steps "$RUNNER_TEMP/go.yml" arm64 | sed 's/^\( *key: go-.*\)-arm64-/\1-binaries-/' > "$RUNNER_TEMP/shared-steps"
-          steps .github/workflows/ci.yml binaries-build > "$RUNNER_TEMP/own-steps"
-          if ! grep -qx '      - name: Go caches' "$RUNNER_TEMP/shared-steps" || ! diff "$RUNNER_TEMP/shared-steps" "$RUNNER_TEMP/own-steps"; then
-              echo "::error::The steps «Toolchain image…» and «Go caches…» of the job Binaries / build are not those of the job arm64 of the shared go.yml at ${sha}: copy them from it, or record why not (R58, R61)."
-              exit 1
+          failed=0
+          for name in "Toolchain image from the cache" "Toolchain image" "Toolchain image into the cache" \
+              "Go caches from the cache" "Go caches" "Go caches into the cache"; do
+              step "$RUNNER_TEMP/go.yml" arm64 "$name" | sed 's/^\( *key: go-.*\)-arm64-/\1-binaries-/' > "$RUNNER_TEMP/shared-step"
+              step .github/workflows/ci.yml binaries-build "$name" > "$RUNNER_TEMP/own-step"
+              if [ ! -s "$RUNNER_TEMP/shared-step" ] || ! diff "$RUNNER_TEMP/shared-step" "$RUNNER_TEMP/own-step"; then
+                  echo "::error::The step «${name}» of the job Binaries / build is not that of the job arm64 of the shared go.yml at ${sha}: copy it from there, or record why not (R58, R61)."
+                  failed=1
+              fi
+          done
+          # The lines of the recipe's docker run in arm64 that mount the Go caches and point Go into them.
+          step "$RUNNER_TEMP/go.yml" arm64 ci-test | grep -F /go-cache > "$RUNNER_TEMP/shared-mount" || true
+          step .github/workflows/ci.yml binaries-build "Release files and samples" > "$RUNNER_TEMP/own-run"
+          mounted=$([ -s "$RUNNER_TEMP/shared-mount" ] && echo true || echo false)
+          while IFS= read -r line; do
+              grep -Fxq -- "$line" "$RUNNER_TEMP/own-run" || mounted=false
+          done < "$RUNNER_TEMP/shared-mount"
+          if [ "$mounted" = false ]; then
+              cat "$RUNNER_TEMP/shared-mount"
+              echo "::error::«Release files and samples» of the job Binaries / build does not mount the Go caches as the step ci-test of the job arm64 of the shared go.yml at ${sha}, by the lines above: take them from there (R61)."
+              failed=1
           fi
+          exit "$failed"
 
       # The toolchain stage from the cache of GitHub Actions, by the steps of the job arm64 of the
       # shared go.yml of v0.1.30 (R42 .github; the 2026-11-09 amendment to R31 in spec; R58, R61 in
