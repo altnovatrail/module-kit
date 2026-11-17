@@ -357,9 +357,9 @@ func trapOf(v verdict.SlotVerdict) formatv0.TrapID {
 // Starlark with ctx; a reason gets unreadable, with the reason of the verdict that the table names;
 // and a slot bound choice gets the verdict of the option tapped, or blank when none was. The
 // observation is one that Join gave, or one that Validate accepts — a reading of one reader, in
-// the reading mode single or for the eval runner, the truth of a sample's markup —, or nil when there is none: AI failed, a limit ran out, or an
-// observation is not valid. Then every answer slot that AI reads is unchecked, and the slots bound
-// choice still get their verdicts.
+// the reading mode single or for the eval runner, the truth of a sample's markup —, or nil when
+// there is none: AI failed, a limit ran out, or an observation is not valid. Then every answer
+// slot that AI reads is unchecked, and the slots bound choice still get their verdicts.
 //
 // tapped lists the options tapped, one for each answer slot bound choice that the learner tapped
 // one of, in the task's order, as api gets them.
