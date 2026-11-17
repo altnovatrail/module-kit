@@ -1,6 +1,6 @@
 # NovaTrail's shared checks (R03 .github), pinned to a release of .github by SHA with its version
-# beside it; Dependabot moves both. The repository's own jobs go beside them; the steps of the cache
-# that "Binaries / build" copies from the shared go.yml move by hand, and the job checks them.
+# beside it; Dependabot moves both, and with them the composite action of .github that "Binaries /
+# build" takes its image and Go caches by (R64). The repository's own jobs go beside them.
 name: CI
 
 on:
@@ -19,17 +19,17 @@ concurrency:
 jobs:
   secrets:
     name: Secrets
-    uses: altnovatrail/.github/.github/workflows/secrets.yml@93c848fb51a10a245968cf730b99cc709a7748bf # v0.1.31
+    uses: altnovatrail/.github/.github/workflows/secrets.yml@1704f782e76cee50ea5392cc0ea0d4b76c4b3672 # v0.1.32
 
   # A pull request's commits are what it checks; a push to main has been checked as one.
   dco:
     name: DCO
     if: github.event_name == 'pull_request'
-    uses: altnovatrail/.github/.github/workflows/dco.yml@93c848fb51a10a245968cf730b99cc709a7748bf # v0.1.31
+    uses: altnovatrail/.github/.github/workflows/dco.yml@1704f782e76cee50ea5392cc0ea0d4b76c4b3672 # v0.1.32
 
   documents:
     name: Documents
-    uses: altnovatrail/.github/.github/workflows/documents.yml@93c848fb51a10a245968cf730b99cc709a7748bf # v0.1.31
+    uses: altnovatrail/.github/.github/workflows/documents.yml@1704f782e76cee50ea5392cc0ea0d4b76c4b3672 # v0.1.32
 
   # The repository's Go code, by its own ci- recipes in its toolchain stage, and the coverage of
   # its tests, which the shared workflow sends to Codecov (R16 .github). id-token: write is for its
@@ -40,7 +40,7 @@ jobs:
     permissions:
       contents: read
       id-token: write
-    uses: altnovatrail/.github/.github/workflows/go.yml@93c848fb51a10a245968cf730b99cc709a7748bf # v0.1.31
+    uses: altnovatrail/.github/.github/workflows/go.yml@1704f782e76cee50ea5392cc0ea0d4b76c4b3672 # v0.1.32
 
   # The six binaries of a release, each run on a runner of its own system (Д6 in RUN.md; R41 in
   # docs/decisions.md). The build job builds them as release.yml does, by release-files in the
@@ -55,15 +55,16 @@ jobs:
         with:
           persist-credentials: false
 
-      # The steps «Toolchain image…» and «Go caches…» below are a copy of those of the job arm64 of
-      # the shared go.yml, the one job there that takes the image on its own rather than from the
-      # job toolchain, which a job of the caller cannot need; only the check in the key of the Go
-      # caches is this job's, binaries. Dependabot moves the SHA of go.yml, not the copy: this step
-      # holds each of the six steps, comments and blank lines aside, and the mount of the Go caches
-      # in «Release files and samples» to the go.yml of the SHA the job "Go" pins, so that a move
-      # of .github that changed them fails here, and the pull request takes the new steps by hand
-      # (R58, R61 in docs/decisions.md).
-      - name: Cache steps as in the shared go.yml
+      # What this job still holds to the release of .github it pins, in place of the copy of the
+      # steps that the composite action took (R64 in docs/decisions.md): every reference to .github
+      # at one SHA, so the action is go.yml's of the same release, with its file, image, folder and
+      # keys; the mount of the Go caches in «Release files and samples», by the lines the header of
+      # the action names for a caller's docker run; and the awk of «The stage of the release» to
+      # that of the step «Toolchain stages» of the job toolchain of go.yml, which reads the
+      # Dockerfile for the stage of the checks as release.yml reads it for the release (R62). A
+      # move of .github that changes the mount or that reading fails here, and the pull request
+      # takes it by hand.
+      - name: As in the pinned .github
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
@@ -78,39 +79,35 @@ jobs:
                   f && $0 != "" && !/^[[:space:]]*#/ { print }
               ' "$1"
           }
-          sha=$(grep -o 'altnovatrail/\.github/\.github/workflows/go\.yml@[0-9a-f]\{40\}' .github/workflows/ci.yml | cut -d@ -f2)
+          # The program of the awk of a step that reads .devcontainer/Dockerfile, its indentation aside.
+          program() { sed -n "/awk '\$/,/^ *' \.devcontainer\/Dockerfile/p" | sed '1d;$d;s/^ *//'; }
+          failed=0
+          shas=$(grep -oh 'altnovatrail/\.github/[^@ ]*@[0-9a-f]\{40\}' .github/workflows/*.yml | cut -d@ -f2 | sort -u)
+          if [ "$(printf '%s\n' "$shas" | grep -c .)" != 1 ]; then
+              echo "::error::The references to altnovatrail/.github in .github/workflows/ are not at one SHA: $(echo $shas). Move them to one release (R58, R64)."
+              exit 1
+          fi
+          sha=$shas
           gh api -H 'Accept: application/vnd.github.raw' \
               "repos/altnovatrail/.github/contents/.github/workflows/go.yml?ref=$sha" > "$RUNNER_TEMP/go.yml"
-          failed=0
-          for name in "Toolchain image from the cache" "Toolchain image" "Toolchain image into the cache" \
-              "Go caches from the cache" "Go caches" "Go caches into the cache"; do
-              step "$RUNNER_TEMP/go.yml" arm64 "$name" | sed 's/^\( *key: go-.*\)-arm64-/\1-binaries-/' > "$RUNNER_TEMP/shared-step"
-              step .github/workflows/ci.yml binaries-build "$name" > "$RUNNER_TEMP/own-step"
-              if [ ! -s "$RUNNER_TEMP/shared-step" ] || ! diff "$RUNNER_TEMP/shared-step" "$RUNNER_TEMP/own-step"; then
-                  echo "::error::The step «${name}» of the job Binaries / build is not that of the job arm64 of the shared go.yml at ${sha}: copy it from there, or record why not (R58, R61)."
-                  failed=1
-              fi
-          done
-          # The program of the awk of «The stage of the release» against that of the step «Toolchain
-          # stages» of the job toolchain, which reads the Dockerfile for the stage of the checks as
-          # release.yml reads it for the release (R62).
-          program() { sed -n "/awk '\$/,/^ *' \.devcontainer\/Dockerfile/p" | sed '1d;$d;s/^ *//'; }
-          step "$RUNNER_TEMP/go.yml" toolchain "Toolchain stages" | program > "$RUNNER_TEMP/shared-awk"
-          step .github/workflows/ci.yml binaries-build "The stage of the release" | program > "$RUNNER_TEMP/own-awk"
-          if [ ! -s "$RUNNER_TEMP/shared-awk" ] || ! diff "$RUNNER_TEMP/shared-awk" "$RUNNER_TEMP/own-awk"; then
-              echo "::error::The awk of «The stage of the release» of the job Binaries / build is not that of «Toolchain stages» of the job toolchain of the shared go.yml at ${sha}: copy it from there (R62)."
-              failed=1
-          fi
-          # The lines of the recipe's docker run in arm64 that mount the Go caches and point Go into them.
-          step "$RUNNER_TEMP/go.yml" arm64 ci-test | grep -F /go-cache > "$RUNNER_TEMP/shared-mount" || true
-          step .github/workflows/ci.yml binaries-build "Release files and samples" > "$RUNNER_TEMP/own-run"
+          gh api -H 'Accept: application/vnd.github.raw' \
+              "repos/altnovatrail/.github/contents/.github/actions/toolchain/action.yml?ref=$sha" > "$RUNNER_TEMP/action.yml"
+          # The lines of the header of the action that mount the Go caches and point Go into it.
+          grep -E '^#[[:space:]]+--.*/go-cache' "$RUNNER_TEMP/action.yml" | sed 's/^#[[:space:]]*//' > "$RUNNER_TEMP/shared-mount" || true
+          step .github/workflows/ci.yml binaries-build "Release files and samples" | sed 's/^[[:space:]]*//' > "$RUNNER_TEMP/own-run"
           mounted=$([ -s "$RUNNER_TEMP/shared-mount" ] && echo true || echo false)
           while IFS= read -r line; do
               grep -Fxq -- "$line" "$RUNNER_TEMP/own-run" || mounted=false
           done < "$RUNNER_TEMP/shared-mount"
           if [ "$mounted" = false ]; then
               cat "$RUNNER_TEMP/shared-mount"
-              echo "::error::«Release files and samples» of the job Binaries / build does not mount the Go caches as the step ci-test of the job arm64 of the shared go.yml at ${sha}, by the lines above: take them from there (R61)."
+              echo "::error::«Release files and samples» of the job Binaries / build does not mount the Go caches by the lines above of the header of the action toolchain at ${sha}: take them from there (R64)."
+              failed=1
+          fi
+          step "$RUNNER_TEMP/go.yml" toolchain "Toolchain stages" | program > "$RUNNER_TEMP/shared-awk"
+          step .github/workflows/ci.yml binaries-build "The stage of the release" | program > "$RUNNER_TEMP/own-awk"
+          if [ ! -s "$RUNNER_TEMP/shared-awk" ] || ! diff "$RUNNER_TEMP/shared-awk" "$RUNNER_TEMP/own-awk"; then
+              echo "::error::The awk of «The stage of the release» of the job Binaries / build is not that of «Toolchain stages» of the job toolchain of the shared go.yml at ${sha}: copy it from there (R62)."
               failed=1
           fi
           exit "$failed"
@@ -119,9 +116,9 @@ jobs:
       # in toolchain, from the entry that go.yml fills (R47 .github). The two hold the same files
       # while toolchain is FROM toolchain-core with its SHELL alone, as in every copy of the kind
       # go: the step reads the Dockerfile by the awk of the step «Toolchain stages» of the job
-      # toolchain of go.yml, which «Cache steps as in the shared go.yml» holds to it, and fails once
-      # toolchain holds more than the core, so that this job then builds in the core, or when the
-      # Dockerfile cannot be read (R62 in docs/decisions.md).
+      # toolchain of go.yml, which the step before it holds to it, and fails once toolchain holds
+      # more than the core, so that this job then builds in the core, or when the Dockerfile cannot
+      # be read (R62 in docs/decisions.md).
       - name: The stage of the release
         run: |
           status=0
@@ -149,110 +146,17 @@ jobs:
                   ;;
           esac
 
-      # The toolchain stage from the cache of GitHub Actions, by the steps of the job arm64 of the
-      # shared go.yml of v0.1.31 (R42 .github; the 2026-11-09 amendment to R31 in spec; R58, R61 in
-      # docs/decisions.md): the same file, image, path and key as every job of go.yml and
-      # documents.yml, so the entry is the one they fill and read, and the image is built from the
-      # Dockerfile only on a miss. Only a push to main writes and saves the file, and a pull request
-      # reads main's entry.
-      - name: Toolchain image from the cache
-        id: toolchain
-        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+      # The image of the stage toolchain and the caches of Go by the composite action of .github, at
+      # the release the shared workflows are pinned to, which Dependabot moves with them in the group
+      # shared-workflows (R49 .github; R64 in docs/decisions.md): the file, image, path and key of
+      # go.yml, so the entry of the image is the one its jobs fill and read, and the Go caches by a
+      # key of this job's own, the check binaries (R41 .github). What the cache gave, go mod verify
+      # checks first; only a push to main saves, the image at once and the Go caches by the second
+      # call at the end of the job, after the binaries are built and their reference written.
+      - name: Toolchain image and Go caches
+        uses: altnovatrail/.github/.github/actions/toolchain@1704f782e76cee50ea5392cc0ea0d4b76c4b3672 # v0.1.32
         with:
-          path: ${{ runner.temp }}/novatrail-toolchain.tar
-          key: toolchain-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('.devcontainer/Dockerfile') }}
-
-      - name: Toolchain image
-        env:
-          SAVE: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
-          STAGES: toolchain
-        run: |
-          # Each stage STAGES names, from its own file, novatrail-<stage>.tar, and as the one image
-          # novatrail-toolchain, as spec's toolchain.sh names either stage (R47 .github): here, as
-          # in the job arm64, toolchain alone.
-          for stage in $STAGES; do
-              case $stage in
-                  toolchain | toolchain-core) ;;
-                  *)
-                      echo "::error::STAGES names ${stage}, which is neither toolchain nor toolchain-core."
-                      exit 1
-                      ;;
-              esac
-              tar=$RUNNER_TEMP/novatrail-$stage.tar
-              restored=false
-              if [ -f "$tar" ]; then
-                  restored=true
-                  if docker load --quiet --input "$tar" && docker image inspect novatrail-toolchain > /dev/null; then
-                      rm -f -- "$tar"
-                      echo "Toolchain image: ${stage} loaded from its file."
-                      continue
-                  fi
-                  echo "::warning::The file of the ${stage} stage does not load as the image novatrail-toolchain: the image is built from the Dockerfile. A file from the cache does so on every run until its entry is deleted (gh cache delete) or the Dockerfile changes."
-                  rm -f -- "$tar"
-              fi
-              docker build --target "$stage" --tag novatrail-toolchain - < .devcontainer/Dockerfile
-              # Only a job that saves writes the file. A file that came has its entry or its artifact
-              # already, which no save replaces.
-              if [ "$SAVE" = true ] && [ "$restored" = false ] && ! docker save --output "$tar" novatrail-toolchain; then
-                  echo "::warning::The image of the ${stage} stage could not be saved: the jobs after this one and the next run build it again."
-                  rm -f -- "$tar"
-              fi
-          done
-
-      - name: Toolchain image into the cache
-        if: steps.toolchain.outputs.cache-hit != 'true' && github.event_name == 'push' && github.ref == 'refs/heads/main'
-        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-        with:
-          path: ${{ runner.temp }}/novatrail-toolchain.tar
-          key: ${{ steps.toolchain.outputs.cache-primary-key }}
-
-      # The caches of Go — the modules and the builds of the six targets — from the same cache, as
-      # in the job arm64 of go.yml, by a key of this job's own, with the check binaries (R41 .github):
-      # what the cache gave, go mod verify checks first, and only a push to main saves, at the end
-      # of the job.
-      - name: Go caches from the cache
-        id: go-cache
-        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-        with:
-          path: ${{ runner.temp }}/go-cache
-          key: go-${{ runner.os }}-${{ runner.arch }}-binaries-${{ hashFiles('.devcontainer/Dockerfile') }}-${{ hashFiles('**/go.sum') }}
-
-      - name: Go caches
-        env:
-          RESTORED: ${{ steps.go-cache.outputs.cache-matched-key }}
-        run: |
-          cache=$RUNNER_TEMP/go-cache
-          mkdir -p -- "$cache/mod" "$cache/build" "$cache/lint"
-          if [ -z "$RESTORED" ]; then
-              echo "Go caches: none in the cache; the job starts with empty ones."
-              exit 0
-          fi
-          verified=false
-          if git ls-files -z -- ':(glob)**/go.mod' ':(exclude,glob)**/testdata/**' ':(exclude,glob)**/vendor/**' \
-              ':(exclude,glob)**/.*/**' ':(exclude,glob)**/_*/**' > "$RUNNER_TEMP/go-modules"; then
-              modules=()
-              while IFS= read -r -d '' file; do
-                  modules+=("$(dirname -- "$file")")
-              done < "$RUNNER_TEMP/go-modules"
-              if [ "${#modules[@]}" = 0 ]; then
-                  echo "Go caches: ${RESTORED}, with no module of the repository to verify them by."
-                  verified=true
-              elif docker run --rm --user "$(id -u):$(id -g)" --env HOME=/tmp \
-                  --env GOMODCACHE=/go-cache/mod --env GOCACHE=/go-cache/build --env GOLANGCI_LINT_CACHE=/go-cache/lint \
-                  --volume "$PWD:/work" --volume "$cache:/go-cache" --workdir /work \
-                  novatrail-toolchain bash -c 'for module in "$@"; do go -C "$module" mod verify || exit; done' bash "${modules[@]}"; then
-                  echo "Go caches: ${RESTORED}, its modules verified."
-                  verified=true
-              fi
-          fi
-          if [ "$verified" = true ]; then
-              find "$cache/build" "$cache/lint" -type f -exec touch -c -- {} +
-              exit 0
-          fi
-          echo "::warning::The Go caches of ${RESTORED} did not pass go mod verify: they are deleted, and the job downloads and builds without them. An entry that fails on every run stays until it is deleted (gh cache delete) or go.sum or the Dockerfile changes."
-          chmod -R u+w -- "$cache"
-          rm -rf -- "$cache"
-          mkdir -p -- "$cache/mod" "$cache/build" "$cache/lint"
+          check: binaries
 
       # As go.yml runs a recipe: as the runner's user, with its home in /tmp, its Go caches the
       # folder above, and nothing of the step's environment.
@@ -274,14 +178,11 @@ jobs:
           retention-days: 3
           if-no-files-found: error
 
-      # The Go caches into the cache, as in the job arm64 of go.yml, once the binaries are built and
-      # their reference written: only a push to main, and only on a miss (R41 .github).
       - name: Go caches into the cache
-        if: steps.go-cache.outputs.cache-hit != 'true' && github.event_name == 'push' && github.ref == 'refs/heads/main'
-        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        uses: altnovatrail/.github/.github/actions/toolchain@1704f782e76cee50ea5392cc0ea0d4b76c4b3672 # v0.1.32
         with:
-          path: ${{ runner.temp }}/go-cache
-          key: ${{ steps.go-cache.outputs.cache-primary-key }}
+          check: binaries
+          save: "true"
 
   binaries-run:
     name: Binaries / ${{ matrix.binary }}
