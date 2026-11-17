@@ -356,8 +356,8 @@ func trapOf(v verdict.SlotVerdict) formatv0.TrapID {
 // gets the verdict that the check kind gives that value read, a predicate's in the sandbox of
 // Starlark with ctx; a reason gets unreadable, with the reason of the verdict that the table names;
 // and a slot bound choice gets the verdict of the option tapped, or blank when none was. The
-// observation is one that Join gave, or one that Validate accepts — a reading of one reader, the
-// truth of a sample's markup —, or nil when there is none: AI failed, a limit ran out, or an
+// observation is one that Join gave, or one that Validate accepts — a reading of one reader, in
+// the reading mode single or for the eval runner, the truth of a sample's markup —, or nil when there is none: AI failed, a limit ran out, or an
 // observation is not valid. Then every answer slot that AI reads is unchecked, and the slots bound
 // choice still get their verdicts.
 //
