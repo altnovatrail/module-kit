@@ -10,7 +10,10 @@
 //   - api joins the two readings, Join, and gives the verdict on the joined observation, Verdicts,
 //     or on none, nil, when either is not valid or the call of AI gave none. It keeps the joined
 //     observation and the options tapped, and the same release gives the same verdict on them
-//     again, with no AI (R03 spec);
+//     again, with no AI (R03 spec). In the reading mode single one reader reads, and api gives the
+//     verdict on that observation, Verdicts, with nothing to join, or on none, nil, when it is not
+//     valid or the call of AI gave none; it keeps the observation only when it is valid, as it
+//     keeps the joined one (the 2026-11-17 amendments to R68 spec and R86 spec);
 //   - the eval runner gives the verdict on the truth of a sample's markup, and on a reading of one
 //     reader, by Validate and Verdicts, and on the readings of a pair by Join and Verdicts (R95 spec);
 //   - an essay has one reader and no verdict: Essay says whether its submission goes on to the

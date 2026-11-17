@@ -7,8 +7,9 @@ Table 4 of [RUN.md](../RUN.md): what was put off on purpose, its risk, when to r
 
 ## Table 4. Technical debt
 
-Numbers are not reused: next — Д22.
+Numbers are not reused: next — Д23.
 
 | ID | Debt | From | Risk while open | When to return |
 |---|---|---|---|---|
 | Д10 | Starlark memory in the process is unbounded (R11): a builtin takes hundreds of megabytes in a few steps, and neither steps nor the clock stop it | T03 | A mistake in an official module's task can bring `api`'s process down out of memory, and a solver a run of the CLI in CI of `modules` | At stage 4, when third parties write modules. `spec` answered В12 by an amendment to О-9: a third-party module's Starlark then runs in a process of its own with a memory limit, and how is for tasks of `api` and `module-registry` (R17). Until then the tasks and solvers of official modules go through the review of `modules` |
+| Д22 | Д264 spec (T179 spec; the 2026-11-17 amendments to R68 spec and R86 spec): the vectors of `observation/v1/` hold no case of the reading mode `single`; spec's return is a change of the vectors with `module-kit`'s runner of them, a case of `single` whose `joined` is the one observation (R66) | T54 | Nothing here but `TestVerdicts` and `TestVerdictsErrors` holds the verdict on one reader's observation; the runner `observations` reads a vector strictly, so a new field of such a case fails the vector test until its code comes | The move to the tag of `spec` that brings the vectors: the runner passes them, with its code in the same task (R42) |
