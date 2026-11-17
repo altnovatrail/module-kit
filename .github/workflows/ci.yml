@@ -55,12 +55,16 @@ jobs:
         with:
           persist-credentials: false
 
-      # The awk of «The stage of the release» against that of the step «Toolchain stages» of the job
-      # toolchain of the shared go.yml at the SHA the job "Go" pins, which reads the Dockerfile for
-      # the stage of the checks as release.yml reads it for the release: a move of .github that
-      # changed that reading fails here, and the pull request takes it by hand (R62, R64 in
-      # docs/decisions.md).
-      - name: The stage reading as in the shared go.yml
+      # What this job still holds to the release of .github it pins, in place of the copy of the
+      # steps that the composite action took (R64 in docs/decisions.md): every reference to .github
+      # at one SHA, so the action is go.yml's of the same release, with its file, image, folder and
+      # keys; the mount of the Go caches in «Release files and samples», by the lines the header of
+      # the action names for a caller's docker run; and the awk of «The stage of the release» to
+      # that of the step «Toolchain stages» of the job toolchain of go.yml, which reads the
+      # Dockerfile for the stage of the checks as release.yml reads it for the release (R62). A
+      # move of .github that changes the mount or that reading fails here, and the pull request
+      # takes it by hand.
+      - name: As in the pinned .github
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
@@ -77,15 +81,36 @@ jobs:
           }
           # The program of the awk of a step that reads .devcontainer/Dockerfile, its indentation aside.
           program() { sed -n "/awk '\$/,/^ *' \.devcontainer\/Dockerfile/p" | sed '1d;$d;s/^ *//'; }
-          sha=$(grep -o 'altnovatrail/\.github/\.github/workflows/go\.yml@[0-9a-f]\{40\}' .github/workflows/ci.yml | cut -d@ -f2)
+          failed=0
+          shas=$(grep -oh 'altnovatrail/\.github/[^@ ]*@[0-9a-f]\{40\}' .github/workflows/*.yml | cut -d@ -f2 | sort -u)
+          if [ "$(printf '%s\n' "$shas" | grep -c .)" != 1 ]; then
+              echo "::error::The references to altnovatrail/.github in .github/workflows/ are not at one SHA: $(echo $shas). Move them to one release (R58, R64)."
+              exit 1
+          fi
+          sha=$shas
           gh api -H 'Accept: application/vnd.github.raw' \
               "repos/altnovatrail/.github/contents/.github/workflows/go.yml?ref=$sha" > "$RUNNER_TEMP/go.yml"
+          gh api -H 'Accept: application/vnd.github.raw' \
+              "repos/altnovatrail/.github/contents/.github/actions/toolchain/action.yml?ref=$sha" > "$RUNNER_TEMP/action.yml"
+          # The lines of the header of the action that mount the Go caches and point Go into it.
+          grep -E '^#[[:space:]]+--.*/go-cache' "$RUNNER_TEMP/action.yml" | sed 's/^#[[:space:]]*//' > "$RUNNER_TEMP/shared-mount" || true
+          step .github/workflows/ci.yml binaries-build "Release files and samples" | sed 's/^[[:space:]]*//' > "$RUNNER_TEMP/own-run"
+          mounted=$([ -s "$RUNNER_TEMP/shared-mount" ] && echo true || echo false)
+          while IFS= read -r line; do
+              grep -Fxq -- "$line" "$RUNNER_TEMP/own-run" || mounted=false
+          done < "$RUNNER_TEMP/shared-mount"
+          if [ "$mounted" = false ]; then
+              cat "$RUNNER_TEMP/shared-mount"
+              echo "::error::«Release files and samples» of the job Binaries / build does not mount the Go caches by the lines above of the header of the action toolchain at ${sha}: take them from there (R64)."
+              failed=1
+          fi
           step "$RUNNER_TEMP/go.yml" toolchain "Toolchain stages" | program > "$RUNNER_TEMP/shared-awk"
           step .github/workflows/ci.yml binaries-build "The stage of the release" | program > "$RUNNER_TEMP/own-awk"
           if [ ! -s "$RUNNER_TEMP/shared-awk" ] || ! diff "$RUNNER_TEMP/shared-awk" "$RUNNER_TEMP/own-awk"; then
               echo "::error::The awk of «The stage of the release» of the job Binaries / build is not that of «Toolchain stages» of the job toolchain of the shared go.yml at ${sha}: copy it from there (R62)."
-              exit 1
+              failed=1
           fi
+          exit "$failed"
 
       # The shared release.yml builds the release's files in the stage toolchain-core, and this job
       # in toolchain, from the entry that go.yml fills (R47 .github). The two hold the same files
