@@ -9,8 +9,10 @@ updates:
     cooldown:
       default-days: 3
     groups:
-      # Every reference to a shared workflow of .github in one pull request, to one release:
-      # Dependabot names each altnovatrail/.github/.github/workflows/<file>.yml (Д88 spec; R58 in
+      # Every reference to a shared workflow of .github in one pull request, to one release, and the
+      # composite action that "Binaries / build" takes with them: Dependabot names each
+      # altnovatrail/.github/.github/workflows/<file>.yml and the action
+      # altnovatrail/.github/.github/actions/toolchain (Д88 spec; R49 .github; R58 and R64 in
       # docs/decisions.md).
       shared-workflows:
         patterns: ["altnovatrail/.github/*"]

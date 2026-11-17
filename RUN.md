@@ -46,4 +46,4 @@ A task starts with «Выполни задачу T01 из RUN.md» in a new sess
 
 ## Table 1. Current epic — none
 
-Last done epic: E5, [docs/plan/E5.md](docs/plan/E5.md). Next — the author picks it from [run/EPICS.md](run/EPICS.md), empty now, and splits it into tasks (Epics, «Next epic»).
+Last done epic: E6, [docs/plan/E6.md](docs/plan/E6.md). Next — the author picks it from [run/EPICS.md](run/EPICS.md), empty now, and splits it into tasks (Epics, «Next epic»).
