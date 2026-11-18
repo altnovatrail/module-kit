@@ -52,7 +52,6 @@ func rubric() AnswerSlot {
 	return AnswerSlot{Binding: string(formatv0.AnswerSlotBindingSheet), Check: formatv0.Check{Kind: formatv0.CheckKindRubric, Criteria: []formatv0.Criterion{{Text: "Clear."}}}}
 }
 
-// trapped gives an answer slot with trap values, each a value and its trap.
 func trapped(slot AnswerSlot, pairs ...string) AnswerSlot {
 	for i := 0; i < len(pairs); i += 2 {
 		slot.Check.TrapValues = append(slot.Check.TrapValues, formatv0.TrapValue{Value: pairs[i], Trap: formatv0.TrapID(pairs[i+1])})
@@ -84,7 +83,7 @@ func short(v SlotVerdict) string {
 }
 
 // The cases hold each step of the normalization, the notation of each kind and the choices, by the
-// examples of the format's text where it gives them (format/README.md, section 15).
+// examples of the format's text where it gives them.
 var slotCases = []struct {
 	name  string
 	slot  AnswerSlot
@@ -519,8 +518,8 @@ func TestNormalForm(t *testing.T) {
 	}
 }
 
-// The version that a release names is that of the tables of NFKC and of the package unicode alike
-// (format/README.md, section 15; R27).
+// The version that a release names is that of the tables of NFKC and of the package unicode
+// alike (R27).
 func TestUnicodeVersion(t *testing.T) {
 	for name, version := range map[string]string{"UnicodeVersion": UnicodeVersion, "norm.Version": norm.Version, "unicode.Version": unicode.Version} {
 		if version != "17.0.0" {

@@ -11,7 +11,7 @@ import (
 
 // runForm is the longest run of the form of a number that begins at a digit, written another way than
 // longestRun: a simple fraction whose denominator holds a digit other than 0, a decimal, or an
-// integer, the longest match of the three (format/README.md, section 20).
+// integer, the longest match of the three.
 var runForm = func() *regexp.Regexp {
 	r := regexp.MustCompile(`^(?:[0-9]+ ?/ ?[0-9]*[1-9][0-9]*|[0-9]+\.[0-9]+|[0-9]+)`)
 	r.Longest()
@@ -38,7 +38,6 @@ func modelNumbers(form string) []string {
 	return found
 }
 
-// modelValue gives the rational that a run of the form of a number writes, leading zeros and all.
 func modelValue(run string) string {
 	integer := func(digits string) *big.Int {
 		n, _ := new(big.Int).SetString(strings.Trim(digits, " "), 10)
@@ -58,9 +57,8 @@ func modelValue(run string) string {
 // simple fraction with a space on either side of its slash or none, with leading zeros — and finds
 // it between characters of no word, exactly and alone; with a character of a word right before or
 // right after it — a letter, a mark, a digit of another script — the search finds nothing, not even
-// a tail of it. In any text, the numbers are those that a regular expression of
-// the longest run reads, modelNumbers, and the search goes without a panic (format/README.md,
-// section 20).
+// a tail of it. In any text, the numbers are those that a regular expression of the longest run
+// reads, modelNumbers, and the search goes without a panic.
 func FuzzNumbers(f *testing.F) {
 	f.Add(uint64(7), uint64(5), uint8(0), uint8(0), "x7.5")
 	f.Add(uint64(9007199254740993), uint64(0), uint8(2), uint8(1), "07:30")

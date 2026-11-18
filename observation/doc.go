@@ -1,10 +1,10 @@
 // Package observation holds what module-kit does with an observation, novatrail.observation.v1:
 // which one is valid, how the observations of two readers join into one, answer slot by answer
 // slot, which verdict the observation gives with the options tapped beside it, and how the
-// submission of an essay ends (contracts/README.md, section 10; R86 spec; R29). The verdict of each
-// value is the package verdict's, by the check kinds of the module format (format/README.md,
-// section 15). The observation's type is spec's, of the module github.com/altnovatrail/spec/contracts,
-// so this package brings in the protobuf runtime, and verdict and the check of a module do not.
+// submission of an essay ends (R86 spec; R29). The verdict of each value is the package verdict's,
+// by the check kinds of the module format. The observation's type is spec's, of the module
+// github.com/altnovatrail/spec/contracts, so this package brings in the protobuf runtime, and
+// verdict and the check of a module do not.
 //
 // api and tutor's eval runner call it:
 //   - api joins the two readings, Join, and gives the verdict on the joined observation, Verdicts,
@@ -13,7 +13,7 @@
 //     again, with no AI (R03 spec). In the reading mode single one reader reads, and api gives the
 //     verdict on that observation, Verdicts, with nothing to join, or on none, nil, when it is not
 //     valid or the call of AI gave none; it keeps the observation only when it is valid, as it
-//     keeps the joined one (the 2026-11-17 amendments to R68 spec and R86 spec);
+//     keeps the joined one (R68 spec, R86 spec);
 //   - the eval runner gives the verdict on the truth of a sample's markup, and on a reading of one
 //     reader, by Validate and Verdicts, and on the readings of a pair by Join and Verdicts (R95 spec);
 //   - an essay has one reader and no verdict: Essay says whether its submission goes on to the
@@ -21,5 +21,5 @@
 //
 // An observation that is not valid is ErrNotValid, from Validate, Join, Verdicts and Essay alike,
 // and it is no observation: every answer slot that AI reads gets unchecked by it. So unchecked in
-// the verdict on a valid observation is the check's own, a predicate that could not run (R28).
+// the verdict on a valid observation is the check's own, a predicate that could not run (R29).
 package observation

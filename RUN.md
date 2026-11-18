@@ -52,7 +52,7 @@ A task starts with «Выполни задачу T01 из RUN.md» in a new sess
 | [x] | T58 | Документы без истории: `docs/architecture.md` без раздела 3.6, `docs/README.md`, README, CLAUDE.md, `.claude/rules/` — тело в [docs/plan/E11.md](docs/plan/E11.md) | Claude | — | T57 |
 | [x] | T59 | Документы без истории: раздел 3.6 `docs/architecture.md` — тело в [docs/plan/E11.md](docs/plan/E11.md) | Claude | — | T57 |
 | [x] | T60 | Комментарии кода по R160 spec: `module`, `template`, `cmd/module-kit` — тело в [docs/plan/E11.md](docs/plan/E11.md) | Claude | — | T57 |
-| [ ] | T61 | Комментарии кода по R160 spec: `moduleversion`, `moduleindex`, `modulepackage`, `observation`, `verdict`, `leak`, `openview`, `page`, `picture` | Claude | — | T57 |
+| [x] | T61 | Комментарии кода по R160 spec: `moduleversion`, `moduleindex`, `modulepackage`, `observation`, `verdict`, `leak`, `openview`, `page`, `picture` — тело в [docs/plan/E11.md](docs/plan/E11.md) | Claude | — | T57 |
 | [ ] | T62 | Комментарии кода по R160 spec: `internal/`, `.github/`, `justfile` | Claude | — | T57 |
 
 ## Epic E11. Тексты без истории (R160 spec)
@@ -62,14 +62,6 @@ A task starts with «Выполни задачу T01 из RUN.md» in a new sess
 **Не входит:** новый код библиотеки и CLI — формат тот же; записи журнала целиком — каждую переписывает задача, которая её касается (R160 spec, «Decisions»); `docs/sources.md`, `docs/measurements.md`, архивы `docs/plan/` — вне правила (R160 spec, «Outside the rule»); `.devcontainer/` — это файлы заготовки `spec` (R51), их комментарии приходят переходом на тег.
 
 ## Задачи эпика
-
-#### T61. Комментарии кода по R160 spec: `moduleversion`, `moduleindex`, `modulepackage`, `observation`, `verdict`, `leak`, `openview`, `page`, `picture`
-
-- **Цель:** комментарии Go этих пакетов, тесты тоже, — как в T60.
-- **Почему:** как T60; около 110 КБ комментариев.
-- **Сделать:** как пункты 1 и 2 T60, для этих пакетов.
-- **Как проверить:** как T60.
-- **Разделы:** R160 spec, R32 spec; RULES.md spec — The bar.
 
 #### T62. Комментарии кода по R160 spec: `internal/`, `.github/`, `justfile`
 

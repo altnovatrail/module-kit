@@ -26,12 +26,11 @@ var (
 	digestForm        = regexp.MustCompile(`^sha256:[0-9a-f]{64}$`)
 )
 
-// readPublished reads a published package as files by the chain of digests from its digest
-// (format/README.md, sections 2 and 25): inventory.json by the digest, and then, by the format
-// version that the inventory names at the place every version keeps, a package of the version
-// module-kit reads by modulepackage.ReadParts, and one of an earlier version by its places alone,
-// server.json by the digest and the size that the inventory gives. A package of a newer version of
-// the format is modulepackage.ErrFormatVersion.
+// readPublished reads a published package as files by the chain of digests from its digest (R37):
+// inventory.json by the digest, and then, by the format version that the inventory names at the
+// place every version keeps, a package of the version module-kit reads by modulepackage.ReadParts,
+// and one of an earlier version by its places alone, server.json by the digest and the size that the
+// inventory gives. A package of a newer version of the format is modulepackage.ErrFormatVersion.
 func readPublished(p Published) (publishedVersion, error) {
 	inventoryData, err := readNamed(p.Files, modulepackage.InventoryFile)
 	if err != nil {
@@ -86,7 +85,6 @@ func readNamed(fsys fs.FS, name string) ([]byte, error) {
 	return data, err
 }
 
-// placesOfPackage gives the places of a package that modulepackage built or read.
 func placesOfPackage(pkg *modulepackage.Package) (places, error) {
 	inventory, err := canonical.Parse(pkg.Files[modulepackage.InventoryFile])
 	if err != nil {

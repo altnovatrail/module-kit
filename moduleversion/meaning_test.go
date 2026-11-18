@@ -12,7 +12,7 @@ import (
 
 // What decides the verdict of a choice is its notation too, options when absent, and its options as
 // a choice of that notation normalizes them; of a time, its key by its hours and its minutes, and its
-// trap values so (format/README.md, section 27).
+// trap values so.
 func TestMeaningOfNotationAndTime(t *testing.T) {
 	choice := func(notation *formatv0.CheckNotation, options ...formatv0.Text) verdict.AnswerSlot {
 		return verdict.AnswerSlot{Check: formatv0.Check{Kind: formatv0.CheckKindChoice, Key: new("Kim"), Options: options, Notation: notation}}

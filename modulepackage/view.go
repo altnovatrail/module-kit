@@ -15,8 +15,7 @@ import (
 	"github.com/altnovatrail/module-kit/module"
 )
 
-// The members of the canonical view that the code names, and the field of the format version
-// (format/README.md, sections 2 and 25).
+// The members of the canonical view that the code names, and the field of the format version.
 const (
 	versionField     = "module_format_version"
 	manifestMember   = "manifest"
@@ -27,7 +26,7 @@ const (
 )
 
 // The member of the canonical view of each file of a part that a module has once, and of each
-// folder of a part that it has many of (format/README.md, section 25).
+// folder of a part that it has many of.
 var (
 	onceParts = map[string]string{
 		"manifest.yaml":      manifestMember,
@@ -42,8 +41,7 @@ var (
 // canonicalView builds the canonical view of a module that passed its check: each part under its
 // member, as the JSON value of its file is, with an integer that the reader of YAML gave as a
 // double as an integer; skill_tiers, when it has a skill graph; and instances, when a task is a
-// template, with the results of its solver, as the check of the module counted them
-// (format/README.md, sections 12, 23, 24 and 25).
+// template, with the results of its solver, as the check of the module counted them (R34).
 func canonicalView(fsys fs.FS, files []string, instances map[string][]formatv0.Numbers) (map[string]any, error) {
 	view := map[string]any{}
 	for _, file := range files {
@@ -102,8 +100,8 @@ func memberOf(file string) (member, id string, ok bool) {
 }
 
 // integers gives a JSON value of the reader of YAML with every double that is an integer within
-// ±(2^53 − 1) — 50.0 or 5e1 — as that integer, as the canonical view holds it (format/README.md,
-// section 25). Any other double stays, and the canonical text refuses it.
+// ±(2^53 − 1) — 50.0 or 5e1 — as that integer, as the canonical view holds it (R34). Any other
+// double stays, and the canonical text refuses it.
 func integers(value any) any {
 	switch v := value.(type) {
 	case map[string]any:

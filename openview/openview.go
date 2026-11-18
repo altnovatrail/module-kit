@@ -48,10 +48,9 @@ func Task(part formatv0.Task) (open.Task, error) {
 	return of[open.Task]("task", part)
 }
 
-// of gives the open view of a part of a module's layout, named as its schema's file is, as the
-// type open has it. The part goes as JSON to the schema of its version, and the open view comes
-// back strictly into its type: a field that the type does not know is a fault, since the type is
-// what the marks of the same schemas give (R72 spec).
+// of takes a part named as its schema's file is. The open view comes back strictly into its type: a
+// field that the type does not know is a fault, since the type is what the marks of the same
+// schemas give (R72 spec).
 func of[O any](part string, value any) (O, error) {
 	v, err := viewOf(part, value)
 	if err != nil {
@@ -66,8 +65,8 @@ func of[O any](part string, value any) (O, error) {
 }
 
 // viewOf gives the open view of a part as the JSON value that the walk of its schema gives, before
-// any type holds it, so that a field is in it exactly when the open view has it. It fails when the
-// part is not valid against its schema.
+// any type holds it, so that a field is in it exactly when the open view has it (R24). It fails when
+// the part is not valid against its schema.
 func viewOf(part string, value any) (any, error) {
 	file := part + ".schema.json"
 	v := schema.ValueOf(value)

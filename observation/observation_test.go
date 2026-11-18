@@ -124,18 +124,14 @@ const (
 	several   = observationv1.Unreadable_UNREADABLE_SEVERAL_FINAL_ANSWERS
 )
 
-// boxesRead gives an observation of the boxes, each a value.
 func boxesRead(a, b, c, d string) *observationv1.Observation {
 	return observation(value(1, 1, a), value(2, 1, b), value(2, 2, c), value(3, 1, d))
 }
 
-// zonesRead gives an observation of the zones, each a value.
 func zonesRead(a, b, c string) *observationv1.Observation {
 	return observation(value(1, 1, a), value(1, 3, b), value(3, 1, c))
 }
 
-// written writes an observation shortly: each answer slot by its place, with its value or its
-// reason and its crop_box.
 func written(o *observationv1.Observation) string {
 	var parts []string
 	for _, s := range o.GetAnswerSlots() {
@@ -154,8 +150,7 @@ func written(o *observationv1.Observation) string {
 }
 
 // Each reason of the package is in the table, named as the value is, in lower case and without its
-// prefix (observation.proto): a reason that a new tag of spec adds fails this test until the task
-// that takes the tag names it.
+// prefix: a reason that a new tag of spec adds fails this test until the table names it (R29).
 func TestReasonsAreThePackages(t *testing.T) {
 	values := observationv1.Unreadable(0).Descriptor().Values()
 	for i := range values.Len() {
@@ -234,8 +229,7 @@ func TestValidate(t *testing.T) {
 	}
 }
 
-// Join joins two readings answer slot by answer slot, by the rules of contracts/README.md, section
-// 10.
+// Join joins two readings answer slot by answer slot.
 func TestJoin(t *testing.T) {
 	for _, c := range []struct {
 		name          string

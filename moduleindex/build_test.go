@@ -23,7 +23,6 @@ import (
 // module's folder in it.
 var vectorPackages sync.Map
 
-// pkg gives the package of the module of a vector of the index: modules/<name>/ of the case.
 func pkg(t testing.TB, vectorCase, name string) *modulepackage.Package {
 	t.Helper()
 	at := "vectors/indexes/" + vectorCase + "/modules/" + name
@@ -42,14 +41,12 @@ func pkg(t testing.TB, vectorCase, name string) *modulepackage.Package {
 	return p
 }
 
-// The packages of the vectors that the tests build indexes of.
 func smallest(t testing.TB) *modulepackage.Package    { return pkg(t, "first-release", "smallest") }
 func timesTables(t testing.TB) *modulepackage.Package { return pkg(t, "first-release", "times-tables") }
 func timesTables020(t testing.TB) *modulepackage.Package {
 	return pkg(t, "next-release", "times-tables")
 }
 
-// textOf gives the canonical text of an index, as a release of modules holds it.
 func textOf(t testing.TB, index formatv0.ModuleIndex) []byte {
 	t.Helper()
 	text, err := canonical.Text(schema.ValueOf(index))
@@ -59,7 +56,6 @@ func textOf(t testing.TB, index formatv0.ModuleIndex) []byte {
 	return text
 }
 
-// mustRead reads the text of an index.
 func mustRead(t testing.TB, text []byte) formatv0.ModuleIndex {
 	t.Helper()
 	index, err := Read(text)
@@ -71,8 +67,8 @@ func mustRead(t testing.TB, text []byte) formatv0.ModuleIndex {
 
 func reason(r formatv0.WithdrawalReason) *formatv0.WithdrawalReason { return &r }
 
-// The rules of the index are those whose refusals the vectors of the index name, in the order of
-// the table of section 26.
+// The rules of the index are those whose refusals the vectors of the index name, in the order the
+// schema of the vectors names them.
 func TestRulesAreTheFormats(t *testing.T) {
 	data, err := fs.ReadFile(spec.Format, "schemas/index-vector.schema.json")
 	if err != nil {

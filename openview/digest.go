@@ -9,10 +9,10 @@ import (
 )
 
 // TaskDigest gives the digest of the open view of a task: sha256: and the SHA-256 of its canonical
-// text (format/README.md, section 25; R93 spec). Of an instance of a template, the task is what
-// template.Instance gives, with its numbers in place, so that the digest is of the open view the
-// learner's app received. tutor's eval runner finds the task of a sample by it, and the CLI's open
-// writes it beside each open view (contracts/README.md, section 11).
+// text (R34; R93 spec). Of an instance of a template, the task is what template.Instance gives, with
+// its numbers in place, so that the digest is of the open view the learner's app received. tutor's
+// eval runner finds the task of a sample by it, and the CLI's open writes it beside each open view
+// (R43).
 //
 // The open view is the one TaskView gives, taken as the JSON value that the walk of the schemas
 // gives, before any type holds it, so that a field is in the text exactly when the open view has it.

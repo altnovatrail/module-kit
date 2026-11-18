@@ -23,12 +23,9 @@ const MaxPixels = 1 << 25
 // maxPixels is MaxPixels, which the fuzz test lowers.
 var maxPixels = MaxPixels
 
-// The folder of a module's media files and the extensions of the pictures that may hold
-// transparency (format/README.md, section 10).
 const mediaFolder = "media"
 
-// decoders holds, by extension, the format's name, whether a file begins with its signature as
-// module.media reads it (format/README.md, section 10), and how to read its size and decode it.
+// A signature of decoders is read as module.media reads it.
 var decoders = map[string]struct {
 	format    string
 	signature func(data []byte) bool
@@ -61,9 +58,8 @@ func (w Warning) String() string {
 // Warnings reads each PNG and WebP file under media/ of the module whose folder is the root of fsys,
 // in the order of their paths, and gives a warning for each picture with a pixel that is not fully
 // opaque, and for each it could not check. A module with no media/ has none. Files and folders whose
-// names begin with "." are not the module's (format/README.md, section 10) and are skipped. The
-// error is for a folder or a file that could not be read, or ctx once it is done, and then there are
-// no warnings.
+// names begin with "." are not the module's and are skipped. The error is for a folder or a file
+// that could not be read, or ctx once it is done, and then there are no warnings.
 func Warnings(ctx context.Context, fsys fs.FS) ([]Warning, error) {
 	var warnings []Warning
 	err := fs.WalkDir(fsys, mediaFolder, func(name string, entry fs.DirEntry, err error) error {
@@ -104,10 +100,11 @@ func Warnings(ctx context.Context, fsys fs.FS) ([]Warning, error) {
 }
 
 // Check reads one picture, the bytes of a file named name, by the format its extension names, .png
-// or .webp in lowercase, as media_path has them, and says what to warn of, if anything: a pixel that is not fully opaque, the first in
-// the order of rows; a size above MaxPixels; or a file it cannot decode. A file of another extension
-// gives no warning, and neither does one that does not begin with the signature of its format: the
-// check of the module refuses it by module.media, and a warning would say it twice.
+// or .webp in lowercase, as media_path has them, and says what to warn of, if anything: a pixel that
+// is not fully opaque, the first in the order of rows; a size above MaxPixels; or a file it cannot
+// decode. A file of another extension gives no warning, and neither does one that does not begin
+// with the signature of its format: the check of the module refuses it by module.media, and a
+// warning would say it twice.
 func Check(name string, data []byte) (message string, warn bool) {
 	d, ok := decoders[path.Ext(name)]
 	if !ok || !d.signature(data) {

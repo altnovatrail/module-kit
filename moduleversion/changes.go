@@ -19,11 +19,11 @@ import (
 )
 
 // A Change is one change from a published version of a module to a new one, and the part of the
-// version that it raises (format/README.md, section 27): where it is — the file of the package,
-// modulepackage.ServerFile for the canonical view and modulepackage.DeviceFile for the listing of the
-// device part, and the place in it as a JSON Pointer in URI fragment form, in the new version, or in
-// the published one for what is gone — the numbers of the parameters of the instance of a template
-// that it is of, and what changes, in words.
+// version that it raises (R36): where it is — the file of the package, modulepackage.ServerFile for
+// the canonical view and modulepackage.DeviceFile for the listing of the device part, and the place
+// in it as a JSON Pointer in URI fragment form, in the new version, or in the published one for what
+// is gone — the numbers of the parameters of the instance of a template that it is of, and what
+// changes, in words.
 type Change struct {
 	Part       Part             `json:"part"`
 	File       string           `json:"file"`
@@ -43,7 +43,6 @@ func (c Change) String() string {
 	return c.File + " " + c.Pointer + ": " + c.Part.String() + ": " + what
 }
 
-// shownNumbers writes numbers by their names, in the order of the names, as "a = 2, b = 3".
 func shownNumbers(numbers formatv0.Numbers) string {
 	var shown []string
 	for _, name := range slices.Sorted(maps.Keys(numbers)) {
@@ -59,7 +58,6 @@ type change struct {
 	tokens []string
 }
 
-// comparer gathers the changes from the canonical view of one version to that of another.
 type comparer struct {
 	changes []change
 }
@@ -73,8 +71,8 @@ func (c *comparer) add(part Part, tokens []string, parameters formatv0.Numbers, 
 
 // Changes compares two packages of one module and one version of the format — before, the published
 // version, and after, the new one — and gives the part of the version that the comparison finds, the
-// highest that a change raises, and every change, by the table of format/README.md, section 27: each
-// row of the table at its place, and anything else that differs in the canonical view or in the
+// highest that a change raises, and every change, by the format's table of changes and parts (R36):
+// each row of the table at its place, and anything else that differs in the canonical view or in the
 // listing of the device part, but the version, as a patch at each place where the two differ. A
 // difference at or within the place of a change that a row gives is not given again. The changes come
 // in the order of their parts, from the highest, and then of their places.
@@ -112,16 +110,12 @@ func Changes(before, after *modulepackage.Package) (Part, []Change, error) {
 	return part, changes, nil
 }
 
-// compareChanges orders changes by their parts, from the highest, then by their places — the
-// canonical view before the listing of the device part, and in a file member by member — then by the
-// numbers of their instances, and then by their words.
 func compareChanges(x, y change) int {
 	return cmp.Or(cmp.Compare(y.Part, x.Part), boolOrder(x.File == modulepackage.DeviceFile, y.File == modulepackage.DeviceFile),
 		schema.ComparePointers(x.Pointer, y.Pointer), strings.Compare(shownNumbers(x.Parameters), shownNumbers(y.Parameters)),
 		strings.Compare(x.What, y.What))
 }
 
-// boolOrder orders false before true.
 func boolOrder(a, b bool) int {
 	switch {
 	case a == b:
@@ -132,7 +126,6 @@ func boolOrder(a, b bool) int {
 	return -1
 }
 
-// The sets that the table compares: what is in one and not in the other, in order.
 func setOf[T cmp.Ordered](items []T) map[T]bool {
 	s := make(map[T]bool, len(items))
 	for _, item := range items {
@@ -182,8 +175,7 @@ func (c *comparer) suited(tokens []string, before, after []formatv0.AgeCategory)
 	}
 }
 
-// own gives the age categories of a task or a lesson: its own, or else the module's of its version
-// (format/README.md, sections 14 and 21).
+// own gives the age categories of a task or a lesson: its own, or else the module's of its version.
 func own(categories []formatv0.AgeCategory, m formatv0.Manifest) []formatv0.AgeCategory {
 	if len(categories) > 0 {
 		return categories
@@ -223,8 +215,7 @@ func (c *comparer) manifests(b, a formatv0.Manifest) {
 	}
 }
 
-// digitHeight gives the height of a digit on a crop that a manifest gives: 24 when it gives none
-// (format/README.md, section 11).
+// digitHeight gives the height of a digit on a crop that a manifest gives: 24 when it gives none.
 func digitHeight(m formatv0.Manifest) int64 {
 	if m.Canvas == nil || m.Canvas.DigitHeight == nil {
 		return 24
@@ -411,8 +402,8 @@ func sameSkills(a, b *formatv0.Skills) bool {
 
 // items compares the items and the answer slots of two tasks by their places: their number, the
 // binding of each answer slot and, withChecks, what decides its verdict and trap and the criteria of
-// a rubric (format/README.md, section 27). A template as it is written is compared without its
-// checks, which its instances compare, each with its numbers, parameters.
+// a rubric. A template as it is written is compared without its checks, which its instances
+// compare, each with its numbers, parameters.
 func (c *comparer) items(here []string, was, is formatv0.Task, withChecks bool, parameters formatv0.Numbers) {
 	if len(was.Items) != len(is.Items) {
 		c.add(Major, append(slices.Clone(here), "items"), parameters, fmt.Sprintf("the number of items changes from %d to %d", len(was.Items), len(is.Items)))
@@ -468,13 +459,13 @@ func slotsOf(item formatv0.Item) []slot {
 }
 
 // A meaning is what decides the verdict and the trap of an answer slot, as its check kind reads it
-// (format/README.md, sections 15 and 27): the kind; for number, the key as a rational number and the
-// set of the forms of its units; for fraction, the key as a rational number and the form, any when
-// absent; for choice, the notation, options when absent, and the key and the set of options — the
-// check's own, or the answer slot's when it is bound choice — each as a choice of that notation
-// normalizes it; for time, the key by its hours and minutes; for predicate, the predicate as it is
-// written; and the set of trap values, each the value as the check compares it, with its trap. A
-// value out of a number's notation compares as "", as none of its values does.
+// (R13, R36): the kind; for number, the key as a rational number and the set of the forms of its
+// units; for fraction, the key as a rational number and the form, any when absent; for choice, the
+// notation, options when absent, and the key and the set of options — the check's own, or the
+// answer slot's when it is bound choice — each as a choice of that notation normalizes it; for time,
+// the key by its hours and minutes; for predicate, the predicate as it is written; and the set of
+// trap values, each the value as the check compares it, with its trap. A value out of a number's
+// notation compares as "", as none of its values does.
 type meaning struct {
 	kind                           formatv0.CheckKind
 	key, form, notation, predicate string
@@ -529,7 +520,7 @@ func meaningOf(s verdict.AnswerSlot) meaning {
 // instances compares a template of both versions through its instances, matched by the numbers of
 // their parameters, not by their places: parameters of other names match none, a major change; an
 // instance in one version alone is a minor change; and the checks of two matched ones compare, each
-// the task with its numbers in place (format/README.md, section 27).
+// the task with its numbers in place (R13).
 func (c *comparer) instances(id formatv0.TaskID, b, a formatv0.CanonicalView) error {
 	was, is := b.Tasks[id], a.Tasks[id]
 	names := slices.Sorted(maps.Keys(was.Template.Parameters))
@@ -606,8 +597,6 @@ func (c *comparer) lessons(b, a formatv0.CanonicalView) {
 	}
 }
 
-// segmentsOf gives what each segment of a lesson is: an explanation, a worked example, or the task
-// that it names.
 func segmentsOf(l formatv0.Lesson) []string {
 	s := make([]string, len(l.Segments))
 	for i, segment := range l.Segments {

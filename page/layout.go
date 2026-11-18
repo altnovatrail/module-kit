@@ -11,7 +11,7 @@ import (
 )
 
 // Piece is a piece of an item's line, as the open view holds it: a piece of text, Text, or, when Box
-// is set, a box, an answer slot, whose Text is nothing (format/README.md, section 14).
+// is set, a box, an answer slot, whose Text is nothing.
 type Piece struct {
 	Text string
 	Box  bool
@@ -77,7 +77,7 @@ type Layout struct {
 
 // NoRoom is what Lay gives when the page has no room: Item, counted from 0, is the first item of the
 // row that has none, at which the page is refused (task.workbook-page) — or the first item after the
-// most_items of page.yaml, which has none either (format/README.md, section 14).
+// most_items of page.yaml, which has none either.
 type NoRoom struct {
 	Item int
 }
@@ -86,12 +86,12 @@ func (e *NoRoom) Error() string {
 	return fmt.Sprintf("page: the page has no room at the row of item %d, counted from 0", e.Item)
 }
 
-// Lay lays out the items of a task on a workbook, each its line of pieces, on the page, as section 14
-// of format/README.md does by page.yaml. Rows start at the margin, each the gap of items below the
-// one before: two short items side by side, in the two columns, and a short item before a long one,
-// or before none, alone at the left; a long item across the page, its lines filled greedily, run by
-// run. When a row would pass the lowest unit, or an item comes after the most_items of page.yaml,
-// it gives a *NoRoom with the first item of that row, and nothing ever shrinks.
+// Lay lays out the items of a task on a workbook, each its line of pieces, on the page by page.yaml.
+// Rows start at the margin, each the gap of items below the one before: two short items side by
+// side, in the two columns, and a short item before a long one, or before none, alone at the left;
+// a long item across the page, its lines filled greedily, run by run. When a row would pass the
+// lowest unit, or an item comes after the most_items of page.yaml, it gives a *NoRoom with the first
+// item of that row, and nothing ever shrinks.
 func Lay(items [][]Piece) (Layout, error) {
 	return format().lay(items)
 }
@@ -122,7 +122,7 @@ type entry struct {
 	start bool
 }
 
-// A part laid out on a line, from the line's start: a text or a box.
+// The left of a laid part is from the line's start.
 type laid struct {
 	box   bool
 	text  string
@@ -186,8 +186,6 @@ func (t *table) lay(items [][]Piece) (Layout, error) {
 	return Layout{Items: placed, Bottom: bottom}, nil
 }
 
-// entries gives the tokens of an item's line, the words of its pieces of text and its boxes, in
-// order, each with the joint before it.
 func (t *table) entries(pieces []Piece) []entry {
 	var tokens []token
 	for p, piece := range pieces {
@@ -209,7 +207,6 @@ func (t *table) entries(pieces []Piece) []entry {
 	return entries
 }
 
-// joint gives what lies between two tokens next to each other (format/README.md, section 14).
 // Between two words of one piece stands the space, within its text; between words of two pieces,
 // the space's own width, or nothing when the second begins with a closing mark or the first ends
 // with an opening one. Between a word and a box, either way, stands the gap, and between two boxes
@@ -236,8 +233,6 @@ func (t *table) joint(a, b token) joint {
 	return joint{room: n.Apart, breaks: true}
 }
 
-// closes says whether a word begins with a closing mark, and opens whether it ends with an opening
-// one, of joints of page.yaml.
 func (t *table) closes(word string) bool {
 	r, _ := utf8.DecodeRuneInString(word)
 	return strings.ContainsRune(t.page.Joints.Closing, r)
@@ -248,10 +243,7 @@ func (t *table) opens(word string) bool {
 	return strings.ContainsRune(t.page.Joints.Opening, r)
 }
 
-// parts lays out a line of entries from its start: the words of one piece that follow each other
-// on it make one text, as wide as size × (the sum of their widths + the space × the spaces between
-// them) ÷ 100, rounded up, and a box is the box's width. It gives each text and box at its place,
-// and the width of the whole line.
+// The words of one piece that follow each other on a line make one text, as TextWidth measures it.
 func (t *table) parts(entries []entry) ([]laid, int64) {
 	var parts []laid
 	var x, start, hundredths int64
@@ -286,13 +278,11 @@ func (t *table) parts(entries []entry) ([]laid, int64) {
 	return parts, x
 }
 
-// fits says whether a line of entries is no wider than a line across the page.
 func (t *table) fits(entries ...[]entry) bool {
 	_, width := t.parts(slices.Concat(entries...))
 	return width <= t.across
 }
 
-// fresh gives an entry as the start of a line.
 func fresh(e entry) entry {
 	return entry{token: e.token, start: true}
 }
@@ -300,7 +290,7 @@ func fresh(e entry) entry {
 // wrap fills the lines of a long item across the page greedily, run by run, where a run is the
 // tokens between which no line may break: a run that does not fit after the line so far starts the
 // next line; a run wider than a line goes token by token; and a word wider than a line is broken
-// between its clusters, as many to a line as fit (format/README.md, section 14).
+// between its clusters, as many to a line as fit.
 //
 // It stops, and gives false, once the item has more lines than could fit in room, the room left
 // below the row's top: every line is at least as high as the lower of a line of text and a box, and

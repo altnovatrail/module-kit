@@ -15,12 +15,12 @@ import (
 )
 
 // ErrNotValid is what an observation that is not valid gives: it is no observation, as a failure of
-// AI is none, and every answer slot that AI reads gets unchecked (contracts/README.md, section 10).
+// AI is none, and every answer slot that AI reads gets unchecked (R29).
 var ErrNotValid = errors.New("not valid")
 
-// reasons is the table of contracts/README.md, section 10: each reason of the observation, with the
-// reason of the verdict it gives. A reason that the package adds after this release is not in it,
-// and not valid to this release; the task that takes the tag of spec that adds it names it here.
+// reasons is the table of the reasons of the observation, each with the reason of the verdict it
+// gives. A reason that the package adds after this release is not in it, and not valid to this
+// release (R29).
 var reasons = map[observationv1.Unreadable]verdict.Reason{
 	observationv1.Unreadable_UNREADABLE_BLANK:                 verdict.Blank,
 	observationv1.Unreadable_UNREADABLE_ILLEGIBLE:             verdict.Illegible,
@@ -30,7 +30,7 @@ var reasons = map[observationv1.Unreadable]verdict.Reason{
 }
 
 // Submission is how the submission of an essay ends once it is read, as the test vectors of the
-// observation write it (contracts/README.md, section 10): an essay gives no verdict.
+// observation write it: an essay gives no verdict.
 type Submission string
 
 // The ends of the submission of an essay.
@@ -59,7 +59,7 @@ func (p place) String() string { return fmt.Sprintf("%d.%d", p.item, p.slot) }
 
 // task is what the rules of the observation read of a task: the answer slots that AI reads, in the
 // task's order, those bound choice, which the learner taps, and whether it is an essay, a task whose
-// one answer slot is bound sheet (format/README.md, section 14).
+// one answer slot is bound sheet.
 type task struct {
 	read, tapped []place
 	essay        bool
@@ -83,7 +83,6 @@ func taskOf(items []formatv0.Item) task {
 	return t
 }
 
-// placeOf writes the place of an answer slot of an observation, ?.? where it has none.
 func placeOf(p *observationv1.AnswerSlotPlace) string {
 	if p == nil {
 		return "?.?"
@@ -92,19 +91,18 @@ func placeOf(p *observationv1.AnswerSlotPlace) string {
 }
 
 // Validate says whether an observation is valid for a task, given its items: nil when it is, and
-// ErrNotValid, with every condition it breaks, when it is not (contracts/README.md, section 10). It
-// holds every answer slot that AI reads, each once and in the task's order, and no other — neither a
-// slot bound choice nor a place the task does not have; each with a value that is valid UTF-8 and
-// not empty nor only white space, or with a reason of the table other than UNREADABLE_UNSPECIFIED;
-// only a slot bound anywhere gives UNREADABLE_NO_FINAL_ANSWER, UNREADABLE_SEVERAL_FINAL_ANSWERS or
-// a crop_box, the box only beside a value, whole thousandths from 0 to 1000 with ymin < ymax and
-// xmin < xmax; and a slot bound sheet gives a value, UNREADABLE_BLANK or UNREADABLE_ILLEGIBLE. A
-// nil observation is none, and not valid.
+// ErrNotValid, with every condition it breaks, when it is not. It holds every answer slot that AI
+// reads, each once and in the task's order, and no other — neither a slot bound choice nor a place
+// the task does not have; each with a value that is valid UTF-8 and not empty nor only white
+// space, or with a reason of the table other than UNREADABLE_UNSPECIFIED; only a slot bound
+// anywhere gives UNREADABLE_NO_FINAL_ANSWER, UNREADABLE_SEVERAL_FINAL_ANSWERS or a crop_box, the
+// box only beside a value, whole thousandths from 0 to 1000 with ymin < ymax and xmin < xmax; and
+// a slot bound sheet gives a value, UNREADABLE_BLANK or UNREADABLE_ILLEGIBLE. A nil observation is
+// none, and not valid.
 func Validate(items []formatv0.Item, o *observationv1.Observation) error {
 	return valid(taskOf(items), o, "the observation")
 }
 
-// valid is Validate on a task, its error naming the observation as which.
 func valid(t task, o *observationv1.Observation, which string) error {
 	if o == nil {
 		return fmt.Errorf("observation: %s is %w: there is none", which, ErrNotValid)
@@ -115,7 +113,6 @@ func valid(t task, o *observationv1.Observation, which string) error {
 	return nil
 }
 
-// breaches gives the conditions of validity that an observation breaks, none when it is valid.
 func breaches(t task, o *observationv1.Observation) []string {
 	var found []string
 	given := o.GetAnswerSlots()
@@ -176,7 +173,6 @@ func breaches(t task, o *observationv1.Observation) []string {
 	return found
 }
 
-// samePlaces says whether the answer slots of an observation are those AI reads, in order.
 func samePlaces(given []*observationv1.AnswerSlotObservation, read []place) bool {
 	if len(given) != len(read) {
 		return false
@@ -198,7 +194,7 @@ func listOf(places []string) string {
 }
 
 // isWhiteSpace says whether a character has the Unicode property White_Space, as step 4 of the
-// module format's numbers has it (format/README.md, section 15).
+// module format's numbers has it.
 func isWhiteSpace(r rune) bool { return unicode.Is(unicode.White_Space, r) }
 
 // validBox says whether a crop_box is valid: from 0 to 1000, ymin < ymax and xmin < xmax (R53 spec).
@@ -222,8 +218,8 @@ func essayReason(r observationv1.Unreadable) bool {
 }
 
 // Join joins the observations of two readers of a task into one, answer slot by answer slot, first
-// being the reader whom tutor names first in the pair (contracts/README.md, section 10). It runs no
-// predicate and takes no context: the join compares values as the check normalizes them.
+// being the reader whom tutor names first in the pair. It runs no predicate and takes no context:
+// the join compares values as the check normalizes them.
 //   - A value that the kind normalizes to nothing, such as = under number, is UNREADABLE_BLANK
 //     before any pairing.
 //   - Two values join when both are in the kind's notation, the check compares them equal, as it
@@ -272,7 +268,6 @@ func checked(t task) error {
 	return nil
 }
 
-// side is a reader's answer slot as the join takes it: a value with its crop_box, or a reason.
 type side struct {
 	value  *string
 	box    *observationv1.CropBox
@@ -290,7 +285,6 @@ func sideOf(p place, s *observationv1.AnswerSlotObservation) side {
 	return side{value: &read.Value, box: s.GetCropBox()}
 }
 
-// joinSlot joins the two readers' readings of one answer slot.
 func joinSlot(p place, a, b *observationv1.AnswerSlotObservation) *observationv1.AnswerSlotObservation {
 	joined := &observationv1.AnswerSlotObservation{AnswerSlot: &observationv1.AnswerSlotPlace{Item: p.item, Slot: p.slot}}
 	x, y := sideOf(p, a), sideOf(p, b)
@@ -343,7 +337,6 @@ func alike(s verdict.AnswerSlot, a, b string) bool {
 	return got[0].Verdict == got[1].Verdict && got[0].Reason == got[1].Reason && trapOf(got[0]) == trapOf(got[1])
 }
 
-// trapOf gives the ID of the trap of a verdict, or "" when it has none.
 func trapOf(v verdict.SlotVerdict) formatv0.TrapID {
 	if v.Trap == nil {
 		return ""
@@ -352,14 +345,14 @@ func trapOf(v verdict.SlotVerdict) formatv0.TrapID {
 }
 
 // Verdicts gives the verdict of every item of a task on an observation, in the task's order, each
-// with its answer slots' (contracts/README.md, section 10; format/README.md, section 15): a value
-// gets the verdict that the check kind gives that value read, a predicate's in the sandbox of
-// Starlark with ctx; a reason gets unreadable, with the reason of the verdict that the table names;
-// and a slot bound choice gets the verdict of the option tapped, or blank when none was. The
-// observation is one that Join gave, or one that Validate accepts — a reading of one reader, in
-// the reading mode single or for the eval runner, the truth of a sample's markup —, or nil when
-// there is none: AI failed, a limit ran out, or an observation is not valid. Then every answer
-// slot that AI reads is unchecked, and the slots bound choice still get their verdicts.
+// with its answer slots': a value gets the verdict that the check kind gives that value read, a
+// predicate's in the sandbox of Starlark with ctx; a reason gets unreadable, with the reason of the
+// verdict that the table names; and a slot bound choice gets the verdict of the option tapped, or
+// blank when none was. The observation is one that Join gave, or one that Validate accepts — a
+// reading of one reader, in the reading mode single or for the eval runner, the truth of a
+// sample's markup —, or nil when there is none: AI failed, a limit ran out, or an observation is
+// not valid. Then every answer slot that AI reads is unchecked, and the slots bound choice still
+// get their verdicts.
 //
 // tapped lists the options tapped, one for each answer slot bound choice that the learner tapped
 // one of, in the task's order, as api gets them.
@@ -409,8 +402,6 @@ func Verdicts(ctx context.Context, items []formatv0.Item, o *observationv1.Obser
 	return verdicts, nil
 }
 
-// slotVerdict gives the verdict of one answer slot: of the option tapped in a slot bound choice; of
-// the slot's reading when there is an observation; and unchecked when there is none.
 func slotVerdict(ctx context.Context, p place, observed bool, s *observationv1.AnswerSlotObservation, taps map[string]*string) (verdict.SlotVerdict, error) {
 	if p.answerSlot.Binding == string(formatv0.AnswerSlotBindingChoice) {
 		return verdict.OfSlot(ctx, p.answerSlot, taps[p.String()])
@@ -424,8 +415,6 @@ func slotVerdict(ctx context.Context, p place, observed bool, s *observationv1.A
 	return verdict.SlotVerdict{Verdict: verdict.Unreadable, Reason: reasons[s.GetUnreadable()]}, nil
 }
 
-// tapsOf gives the options tapped by the places of their answer slots, which are bound choice, each
-// once and in the task's order.
 func tapsOf(t task, tapped []Tapped) (map[string]*string, error) {
 	taps := map[string]*string{}
 	next := 0
@@ -451,11 +440,10 @@ func tapsOf(t task, tapped []Tapped) (map[string]*string, error) {
 // Essay says how the submission of an essay ends on its observation: SubmissionAssessment when it
 // gives the essay's text, which goes on to the assessment by the rubric, without the picture;
 // SubmissionUnreadable when the sheet is blank or illegible, and the learner writes it again; and
-// SubmissionUnchecked when there is no observation, nil — AI failed, or a limit ran out
-// (contracts/README.md, section 10; R75 spec, R87 spec). A rubric normalizes nothing, so the text
-// is the value as the reader gave it. An error gives no end: the task is no essay, whose one answer
-// slot is bound sheet; or the observation is not valid, ErrNotValid, and the submission then ends
-// unchecked.
+// SubmissionUnchecked when there is no observation, nil — AI failed, or a limit ran out (R75 spec,
+// R87 spec). A rubric normalizes nothing, so the text is the value as the reader gave it. An error
+// gives no end: the task is no essay, whose one answer slot is bound sheet; or the observation is
+// not valid, ErrNotValid, and the submission then ends unchecked.
 func Essay(items []formatv0.Item, o *observationv1.Observation) (Submission, error) {
 	t := taskOf(items)
 	if !t.essay {

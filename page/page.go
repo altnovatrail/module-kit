@@ -21,32 +21,31 @@ import (
 //go:embed page.yaml
 var pageFile []byte
 
-// format is the table of pageFile, read once.
 var format = sync.OnceValue(func() *table { return mustLoad(pageFile) })
 
 // Numbers gives the numbers of the layout, numbers of page.yaml, in units of the page: the type
-// size, the width and the height of a box, and the rest (format/README.md, section 14).
+// size, the width and the height of a box, and the rest.
 func Numbers() formatv0.PageNumbers {
 	return format().page.Numbers
 }
 
 // MostItems gives the most items that a page holds, most_items of page.yaml: the item after them has
-// no room (format/README.md, section 14).
+// no room.
 func MostItems() int {
 	return int(format().page.MostItems)
 }
 
 // TextWidth gives the width, in units of the page, of a text as the layout sets it on one line, as
 // one piece of a line: its words, cut at the runs of the white space that breaks, joined by single
-// spaces, size × (the sum of their widths + the space × the spaces between them) ÷ 100, rounded up
-// (format/README.md, section 14). A text of white space alone, or none, is 0 wide.
+// spaces, size × (the sum of their widths + the space × the spaces between them) ÷ 100, rounded up.
+// A text of white space alone, or none, is 0 wide.
 func TextWidth(text string) int64 {
 	return format().textWidth(text)
 }
 
 // Fits says whether a value written in a box fits the box: as a text of the line, it is no wider
 // than the numbers' BoxWidth, as lesson.workbook-page holds the value of each box of a worked
-// example (format/README.md, section 21).
+// example.
 func Fits(value string) bool {
 	return TextWidth(value) <= Numbers().BoxWidth
 }
@@ -84,9 +83,8 @@ func load(data []byte) (*table, error) {
 }
 
 // A table is a value of page.yaml as the layout reads it: which code point is of which width, from
-// the table of widths alone, never from a Unicode database, and the measures that the numbers give
-// (format/README.md, section 14). It holds nothing that changes, so one table lays out pages from
-// many goroutines at once.
+// the table of widths alone, never from a Unicode database, and the measures that the numbers give.
+// It holds nothing that changes, so one table lays out pages from many goroutines at once.
 type table struct {
 	page     formatv0.Page
 	digits   map[rune]bool
@@ -100,10 +98,9 @@ type table struct {
 	measures
 }
 
-// A span is the code points from its first to its last, both in it.
 type span struct{ first, last rune }
 
-// The measures that the numbers give, in units of the page (format/README.md, section 14).
+// The measures are in units of the page.
 type measures struct {
 	space   int64 // between words of two pieces: the space's own width, rounded up
 	numbers int64 // the column of the numbers, as wide as 00.
@@ -118,11 +115,6 @@ type measures struct {
 // gives; its schema lets none through.
 var errCodePoint = errors.New("page: page.yaml writes a code point not as U+ and hexadecimal digits")
 
-// newTable gives the table of a value of page.yaml, and derives its measures: the column of the
-// numbers, as wide as 00.; a line's indent after it; the content, the sheet less two margins; a
-// column of short items, the content less the gutter, halved and rounded down, and the second
-// column a gutter after the first; a line across the page, the content less the indent; and the
-// lowest unit, the sheet's height less the margin.
 func newTable(p formatv0.Page) (*table, error) {
 	t := &table{page: p, digits: set(p.Widths.Digits.Characters), signs: set(p.Widths.Signs.Characters),
 		own: map[rune]int64{}, breaks: map[rune]bool{}}
@@ -170,7 +162,6 @@ func newTable(p formatv0.Page) (*table, error) {
 	return t, nil
 }
 
-// set gives the code points of a text.
 func set(text string) map[rune]bool {
 	s := map[rune]bool{}
 	for _, r := range text {
@@ -233,7 +224,7 @@ func within(r rune, spans []span) bool {
 	return false
 }
 
-// floorDiv divides and rounds down, toward minus infinity, as section 14 rounds a half and a third.
+// floorDiv rounds toward minus infinity, as the layout rounds a half and a third: Go's / truncates.
 func floorDiv(a, b int64) int64 {
 	q := a / b
 	if a%b != 0 && (a < 0) != (b < 0) {
@@ -242,9 +233,7 @@ func floorDiv(a, b int64) int64 {
 	return q
 }
 
-// width gives the width of a code point, in hundredths of the type size: of zero, 0; a digit or a
-// sign, the width of its class; a character or a space of a width of its own, that width; a wide
-// one, the width of wide; any other, unknown (format/README.md, section 14).
+// width is in hundredths of the type size.
 func (t *table) width(r rune) int64 {
 	switch {
 	case within(r, t.zero):
@@ -263,8 +252,6 @@ func (t *table) width(r rune) int64 {
 	return t.page.Widths.Unknown
 }
 
-// words cuts a piece of text into its words at the runs of the white space that breaks: a piece of
-// white space alone has none.
 func (t *table) words(text string) []string {
 	return strings.FieldsFunc(text, func(r rune) bool { return t.breaks[r] })
 }
@@ -294,13 +281,12 @@ func (t *table) clusters(word string) []string {
 	return clusters
 }
 
-// clusterWidth gives the width of a cluster, that of its first code point.
 func (t *table) clusterWidth(cluster string) int64 {
 	r, _ := utf8.DecodeRuneInString(cluster)
 	return t.width(r)
 }
 
-// wordWidth gives the width of a word, the sum of its clusters', in hundredths of the type size.
+// wordWidth is in hundredths of the type size.
 func (t *table) wordWidth(word string) int64 {
 	var sum int64
 	for _, cluster := range t.clusters(word) {
@@ -309,8 +295,6 @@ func (t *table) wordWidth(word string) int64 {
 	return sum
 }
 
-// units gives a width in hundredths of the type size in whole units of the page: size × hundredths
-// ÷ 100, rounded up.
 func (t *table) units(hundredths int64) int64 {
 	product := t.page.Numbers.Size * hundredths
 	units := product / 100
@@ -320,7 +304,6 @@ func (t *table) units(hundredths int64) int64 {
 	return units
 }
 
-// textWidth gives the width of a text set on one line as one piece of it.
 func (t *table) textWidth(text string) int64 {
 	words := t.words(text)
 	var sum int64
