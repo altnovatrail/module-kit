@@ -18,8 +18,8 @@ const anySize = -1
 
 // readPart reads a file of a package that the chain names by want, and its JSON value, which is
 // valid against the schema at location and of which the file is the canonical text. Of the
-// inventory, the format version is read first, at the place every version keeps
-// (format/README.md, section 2), so that a package of another version is refused by it.
+// inventory, the format version is read first, at the place every version keeps, so that a package
+// of another version is refused by it.
 func readPart(fsys fs.FS, file string, want formatv0.Descriptor, location string, files map[string][]byte) (any, error) {
 	data, err := readFile(fsys, file, want, files)
 	if err != nil {
@@ -45,8 +45,6 @@ func readPart(fsys fs.FS, file string, want formatv0.Descriptor, location string
 	return value, nil
 }
 
-// readFile reads a file of a package and holds it to the digest and size that name it, and keeps
-// it in files.
 func readFile(fsys fs.FS, file string, want formatv0.Descriptor, files map[string][]byte) ([]byte, error) {
 	data, err := fs.ReadFile(fsys, file)
 	if errors.Is(err, fs.ErrNotExist) {

@@ -14,7 +14,6 @@ import (
 	"github.com/altnovatrail/module-kit/internal/yaml"
 )
 
-// pair gives the previous index and the index built of a vector of the index that has both.
 func pair(t testing.TB, name string) (previous, built formatv0.ModuleIndex) {
 	t.Helper()
 	data, err := fs.ReadFile(spec.Format, "vectors/indexes/"+name+"/index.yaml")
@@ -116,7 +115,6 @@ func TestWithLatestRefuses(t *testing.T) {
 	}
 }
 
-// clone copies an index, so that a change to the copy leaves the index as it is.
 func clone(index formatv0.ModuleIndex) formatv0.ModuleIndex {
 	copied := formatv0.ModuleIndex{ModuleFormatVersion: index.ModuleFormatVersion, Modules: map[formatv0.ModuleID]map[formatv0.ModuleVersion]formatv0.Entry{}}
 	for id, versions := range index.Modules {

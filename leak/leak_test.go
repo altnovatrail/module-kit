@@ -117,8 +117,6 @@ band: first
 difficulty: 1
 `
 
-// short writes what a search finds: each key by its value and its place, and each leak phrase by
-// its text and its place.
 func short(found []Leak) string {
 	said := make([]string, len(found))
 	for i, l := range found {
@@ -179,7 +177,7 @@ func TestFor(t *testing.T) {
 }
 
 // The numbers of a text in its normal form, each the longest run of the form of a number from a
-// digit with no character of a word right outside it (format/README.md, section 20).
+// digit with no character of a word right outside it.
 func TestNumbersIn(t *testing.T) {
 	for _, c := range []struct {
 		text string

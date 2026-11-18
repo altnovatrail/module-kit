@@ -40,7 +40,6 @@ func FuzzDiff(f *testing.F) {
 	})
 }
 
-// has says whether a JSON value has a place, token by token.
 func has(value any, tokens []string) bool {
 	for _, token := range tokens {
 		switch v := value.(type) {

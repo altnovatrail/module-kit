@@ -36,21 +36,17 @@ type Leak struct {
 }
 
 // ErrTemplate is what a template gives: the leak check searches it through its instances, each a
-// task with the numbers of the instance in place of its placeholders (format/README.md, sections 20
-// and 23).
+// task with the numbers of the instance in place of its placeholders (R30).
 var ErrTemplate = errors.New("leak: a template is searched through its instances, and an instance is a task with its numbers in place")
 
-// Search is what the leak check searches a text for, for one task (format/README.md, section 20):
-// the key of every check of a number, a fraction, a choice and a time, in every item, but a key that
-// the same search finds in a text that the learner sees with its item; and every leak phrase. It
-// holds nothing that changes, so one Search searches texts from many goroutines at once.
+// Search is what the leak check searches a text for, for one task: the key of every check of a
+// number, a fraction, a choice and a time, in every item, but a key that the same search finds in a
+// text that the learner sees with its item; and every leak phrase. It holds nothing that changes,
+// so one Search searches texts from many goroutines at once.
 type Search struct {
 	needles []needle
 }
 
-// A needle is a key or a leak phrase that a search looks for: a key of a number or a fraction by its
-// magnitude, a key of a time by its hours and minutes, and a key of a choice and a leak phrase by
-// its normal form.
 type needle struct {
 	leak      Leak
 	magnitude *big.Rat
@@ -62,7 +58,7 @@ type needle struct {
 // on an attempt for the keys and the leak phrases of its instance, and the check of a module
 // searches a template through each instance. A key of a number or a fraction that is not in the
 // notation of its kind is not searched for, as spec's second implementation has it: a key that holds
-// a placeholder outside a template breaks task.placeholders instead (section 23).
+// a placeholder outside a template breaks task.placeholders instead.
 func For(task formatv0.Task) (*Search, error) {
 	if task.Template != nil {
 		return nil, ErrTemplate
@@ -104,9 +100,8 @@ func (s *Search) In(text string) []Leak {
 
 // Numbers gives the numbers that the leak check reads in a text, each as it stands in the text's
 // normal form, in the order of the text: a key of a number or a fraction is found where one of them
-// has its value (format/README.md, section 20). A text of the whole module SHOULD hold none, and the
-// check of a module warns of each (R50). A byte of the text that is not UTF-8 counts as U+FFFD, as
-// in Search.In.
+// has its value. A text of the whole module SHOULD hold none, and the check of a module warns of
+// each (R50). A byte of the text that is not UTF-8 counts as U+FFFD, as in Search.In.
 func Numbers(text string) []string {
 	runes := []rune(form(text))
 	var written []string
@@ -116,10 +111,6 @@ func Numbers(text string) []string {
 	return written
 }
 
-// keyOf gives the needle of the key of a check, and whether the leak check searches for it: a key
-// of a number or a fraction in the notation of its kind, by its magnitude, a key of a time, by its
-// hours and minutes, and a key of a choice, by its normal form. A predicate has no key, and a rubric
-// neither.
 func keyOf(c formatv0.Check) (needle, bool) {
 	if c.Key == nil {
 		return needle{}, false
@@ -143,8 +134,6 @@ func keyOf(c formatv0.Check) (needle, bool) {
 	return needle{}, false
 }
 
-// statementTexts gives, searched, the texts of a statement that the learner sees with every item:
-// its paragraphs and the alt of its pictures.
 func statementTexts(statement []formatv0.StatementPart) []*searched {
 	var texts []*searched
 	for _, part := range statement {
@@ -179,9 +168,6 @@ func itemTexts(item formatv0.Item, slots []verdict.AnswerSlot) []*searched {
 	return texts
 }
 
-// in says whether a needle is found in a text: a key of a number or a fraction where a number of the
-// text has its magnitude, a key of a time where a time of the text has its hours and minutes, and a
-// key of a choice or a leak phrase where its normal form stands.
 func (n needle) in(t *searched) bool {
 	if n.magnitude != nil {
 		return slices.ContainsFunc(t.numbers(), func(v *big.Rat) bool { return v.Cmp(n.magnitude) == 0 })
@@ -192,15 +178,12 @@ func (n needle) in(t *searched) bool {
 	return holds(t.form, n.form)
 }
 
-// form gives the normal form of a text, of a key of a choice and of a leak phrase: step 1 of section
-// 15, then NFKC, the dashes and slashes of step 3 and the white space of step 4, and then each
-// character to its simple lowercase mapping (format/README.md, section 20).
 func form(text string) string {
 	return normal.Search(text)
 }
 
-// A searched text: its normal form, and the numbers and the times in it, each read once, when a key
-// of their kind first asks for them: a search with no such key reads none.
+// The numbers and the times of a searched text are read once, when a key of their kind first asks
+// for them: a search with no such key reads none.
 type searched struct {
 	form      string
 	found     []*big.Rat
@@ -213,7 +196,6 @@ func searchedOf(text string) *searched {
 	return &searched{form: form(text)}
 }
 
-// numbers gives the numbers of the text, reading them the first time.
 func (t *searched) numbers() []*big.Rat {
 	if !t.read {
 		t.found, t.read = numbersIn([]rune(t.form)), true
@@ -221,7 +203,6 @@ func (t *searched) numbers() []*big.Rat {
 	return t.found
 }
 
-// times gives the times of the text, reading them the first time.
 func (t *searched) times() []normal.Clock {
 	if !t.readTimes {
 		t.clocks, t.readTimes = timesIn([]rune(t.form)), true
@@ -229,18 +210,16 @@ func (t *searched) times() []normal.Clock {
 	return t.clocks
 }
 
-// isWord says whether a character is a character of a word: one of the general categories L, M and
-// N, a letter, a mark or a number (format/README.md, section 20). U+FFFD is none, and so is the
-// utf8.RuneError that decoding gives at either end of a text.
+// U+FFFD is no character of a word, so neither is the utf8.RuneError that decoding gives at either
+// end of a text.
 func isWord(r rune) bool {
 	return unicode.In(r, unicode.L, unicode.M, unicode.N)
 }
 
-// holds says whether a phrase in its normal form — a key of a choice or a leak phrase — is found in
-// a text's normal form: where it stands, with no character of a word right outside an end of it
-// that is a character of a word itself. A phrase whose normal form is empty is found nowhere. Every
-// place where it stands is tried, so that "odd" is found in "oddly odd". Both forms are UTF-8, so a
-// match of their bytes begins and ends at characters.
+// A phrase is found where it stands with no character of a word right outside an end of it that is
+// a character of a word itself. A phrase whose normal form is empty is found nowhere. Every place
+// where it stands is tried, so that "odd" is found in "oddly odd". Both forms are UTF-8, so a match
+// of their bytes begins and ends at characters.
 func holds(text, phrase string) bool {
 	if phrase == "" {
 		return false
@@ -265,23 +244,19 @@ func holds(text, phrase string) bool {
 	return false
 }
 
-// isDigit says whether a character is a digit, 0 to 9: a number of the text begins at one, and the
-// digits of other scripts begin none (format/README.md, section 20).
+// Only 0 to 9 begin a number of a text: the digits of other scripts begin none.
 func isDigit(r rune) bool {
 	return '0' <= r && r <= '9'
 }
 
-// wordAt says whether a character of a word stands at i, inside the text.
 func wordAt(runes []rune, i int) bool {
 	return i >= 0 && i < len(runes) && isWord(runes[i])
 }
 
-// numbersIn gives the numbers of a text in its normal form, each by its value, from its start
-// (format/README.md, section 20): at a digit, the longest run of the form of a number, which is a
-// number of the text when no character of a word stands right before it and none right after it;
-// either way the search goes on after the whole run, so that no tail of a longer token, as the 5 of
-// x7.5, is read as a number. A number is never negative: no sign is read, and a key is compared by
-// its magnitude.
+// At a digit, the longest run of the form of a number is a number of the text when no character of
+// a word stands right before it and none right after it; either way the search goes on after the
+// whole run, so that no tail of a longer token, as the 5 of x7.5, is read as a number. A number is
+// never negative: no sign is read, and a key is compared by its magnitude.
 func numbersIn(runes []rune) []*big.Rat {
 	var found []*big.Rat
 	for _, r := range runsIn(runes) {
@@ -290,13 +265,11 @@ func numbersIn(runes []rune) []*big.Rat {
 	return found
 }
 
-// A number of a text in its normal form: where its run begins and ends, and its value.
 type run struct {
 	start, end int
 	value      *big.Rat
 }
 
-// runsIn gives the numbers of a text in its normal form with their places, as numbersIn reads them.
 func runsIn(runes []rune) []run {
 	var found []run
 	for at := 0; at < len(runes); {
@@ -313,7 +286,6 @@ func runsIn(runes []rune) []run {
 	return found
 }
 
-// digitsEnd gives where the digits from at end.
 func digitsEnd(runes []rune, at int) int {
 	for at < len(runes) && isDigit(runes[at]) {
 		at++
@@ -321,7 +293,6 @@ func digitsEnd(runes []rune, at int) int {
 	return at
 }
 
-// integerOf gives the integer that digits write, leading zeros and all.
 func integerOf(digits []rune) *big.Int {
 	n, _ := new(big.Int).SetString(string(digits), 10)
 	return n
@@ -358,11 +329,10 @@ func longestRun(runes []rune, at int) (int, *big.Rat) {
 	return end, value
 }
 
-// timesIn gives the times of a text in its normal form, each by its hours and minutes, from its
-// start (format/README.md, section 20): at a digit, the run of digits, : and digits, which is a time
-// of the text when it is in the notation of a time read and no character of a word stands right
-// before it and none right after it; either way the search goes on after the run, so that 17:30
-// shows no 7:30, and a run with no : is skipped whole.
+// At a digit, the run of digits, : and digits is a time of the text when it is in the notation of a
+// time read and no character of a word stands right before it and none right after it; either way
+// the search goes on after the run, so that 17:30 shows no 7:30, and a run with no : is skipped
+// whole.
 func timesIn(runes []rune) []normal.Clock {
 	var found []normal.Clock
 	for at := 0; at < len(runes); {

@@ -13,9 +13,9 @@ import (
 	"github.com/altnovatrail/module-kit/module"
 )
 
-// The files of a package as files, by their paths in its folder (format/README.md, section 25):
-// the canonical texts of the inventory, the canonical view and the listing of the device part, and
-// the folder of the device part's files, byte for byte.
+// The files of a package as files, by their paths in its folder: the canonical texts of the
+// inventory, the canonical view and the listing of the device part, and the folder of the device
+// part's files, byte for byte.
 const (
 	InventoryFile = "inventory.json"
 	ServerFile    = "server.json"
@@ -36,7 +36,7 @@ type Package struct {
 }
 
 // A Refusal is why Build builds no package: the module breaks the format, and the report of its
-// check names every breach (R45 spec).
+// check names every breach (R34).
 type Refusal struct {
 	Report module.Report
 }
@@ -46,12 +46,11 @@ func (r *Refusal) Error() string {
 }
 
 // Build builds the package of the module whose folder is the root of fsys, by the format version
-// its manifest names (format/README.md, section 25; R62 spec). It checks the module first, and a
-// module that breaks the format gives a *Refusal with the report of its check (R45 spec). The
-// solver of each template runs once, in the check, with ctx and one on each CPU, as module.Check runs
-// them, and an error of ctx comes back as it is. Any other error is
-// a file that could not be read, or a fault of module-kit: of a module that passed its check, the
-// canonical text refuses nothing (R09).
+// its manifest names (R62 spec). It checks the module first, and a module that breaks the format
+// gives a *Refusal with the report of its check (R34). The solver of each template runs once, in
+// the check, with ctx and one on each CPU, as module.Check runs them, and an error of ctx comes
+// back as it is. Any other error is a file that could not be read, or a fault of module-kit: of a
+// module that passed its check, the canonical text refuses nothing (R09).
 //
 // The package depends on the files of the module and on the format version alone: its files and
 // folders whose names begin with ".", the eval set, eval/, and the comments of its files of parts
@@ -79,8 +78,7 @@ func Build(ctx context.Context, fsys fs.FS) (*Package, error) {
 	return assemble(view, listing, files0)
 }
 
-// assemble writes the canonical texts of a canonical view and a listing, and of the inventory that
-// names them, and gives the package with its files: files0 holds those of the device part already.
+// files0 holds the files of the device part already.
 func assemble(view, listing map[string]any, files0 map[string][]byte) (*Package, error) {
 	server, err := canonical.Text(view)
 	if err != nil {
@@ -116,7 +114,7 @@ func assemble(view, listing map[string]any, files0 map[string][]byte) (*Package,
 
 // moduleFiles lists the files of a module that passed its check, by their paths from its folder, in
 // the order of the folder: every file but those whose name or folder begins with "." and those of
-// the eval set, which stay out of the package (format/README.md, section 25).
+// the eval set, which stay out of the package (R62 spec).
 func moduleFiles(fsys fs.FS) ([]string, error) {
 	var files []string
 	err := fs.WalkDir(fsys, ".", func(name string, entry fs.DirEntry, err error) error {
@@ -136,7 +134,6 @@ func moduleFiles(fsys fs.FS) ([]string, error) {
 	return files, err
 }
 
-// descriptorValue gives a descriptor as a JSON value.
 func descriptorValue(d formatv0.Descriptor) map[string]any {
 	return map[string]any{"digest": string(d.Digest), "size": d.Size}
 }

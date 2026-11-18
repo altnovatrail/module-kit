@@ -13,24 +13,24 @@ import (
 )
 
 // A Published is a published version of a module: its package as files, without device/, and the
-// digest of the package by which the module index of the newest release names it
-// (format/README.md, sections 25–27). A withdrawn version is a published one too.
+// digest of the package by which the module index of the newest release names it (R36). A withdrawn
+// version is a published one too.
 type Published struct {
 	Digest formatv0.Digest
 	Files  fs.FS
 }
 
 // A Comparison is what the comparison of a new version of a module with its published versions
-// gives (format/README.md, section 27): the module and the new version, the published versions in
-// the order of Semantic Versioning, and the newest of them, with which the new version is compared.
-// Unchanged says that the new version is the newest published one as it was, and then nothing is
-// compared. Otherwise Part is the part of the version that the comparison finds, Changes every change
-// that it finds, Next the next versions after the newest published one whose step raises a part no
-// lower than Part, and Raised the part that the step to the new version raises, None when it is not
-// the next version after the newest one by one of its parts. Breaches are the rules module-version.*
-// that the new version breaks, in the order the rules are checked: above, step, and then those that
-// read the places every version keeps; a comparison with a breach refuses the new version, and diff
-// exits 1. A first version, with no published one, may be any, and nothing is compared.
+// gives: the module and the new version, the published versions in the order of Semantic
+// Versioning, and the newest of them, with which the new version is compared. Unchanged says that
+// the new version is the newest published one as it was, and then nothing is compared. Otherwise
+// Part is the part of the version that the comparison finds, Changes every change that it finds,
+// Next the next versions after the newest published one whose step raises a part no lower than
+// Part, and Raised the part that the step to the new version raises, None when it is not the next
+// version after the newest one by one of its parts. Breaches are the rules module-version.* that the
+// new version breaks, in the order the rules are checked: above, step, and then those that read the
+// places every version keeps; a comparison with a breach refuses the new version, and diff exits 1
+// (R37, R40). A first version, with no published one, may be any, and nothing is compared.
 type Comparison struct {
 	Module    formatv0.ModuleID `json:"module"`
 	Version   string            `json:"version"`
@@ -85,20 +85,20 @@ func (c *Comparison) String() string {
 }
 
 // Compare compares a new version of a module, its package next, with its published versions
-// (format/README.md, section 27). It reads each published package by the chain of digests from its
-// digest — a package of the version of the format that module-kit reads by
-// modulepackage.ReadParts, one of an earlier version by the places that every version keeps — and
-// takes the newest by Semantic Versioning, withdrawn or not. When the new version is that version and
-// its package has that digest, the module has not changed, and nothing is compared. Otherwise the new
-// version is compared with it by Changes, or, when the newest names an earlier version of the format,
-// the part is major while the format is v0; and the rules module-version.* are held: above against
-// every published version, step and retired-kept against the newest, and the others against every
-// one by the places of section 2, so through a move of the format too. With no published version,
-// the new one is the first.
+// (R36, R37). It reads each published package by the chain of digests from its digest — a package
+// of the version of the format that module-kit reads by modulepackage.ReadParts, one of an earlier
+// version by the places that every version keeps — and takes the newest by Semantic Versioning,
+// withdrawn or not. When the new version is that version and its package has that digest, the
+// module has not changed, and nothing is compared. Otherwise the new version is compared with it by
+// Changes, or, when the newest names an earlier version of the format, the part is major while the
+// format is v0; and the rules module-version.* are held: above against every published version,
+// step and retired-kept against the newest, and the others against every one by the places that
+// every version keeps, so through a move of the format too. With no published version, the new one
+// is the first.
 //
-// The error is for a published package that the chain of digests or the places of section 2 refuse —
-// of a newer version of the format, modulepackage.ErrFormatVersion, among them —, one of another
-// module than next, and two of one version.
+// The error is for a published package that the chain of digests or the places that every version
+// keeps refuse — of a newer version of the format, modulepackage.ErrFormatVersion, among them —, one
+// of another module than next, and two of one version.
 func Compare(next *modulepackage.Package, published []Published) (*Comparison, error) {
 	if next == nil {
 		return nil, errors.New("moduleversion: no new version to compare")
@@ -181,7 +181,6 @@ func Compare(next *modulepackage.Package, published []Published) (*Comparison, e
 	return c, nil
 }
 
-// changesOf writes the changes of one part, as a breach of module-version.step names them.
 func changesOf(changes []Change, part Part) string {
 	var said []string
 	for _, change := range changes {

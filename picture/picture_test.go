@@ -11,7 +11,6 @@ import (
 	"golang.org/x/image/webp"
 )
 
-// pngOf encodes m as PNG.
 func pngOf(t testing.TB, m image.Image) []byte {
 	t.Helper()
 	var b bytes.Buffer

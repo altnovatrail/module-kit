@@ -14,9 +14,7 @@ import (
 
 // differences adds the row of the table that no other row names: anything else that differs in the
 // canonical view or in the listing of the device part, but the version in the manifest, is a patch
-// (format/README.md, section 27). The JSON values of the two texts of each are compared member by
-// member and element by element, and each place where they differ is a change: a member or an
-// element added, removed, or another value. The instances of a template compare as a whole, since
+// at each place where the two differ (R36). The instances of a template compare as a whole, since
 // their places carry no meaning. A difference is not given at or within the place of a change that
 // another row gives, nor in skill_tiers when the skill graph differs, nor in the instances of a
 // template when its task differs: they follow those, and give no part of their own.
@@ -45,19 +43,15 @@ func (c *comparer) differences(before, after *modulepackage.Package) error {
 	return nil
 }
 
-// within says whether a place is at or within another, token by token.
 func within(place, other []string) bool {
 	return len(place) >= len(other) && slices.Equal(place[:len(other)], other)
 }
 
-// differsWithin says whether a difference of the canonical view or a change of a row is at or
-// within the place of these tokens.
 func differsWithin(found, rows []change, tokens ...string) bool {
 	in := func(d change) bool { return d.File == modulepackage.ServerFile && within(d.tokens, tokens) }
 	return slices.ContainsFunc(found, in) || slices.ContainsFunc(rows, in)
 }
 
-// diff gives the places where two JSON values differ, within the place at, in file.
 func diff(file string, at []string, before, after any) []change {
 	here := func(what string) []change {
 		return []change{{Change: Change{Part: Patch, File: file, Pointer: schema.Pointer(at), What: what}, tokens: slices.Clone(at)}}

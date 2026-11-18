@@ -56,7 +56,7 @@ func TestBuildFiles(t *testing.T) {
 }
 
 // The package is the same whatever the folder holds beside the module: a file or a folder whose name
-// begins with ".", anything in such a folder, and the eval set (format/README.md, section 25).
+// begins with ".", anything in such a folder, and the eval set.
 func TestBuildLeavesOut(t *testing.T) {
 	module := vectorModule(t, "smallest")
 	before, err := Build(context.Background(), module)

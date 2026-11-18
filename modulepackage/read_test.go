@@ -10,7 +10,6 @@ import (
 	"testing/fstest"
 )
 
-// asFolder gives the files of a package as a folder that Read reads.
 func asFolder(files map[string][]byte) fstest.MapFS {
 	folder := fstest.MapFS{}
 	for name, data := range files {
@@ -19,7 +18,6 @@ func asFolder(files map[string][]byte) fstest.MapFS {
 	return folder
 }
 
-// built gives the package of the module of a vector of packages.
 func built(t testing.TB, name string) *Package {
 	t.Helper()
 	pkg, err := Build(context.Background(), vectorModule(t, name))

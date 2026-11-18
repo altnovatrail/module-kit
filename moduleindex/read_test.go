@@ -15,8 +15,6 @@ import (
 	"github.com/altnovatrail/module-kit/internal/yaml"
 )
 
-// examples gives the text of each example of the module index, valid or invalid, as JSON, by its
-// path in spec.Format.
 func examples(t testing.TB, kind string) map[string][]byte {
 	t.Helper()
 	found, err := fs.Glob(spec.Format, "examples/module-index/"+kind+"/*.yaml")

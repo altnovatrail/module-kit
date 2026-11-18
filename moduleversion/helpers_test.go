@@ -15,7 +15,6 @@ import (
 	"github.com/altnovatrail/module-kit/modulepackage"
 )
 
-// built builds the package of a module laid out at a path of spec.Format.
 func built(t testing.TB, at string) *modulepackage.Package {
 	t.Helper()
 	folder, err := fs.Sub(spec.Format, at)

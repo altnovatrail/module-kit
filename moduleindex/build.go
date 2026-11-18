@@ -17,12 +17,10 @@ import (
 	"github.com/altnovatrail/module-kit/modulepackage"
 )
 
-// File is the name of the module index among the files of a release of modules
-// (format/README.md, section 26).
+// File is the name of the module index among the files of a release of modules (R63 spec).
 const File = "module-index.json"
 
-// The rules of the module index, which refuse to build an index rather than a module
-// (format/README.md, sections 7 and 26).
+// The rules of the module index, which refuse to build an index rather than a module.
 const (
 	RuleEntriesKept      = "module-index.entries-kept"
 	RuleOnePackage       = "module-index.one-package"
@@ -30,8 +28,7 @@ const (
 	RuleVersionAbove     = "module-index.version-above"
 )
 
-// Rules lists the rules of the module index, in the order of the table of section 26 of
-// format/README.md.
+// Rules lists the rules of the module index, in the order the format lists them.
 var Rules = []string{RuleEntriesKept, RuleOnePackage, RuleKnownWithdrawals, RuleVersionAbove}
 
 // The reasons Build builds no index other than the rules of the index, which its error wraps.
@@ -40,7 +37,7 @@ var (
 	// module-kit reads, or one that is not what a build writes — the canonical text of a value valid
 	// against the schema of the module index of the version module-kit reads, with teaches in order
 	// —, or none where the release is not the first, or one where it is. Such a release fails: it does
-	// not start a new index (format/README.md, section 26).
+	// not start a new index (R35).
 	ErrPrevious = errors.New("the previous index cannot be read")
 	// ErrRelease is a release of which no index can be built: a tag that is not one of a release of
 	// modules, withdrawals not in the form of $defs/withdrawals, a package that package
@@ -48,8 +45,8 @@ var (
 	ErrRelease = errors.New("not a release whose index can be built")
 )
 
-// A Release is what a release of modules gives the build of its index (format/README.md, section
-// 26): the index of the release before it, its own packages, its tag and its withdrawals.
+// A Release is what a release of modules gives the build of its index: the index of the release
+// before it, its own packages, its tag and its withdrawals.
 type Release struct {
 	// Previous is the index of the release before, module-index.json as that release holds it,
 	// byte for byte. The first release of modules has none, and says so by First: an empty
@@ -82,7 +79,7 @@ func (b Breach) String() string {
 }
 
 // A Refusal is why Build builds no index: the release breaks rules of the module index, and it
-// names every breach (format/README.md, section 7).
+// names every breach.
 type Refusal struct {
 	Breaches []Breach
 }
@@ -97,10 +94,10 @@ func (r *Refusal) Error() string {
 
 // Build builds the module index of a release by the format version module-kit reads,
 // FormatVersion of package module, and gives its file, module-index.json: the canonical text of the
-// index (format/README.md, sections 25 and 26; R63 spec). Every entry of the previous index stands
-// in the new one as it was; a package of a version that the previous index names keeps that entry,
-// its release among it; every other package gets a new entry, which names the release's tag; and
-// last, the release's withdrawals are marked.
+// index (R63 spec; R35). Every entry of the previous index stands in the new one as it was; a
+// package of a version that the previous index names keeps that entry, its release among it; every
+// other package gets a new entry, which names the release's tag; and last, the release's
+// withdrawals are marked.
 //
 // A release that breaks a rule of the index gives a *Refusal, with every breach in the order of the
 // module, the version and the rule; the build is refused, rather than an index built without what
@@ -156,8 +153,8 @@ func Build(r Release) ([]byte, error) {
 			continue
 		}
 		// The comparison of versions asks the same of a new version, and so the index catches a
-		// release whose CI did not compare them (format/README.md, section 27). The entry stands
-		// even so, so that a withdrawal of it breaks no other rule.
+		// release whose CI did not compare them. The entry stands even so, so that a withdrawal of
+		// it breaks no other rule.
 		var above []semver.Version
 		for _, v := range published[id] {
 			if v.Compare(p.parsed) > 0 {
@@ -211,8 +208,8 @@ func readPrevious(r Release) (formatv0.ModuleIndex, error) {
 	if err != nil {
 		return formatv0.ModuleIndex{}, fmt.Errorf("moduleindex: the previous index is no JSON text: %v: %w", err, ErrPrevious)
 	}
-	// The format version first, at the place every version keeps (format/README.md, section 2), so
-	// that an index of a later version is refused by it rather than by what the version added.
+	// The format version first, at the place every version keeps, so that an index of a later
+	// version is refused by it rather than by what the version added.
 	root, _ := value.(map[string]any)
 	if v, ok := root[versionField].(string); ok && module.NewerFormat(v) {
 		return formatv0.ModuleIndex{}, fmt.Errorf("moduleindex: the previous index was built by the format version %s, newer than %s, which module-kit reads: %w",
@@ -241,8 +238,6 @@ func readPrevious(r Release) (formatv0.ModuleIndex, error) {
 	return index, nil
 }
 
-// A releasedPackage is a package of the release, with its version read and the entry it gets when
-// the release publishes it first.
 type releasedPackage struct {
 	id      formatv0.ModuleID
 	version formatv0.ModuleVersion
@@ -278,9 +273,6 @@ func released(packages []*modulepackage.Package, tag formatv0.Release) ([]releas
 	return out, nil
 }
 
-// entryOf gives the entry of a package that a release publishes first: its format version, the
-// digest of its package, the release's tag, and the anchor skills it teaches, when it teaches any
-// (format/README.md, section 26).
 func entryOf(pkg *modulepackage.Package, tag formatv0.Release) formatv0.Entry {
 	return formatv0.Entry{
 		ModuleFormatVersion: pkg.Inventory.ModuleFormatVersion,
@@ -331,7 +323,6 @@ func withdraw(modules map[formatv0.ModuleID]map[formatv0.ModuleVersion]formatv0.
 	return breaches
 }
 
-// breaks gives the breach of a rule at the version of b.
 func (b Breach) breaks(rule, format string, args ...any) Breach {
 	b.Rule, b.Message = rule, fmt.Sprintf(format, args...)
 	return b
@@ -347,7 +338,6 @@ func mustParse(v formatv0.ModuleVersion) semver.Version {
 	return parsed
 }
 
-// joined writes versions as a list in a sentence: 0.1.0, 0.2.0 and 1.0.0.
 func joined(versions []semver.Version) string {
 	words := make([]string, len(versions))
 	for i, v := range versions {

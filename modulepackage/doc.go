@@ -1,9 +1,8 @@
 // Package modulepackage builds the package of a checked module — its canonical view, the listing
 // of its device part and its inventory, with their digests — and reads a package as files by the
-// chain of digests from the digest an index gives: inventory, then parts, then files
-// (format/README.md, section 25; R62 spec). It checks no signature: spec's release-verify does,
-// where a file enters NovaTrail (R77 spec). The CLI's build, api, tutor's eval runner and
-// module-registry call it.
+// chain of digests from the digest an index gives: inventory, then parts, then files (R62 spec).
+// It checks no signature: spec's release-verify does, where a file enters NovaTrail (R77 spec). The
+// CLI's build, api, tutor's eval runner and module-registry call it.
 //
 // Build checks a module by package module and builds its package — the canonical view, with the
 // tiers of its skill graph and the numbers of every instance of its templates with the results of

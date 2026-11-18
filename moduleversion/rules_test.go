@@ -51,7 +51,6 @@ func asPublished(t *testing.T, at string) Published {
 	return Published{Digest: digestOf(inventory), Files: files}
 }
 
-// compareCase compares the new version of a case of vectors/versions/ with its published versions.
 func compareCase(t *testing.T, name string, versions ...string) *Comparison {
 	t.Helper()
 	at := "vectors/versions/" + name
@@ -67,7 +66,7 @@ func compareCase(t *testing.T, name string, versions ...string) *Comparison {
 }
 
 // Each rule refuses with its words, and the report names it on a line of its own; through a move of
-// the format, the part is major, and the rules hold by the places of section 2.
+// the format, the part is major, and the rules hold by the places that every version keeps.
 func TestBreaches(t *testing.T) {
 	for _, c := range []struct {
 		name     string

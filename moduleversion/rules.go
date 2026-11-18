@@ -8,8 +8,7 @@ import (
 	"github.com/altnovatrail/module-kit/internal/canonical"
 )
 
-// The rules of versions of a module, which refuse a new version rather than a module
-// (format/README.md, sections 7 and 27).
+// The rules of versions of a module, which refuse a new version rather than a module (R37).
 const (
 	RuleAbove           = "module-version.above"
 	RuleStep            = "module-version.step"
@@ -21,7 +20,8 @@ const (
 	RuleBandsKept       = "module-version.bands-kept"
 )
 
-// Rules are the IDs of the rules module-version.*, in the order of section 27.
+// Rules are the IDs of the rules module-version.*, in the order of the refusals of the format's
+// schema of the test vectors of versions (R37).
 var Rules = []string{RuleAbove, RuleStep, RuleRetiredComplete, RuleRetiredKept, RuleRetiredKnown, RuleIDsKept, RuleLanguagesKept, RuleBandsKept}
 
 // A Breach is a rule of versions that the new version breaks, and why.
@@ -34,9 +34,9 @@ func (b Breach) String() string {
 	return b.Rule + ": " + b.Message
 }
 
-// placeBreaches gives the breaches of the rules that read only the places of section 2, so that they
-// hold through a move to another version of the format too (format/README.md, section 27): every rule
-// but above and step. versions are the published ones in the order of Semantic Versioning, the newest
+// placeBreaches gives the breaches of the rules that read only the places that every version keeps,
+// so that they hold through a move to another version of the format too (R37): every rule but above
+// and step. versions are the published ones in the order of Semantic Versioning, the newest
 // last; next is the new version.
 func placeBreaches(versions []publishedVersion, next places) []Breach {
 	var breaches []Breach

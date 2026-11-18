@@ -65,8 +65,6 @@ var oneSlotTasks = [][]formatv0.Item{
 	{{Line: []formatv0.LinePart{boxOf(predicateCheck("value % 7 == 0"))}}},
 }
 
-// readingOf gives one reading of the answer slot 1.1: a value, or the reason r, with a crop_box
-// when withBox.
 func readingOf(isValue bool, v string, r int32, withBox bool, ymin, xmin, ymax, xmax int32) *observationv1.Observation {
 	s := reason(1, 1, observationv1.Unreadable(r))
 	if isValue {

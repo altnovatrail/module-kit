@@ -8,7 +8,7 @@ import (
 )
 
 // The files of a module that go into its device part, the folder that stays out of its package,
-// and the members of the listing of the device part (format/README.md, sections 10 and 25).
+// and the members of the listing of the device part.
 const (
 	licenseFile   = "LICENSE"
 	noticeFile    = "NOTICE"
@@ -19,10 +19,9 @@ const (
 	mediaMember   = "media"
 )
 
-// deviceListing gives the listing of the device part of a module (format/README.md, section 25):
-// LICENSE, NOTICE when the module has one, and each file of media/ by its path from media/, when it
-// has any, each by its digest and size; and the files of the device part, by their paths in the
-// folder of a package as files.
+// deviceListing gives the listing of the device part of a module: LICENSE, NOTICE when the module
+// has one, and each file of media/ by its path from media/, when it has any, each by its digest and
+// size; and the files of the device part, by their paths in the folder of a package as files.
 func deviceListing(fsys fs.FS, files []string) (map[string]any, map[string][]byte, error) {
 	listing := map[string]any{}
 	device := map[string][]byte{}

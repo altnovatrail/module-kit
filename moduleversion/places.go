@@ -12,11 +12,11 @@ import (
 )
 
 // places is what the comparison reads of a package by the places that the format keeps in every
-// version (format/README.md, section 2): from its inventory, the format version, the module's ID and
-// version; from its canonical view, the manifest's languages, the IDs of its bands in order, the keys
-// of the skills of its skill graph and its retired skills with what replaced each, and the keys of its
-// tasks, its lessons, its traps and its techniques. The rules module-version.* but above and step read
-// these alone, so they hold through a move to another version of the format (section 27).
+// version: from its inventory, the format version, the module's ID and version; from its canonical
+// view, the manifest's languages, the IDs of its bands in order, the keys of the skills of its skill
+// graph and its retired skills with what replaced each, and the keys of its tasks, its lessons, its
+// traps and its techniques. The rules module-version.* but above and step read these alone, so they
+// hold through a move to another version of the format (R37).
 type places struct {
 	formatVersion string
 	id            formatv0.ModuleID
@@ -41,8 +41,8 @@ var idPlaces = map[string][]string{
 }
 
 // placesOf reads the places of an inventory and a canonical view, as JSON values, by the places alone
-// (format/README.md, section 2). A package that does not hold one where the format keeps it is
-// modulepackage.ErrNotCanonical: no version of the format builds it.
+// (R37). A package that does not hold one where the format keeps it is modulepackage.ErrNotCanonical:
+// no version of the format builds it.
 func placesOf(inventory, view any) (places, error) {
 	missing := func(what string) (places, error) {
 		return places{}, fmt.Errorf("the package holds no %s where the format keeps it in every version: %w", what, modulepackage.ErrNotCanonical)
@@ -125,7 +125,6 @@ func member[T any](object map[string]any, name string) (T, bool) {
 	return t, ok
 }
 
-// stringsAt reads the replaced_by of an entry of retired_skills: a list of strings.
 func stringsAt(entry any) ([]string, bool) {
 	e, _ := entry.(map[string]any)
 	list, ok := e["replaced_by"].([]any)

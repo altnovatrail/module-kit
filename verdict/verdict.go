@@ -14,8 +14,7 @@ import (
 	"github.com/altnovatrail/module-kit/internal/sandbox"
 )
 
-// Verdict is the verdict of an answer slot or of an item, as the format writes it
-// (format/README.md, section 15).
+// Verdict is the verdict of an answer slot or of an item, as the format writes it.
 type Verdict string
 
 // The verdicts.
@@ -27,9 +26,8 @@ const (
 )
 
 // Reason is why an answer slot is unreadable, as the format and the contracts write it: blank and
-// notation, which a check kind gives itself (format/README.md, section 15), and the reasons that a
-// reading gives before the value is judged, each named after a reason of the observation
-// (contracts/README.md, section 10).
+// notation, which a check kind gives itself, and the reasons that a reading gives before the value
+// is judged, each named after a reason of the observation.
 type Reason string
 
 // The reasons that a check kind gives.
@@ -38,8 +36,8 @@ const (
 	Notation Reason = "notation" // the value is not in the kind's notation
 )
 
-// The reasons that a reading gives, by the table of contracts/README.md, section 10, which the
-// package observation reads them by.
+// The reasons that a reading gives, to which the package observation maps the reasons of the
+// observation (R29).
 const (
 	Illegible           Reason = "illegible"             // something is written, and it cannot be read
 	Ambiguous           Reason = "ambiguous"             // it can be read more than one way, or two readers read it differently
@@ -50,7 +48,7 @@ const (
 // UnicodeVersion is the version of Unicode that the normalization follows: that of the tables of
 // NFKC the library is built with, which its tests hold equal to those of the standard library's
 // package unicode. The format leaves the version to the reader's release, and this is where a
-// release of module-kit names it (format/README.md, section 15; R27).
+// release of module-kit names it (R27).
 const UnicodeVersion = normal.UnicodeVersion
 
 // ErrNoVerdict is what the check of a rubric gives: a rubric gives feedback by its criteria, and the
@@ -59,16 +57,15 @@ var ErrNoVerdict = errors.New("a rubric gives no verdict")
 
 // ErrPlaceholder is what the check of a number or a fraction gives when its key or a trap value
 // holds the placeholder of a template: the check is a template's, and an instance of it replaces
-// the placeholder with a number (format/README.md, section 23).
+// the placeholder with a number.
 var ErrPlaceholder = errors.New("the check holds the placeholder of a template, which an instance replaces with a number")
 
-// valueName is the one name that a predicate is written on, the whole number read
-// (format/README.md, section 15).
+// valueName is the one name that a predicate is written on, the whole number read.
 const valueName = "value"
 
 // AnswerSlot is an answer slot of an item as its check reads it: its binding as the format writes
-// it — anywhere, sheet, zone, choice or box (format/README.md, section 14) — its check, and, when it
-// is bound choice, its options, of which the learner taps one.
+// it — anywhere, sheet, zone, choice or box — its check, and, when it is bound choice, its
+// options, of which the learner taps one.
 type AnswerSlot struct {
 	Binding string
 	Check   formatv0.Check
@@ -76,7 +73,7 @@ type AnswerSlot struct {
 }
 
 // AnswerSlots gives the answer slots of an item, in their order: on a handwriting sheet its
-// answer_slots, on a workbook the boxes of its line (format/README.md, section 14).
+// answer_slots, on a workbook the boxes of its line.
 func AnswerSlots(item formatv0.Item) []AnswerSlot {
 	var slots []AnswerSlot
 	for _, slot := range item.AnswerSlots {
@@ -100,8 +97,7 @@ func AnswerSlots(item formatv0.Item) []AnswerSlot {
 
 // SlotVerdict is the verdict of an answer slot: with its reason when it is Unreadable, and with the
 // trap value that the value matches, a copy of it, when it is NotYet and matches one — the trap it
-// shows, and the text that the learner reads after it, if the author wrote one (format/README.md,
-// sections 15 and 19).
+// shows, and the text that the learner reads after it, if the author wrote one.
 type SlotVerdict struct {
 	Verdict Verdict
 	Reason  Reason
@@ -116,10 +112,10 @@ type ItemVerdict struct {
 }
 
 // OfItem gives the verdict of an item on the values read in its answer slots, one for each, in the
-// order of AnswerSlots: a value as it is written, or nil when nothing was read (format/README.md,
-// section 15). An error gives no verdict: ctx is done, the item has no answer slots, the values are
-// not one for each answer slot, or OfSlot gives one for an answer slot — ErrNoVerdict for an item
-// that a rubric checks, and the error of ctx when it stops a predicate as it runs.
+// order of AnswerSlots: a value as it is written, or nil when nothing was read. An error gives no
+// verdict: ctx is done, the item has no answer slots, the values are not one for each answer slot,
+// or OfSlot gives one for an answer slot — ErrNoVerdict for an item that a rubric checks, and the
+// error of ctx when it stops a predicate as it runs.
 func OfItem(ctx context.Context, item formatv0.Item, values []*string) (ItemVerdict, error) {
 	if err := ctx.Err(); err != nil {
 		return ItemVerdict{}, fmt.Errorf("verdict: %w", err)
@@ -143,12 +139,11 @@ func OfItem(ctx context.Context, item formatv0.Item, values []*string) (ItemVerd
 }
 
 // OfSlot gives the verdict of an answer slot on the value read in it: the value as it is written, or
-// nil when nothing was read (format/README.md, section 15). The value and the trap values are
-// normalized as the check kind normalizes them, and the key is read as it is written, in the kind's
-// notation. A predicate on a value in its notation runs in the sandbox of Starlark, with the limits
-// of a predicate and ctx (format/README.md, section 15; R11): True is correct and False not_yet,
-// and an error, a result that is not a bool, the limit of steps, module-kit's clock and a panic of
-// the interpreter are unchecked.
+// nil when nothing was read. The value and the trap values are normalized as the check kind
+// normalizes them, and the key is read as it is written, in the kind's notation. A predicate on a
+// value in its notation runs in the sandbox of Starlark, with the limits of a predicate and ctx
+// (R11): True is correct and False not_yet, and an error, a result that is not a bool, the limit
+// of steps, module-kit's clock and a panic of the interpreter are unchecked (R28).
 //
 // An error gives no verdict: ctx is done before the verdict, or stops a predicate as it runs — a
 // predicate that its limit of steps, the clock or a panic stopped first, or that ended, gives its
@@ -172,15 +167,14 @@ func OfSlot(ctx context.Context, slot AnswerSlot, value *string) (SlotVerdict, e
 }
 
 // Same says whether the check of an answer slot compares two values equal, as it compares a value
-// with a trap value, after the same normalization (format/README.md, section 15): for a choice, the
-// same normal form, an option or not, empty too; for a number and a fraction, two values in the
-// kind's notation, of one value; for a predicate, the same integer. A rubric compares nothing, and a
-// value that is not UTF-8 is equal to none.
+// with a trap value, after the same normalization: for a choice, the same normal form, an option or
+// not, empty too; for a number and a fraction, two values in the kind's notation, of one value; for
+// a predicate, the same integer. A rubric compares nothing, and a value that is not UTF-8 is equal
+// to none.
 //
 // A value out of a number's notation is equal to nothing here. The joining of two readings joins
 // such values by their normal forms, NormalForm, and keeps apart a value out of the notation from
-// one in it, which its normal form can spell, as 1/100000000000000 does (contracts/README.md,
-// section 10).
+// one in it, which its normal form can spell, as 1/100000000000000 does.
 func Same(slot AnswerSlot, a, b string) bool {
 	if !utf8.ValidString(a) || !utf8.ValidString(b) {
 		return false
@@ -192,14 +186,13 @@ func Same(slot AnswerSlot, a, b string) bool {
 }
 
 // NormalForm gives a value as the check of an answer slot normalizes it, and whether it is in the
-// kind's notation, with no Starlark (format/README.md, section 15): for a choice, its normal form by
-// its notation, in the notation when it is the key's or an option's, or, with notation: word, one
-// word of letters; for a number, a fraction and a predicate, steps 1 to 7, with a number's units
-// dropped, in the notation when the kind takes what is left; for a time, steps 1 to 5 with the
-// spaces at either end dropped, in the notation when it is a time read. An empty form is blank, and
-// in no notation. A rubric normalizes nothing: the form is the value as it is, in no notation, and so
-// is a value that is not UTF-8. The joining of two readings compares the values out of the notation
-// by it (contracts/README.md, section 10).
+// kind's notation, with no Starlark: for a choice, its normal form by its notation, in the notation
+// when it is the key's or an option's, or, with notation: word, one word of letters; for a number,
+// a fraction and a predicate, steps 1 to 7, with a number's units dropped, in the notation when the
+// kind takes what is left; for a time, steps 1 to 5 with the spaces at either end dropped, in the
+// notation when it is a time read. An empty form is blank, and in no notation. A rubric normalizes
+// nothing: the form is the value as it is, in no notation, and so is a value that is not UTF-8.
+// The joining of two readings compares the values out of the notation by it (R29).
 func NormalForm(slot AnswerSlot, value string) (form string, inNotation bool) {
 	if !utf8.ValidString(value) {
 		return value, false
@@ -254,11 +247,8 @@ func (s AnswerSlot) verdict(ctx context.Context, value *string) (SlotVerdict, er
 	return SlotVerdict{}, fmt.Errorf("the check kind %q is none of the format's", c.Kind)
 }
 
-// predicateVerdict gives the verdict of a predicate: blank, out of the notation — an integer alone
-// is in it —, or what the expression gives on the integer read, a Starlark int bound to value, in
-// the sandbox with the limits and ctx. True is correct and False not_yet; an error, a result that is
-// not a bool, the limit of steps, the clock and a panic are unchecked, and ctx done is an error
-// (format/README.md, section 15; R11).
+// predicateVerdict: an error, a result that is not a bool, the limit of steps, the clock and a panic
+// are unchecked, and only ctx done is an error, with no verdict (R28).
 func (s AnswerSlot) predicateVerdict(ctx context.Context, limits sandbox.Limits, value *string) (SlotVerdict, error) {
 	c := s.Check
 	if c.Predicate == nil {
@@ -291,16 +281,13 @@ func (s AnswerSlot) predicateVerdict(ctx context.Context, limits sandbox.Limits,
 
 // CheckPredicate says whether the expression of a predicate is one of the dialect of all the
 // Starlark of the format, which names nothing but value, the names that it binds itself and the
-// built-in names of the dialect: the rule task.predicate-expression (format/README.md, sections 15
-// and 24). The error says why not, at the line and the column where go.starlark.net finds it. A
-// predicate that is not gives unchecked on every value in its notation.
+// built-in names of the dialect: the rule task.predicate-expression. The error says why not, at the
+// line and the column where go.starlark.net finds it. A predicate that is not gives unchecked on
+// every value in its notation.
 func CheckPredicate(expression string) error {
 	return sandbox.CheckExpr(expression, valueName)
 }
 
-// numberVerdict gives the verdict of a number or a fraction: blank, out of the notation, a value
-// other than the key's, a fraction of the key's value that can be reduced under form: reduced, or
-// right.
 func (s AnswerSlot) numberVerdict(value *string) (SlotVerdict, error) {
 	c := s.Check
 	if c.Key == nil {
@@ -336,9 +323,6 @@ func (s AnswerSlot) numberVerdict(value *string) (SlotVerdict, error) {
 	return SlotVerdict{Verdict: Correct}, nil
 }
 
-// choiceVerdict gives the verdict of a choice: blank, the key, another option, or none of the
-// options, which is out of the notation, but with notation: word one word of letters, which is not
-// yet right (format/README.md, section 15).
 func (s AnswerSlot) choiceVerdict(value *string) (SlotVerdict, error) {
 	c := s.Check
 	if c.Key == nil {
@@ -369,8 +353,6 @@ func (s AnswerSlot) choiceVerdict(value *string) (SlotVerdict, error) {
 	return SlotVerdict{Verdict: Unreadable, Reason: Notation}, nil
 }
 
-// timeVerdict gives the verdict of a time: blank, out of the notation of a time read, another time
-// than the key's by its hours or its minutes, or right (format/README.md, section 15).
 func (s AnswerSlot) timeVerdict(value *string) (SlotVerdict, error) {
 	c := s.Check
 	if c.Key == nil {
@@ -398,7 +380,7 @@ func (s AnswerSlot) timeVerdict(value *string) (SlotVerdict, error) {
 }
 
 // ChoiceOptions gives the options of a choice as written: the answer slot's when it is bound
-// choice, and the check's own otherwise (format/README.md, section 15).
+// choice, and the check's own otherwise.
 func (s AnswerSlot) ChoiceOptions() []formatv0.Text {
 	if s.Binding == string(formatv0.AnswerSlotBindingChoice) {
 		return s.Options
@@ -419,16 +401,14 @@ func (s AnswerSlot) notYet(value string) SlotVerdict {
 	return SlotVerdict{Verdict: NotYet}
 }
 
-// reducedForm says whether a fraction check takes only a fraction in lowest terms.
 func reducedForm(c formatv0.Check) bool {
 	return c.Form != nil && *c.Form == formatv0.CheckFormReduced
 }
 
 // ItemOf gives the verdict of an item, made of its answer slots' verdicts: unchecked when there are
 // none, since nothing was checked; correct when every one is; otherwise not_yet when one is, since a
-// value read clearly and wrong is no doubt; otherwise unreadable when one is; otherwise unchecked
-// (format/README.md, section 15). The verdict on an observation makes an item's of its answer
-// slots' by it.
+// value read clearly and wrong is no doubt; otherwise unreadable when one is; otherwise unchecked.
+// The verdict on an observation makes an item's of its answer slots' by it.
 func ItemOf(slots []SlotVerdict) Verdict {
 	count := map[Verdict]int{}
 	for _, s := range slots {

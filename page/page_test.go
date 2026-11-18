@@ -14,7 +14,7 @@ import (
 
 // The copy of page.yaml is format/page.yaml of spec.Format: the same file, byte for byte, of the
 // version that spec.Format holds. A move to a new tag of spec that changes it fails it until the
-// copy follows, as R20 has the move take the copy along.
+// copy follows (R52).
 func TestPageIsSpecs(t *testing.T) {
 	want, err := fs.ReadFile(spec.Format, "page.yaml")
 	if err != nil {
@@ -25,9 +25,9 @@ func TestPageIsSpecs(t *testing.T) {
 	}
 }
 
-// The measures of the numbers of page.yaml are those that section 14 of format/README.md names: the
-// column 440 units, a line across the page 864, and the lowest unit 1360; the column of the numbers
-// is as wide as 00., a line starts the gap after it, and the second column a gutter after the first.
+// The measures of the numbers of page.yaml are those that the format text names: the column 440
+// units, a line across the page 864, and the lowest unit 1360; the column of the numbers is as wide
+// as 00., a line starts the gap after it, and the second column a gutter after the first.
 func TestMeasures(t *testing.T) {
 	got := format().measures
 	want := measures{space: 8, numbers: 40, indent: 56, column: 440, second: 520, across: 864, lowest: 1360}
@@ -42,7 +42,7 @@ func TestMeasures(t *testing.T) {
 	}
 }
 
-// A code point's width comes from its class, in the order of section 14: of no width, a digit, a
+// A code point's width comes from the first of its classes in this order: of no width, a digit, a
 // sign, a character or a space of its own, a wide one, and any other; a cluster is as wide as its
 // first code point, and a flag is wide, as the emoji are.
 func TestWidths(t *testing.T) {
@@ -132,8 +132,8 @@ func lines(texts ...string) [][]Piece {
 	return items
 }
 
-// The examples of section 14 of format/README.md: "347 ÷ 6 = [ ] r [ ]" is still short, two to a
-// row, and "47 : 6 = [ ] (ост. [ ])" is long, alone in its row.
+// The examples of the format text: "347 ÷ 6 = [ ] r [ ]" is still short, two to a row, and
+// "47 : 6 = [ ] (ост. [ ])" is long, alone in its row.
 func TestShortAndLong(t *testing.T) {
 	short, err := Lay(lines("347 ÷ 6 =[]r[]", "347 ÷ 6 =[]r[]"))
 	if err != nil {
@@ -259,7 +259,6 @@ func TestNoRoom(t *testing.T) {
 	}
 }
 
-// tableWith gives the table of page.yaml with numbers of its own.
 func tableWith(t *testing.T, change func(*formatv0.Page)) *table {
 	t.Helper()
 	p := format().page

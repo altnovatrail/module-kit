@@ -16,7 +16,6 @@ import (
 	"github.com/altnovatrail/module-kit/internal/yaml"
 )
 
-// readPart reads a file of a part of spec.Format strictly into its type of formatv0.
 func readPart(t *testing.T, name string, into any) {
 	t.Helper()
 	data, err := fs.ReadFile(spec.Format, name)
@@ -38,7 +37,6 @@ func readPart(t *testing.T, name string, into any) {
 	}
 }
 
-// A function of a part: a new value of its type of formatv0, and its open view by the function.
 type function struct {
 	value func() any
 	open  func(part any) error
