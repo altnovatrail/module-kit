@@ -57,7 +57,7 @@ How `module-kit` keeps what R143 spec and R145 spec saved, by the pattern of mea
 
 ### 2.1. The measurement of sessions
 
-`just -f spec/justfile tokens-report --since … --row` prints one row of the table below, for the epic's window, at its archive. The first row is epic E3, the first archived after RUN.md, Epics, named the measurement; E1 and E2 were archived before it. The last column, the context of a main call among its session's first 80, `tokens-report` prints since T199 spec, and the rows before it have "—" there (the 2026-11-17 amendment to R145 spec; R68).
+`just -f spec/justfile tokens-report --since … --row` prints one row of the table below, for the epic's window, at its archive. The first row is epic E3, the first archived after RUN.md, Epics, named the measurement; E1 and E2 were archived before it. The last column, the context of a main call among its session's first 80, `tokens-report` prints since T199 spec, and the rows before it have "—" there (R145 spec; R68).
 
 | Project | Window, UTC | Sessions | Calls, main / subagents | Context of a call, k, main / subagents | Compactions | Cost at API prices | Context of a main call among its session's first 80, k |
 |---|---|---|---|---|---|---|---|
