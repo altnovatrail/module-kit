@@ -20,7 +20,7 @@ A release comes out by itself once the checks pass on `main`: the next patch of 
 
 ## Contributing
 
-Report a bug or propose a change in an [issue](https://github.com/altnovatrail/module-kit/issues), in English or Russian, and open one before a pull request unless the pull request fixes a typo or a broken link. How a change comes in, with every commit signed off, and what every change keeps to are in the organization's [CONTRIBUTING.md](https://github.com/altnovatrail/.github/blob/main/CONTRIBUTING.md); the rules every NovaTrail repository shares are in spec's [RULES.md](https://github.com/altnovatrail/spec/blob/main/RULES.md): code comes with its tests. Report a vulnerability privately, as the [security policy](https://github.com/altnovatrail/module-kit/security/policy) says, never in a public issue.
+Report a bug or propose a change in an [issue](https://github.com/altnovatrail/module-kit/issues), in English, and open one before a pull request unless the pull request fixes a typo or a broken link. How a change comes in, with every commit signed off, and what every change keeps to are in the organization's [CONTRIBUTING.md](https://github.com/altnovatrail/.github/blob/main/CONTRIBUTING.md); the rules every NovaTrail repository shares are in spec's [RULES.md](https://github.com/altnovatrail/spec/blob/main/RULES.md): code comes with its tests. Report a vulnerability privately, as the [security policy](https://github.com/altnovatrail/module-kit/security/policy) says, never in a public issue.
 
 Work in the devcontainer: open the repository in VS Code and choose "Reopen in Container". It holds every tool at the version the repository pins. The checks are recipes of the [justfile](../justfile), and `just --list` names each with its arguments:
 

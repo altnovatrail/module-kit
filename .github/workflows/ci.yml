@@ -19,17 +19,17 @@ concurrency:
 jobs:
   secrets:
     name: Secrets
-    uses: altnovatrail/.github/.github/workflows/secrets.yml@1704f782e76cee50ea5392cc0ea0d4b76c4b3672 # v0.1.32
+    uses: altnovatrail/.github/.github/workflows/secrets.yml@f1c7e9e6f8245fdbdbc23c4091f3c26350e3a44e # v0.1.33
 
   # A pull request's commits are what it checks; a push to main has been checked as one.
   dco:
     name: DCO
     if: github.event_name == 'pull_request'
-    uses: altnovatrail/.github/.github/workflows/dco.yml@1704f782e76cee50ea5392cc0ea0d4b76c4b3672 # v0.1.32
+    uses: altnovatrail/.github/.github/workflows/dco.yml@f1c7e9e6f8245fdbdbc23c4091f3c26350e3a44e # v0.1.33
 
   documents:
     name: Documents
-    uses: altnovatrail/.github/.github/workflows/documents.yml@1704f782e76cee50ea5392cc0ea0d4b76c4b3672 # v0.1.32
+    uses: altnovatrail/.github/.github/workflows/documents.yml@f1c7e9e6f8245fdbdbc23c4091f3c26350e3a44e # v0.1.33
 
   # The repository's Go code, by its own ci- recipes in its toolchain stage, and the coverage of
   # its tests, which the shared workflow sends to Codecov (R16 .github). id-token: write is for its
@@ -40,7 +40,7 @@ jobs:
     permissions:
       contents: read
       id-token: write
-    uses: altnovatrail/.github/.github/workflows/go.yml@1704f782e76cee50ea5392cc0ea0d4b76c4b3672 # v0.1.32
+    uses: altnovatrail/.github/.github/workflows/go.yml@f1c7e9e6f8245fdbdbc23c4091f3c26350e3a44e # v0.1.33
 
   # The six binaries of a release, each run on a runner of its own system (Д6 in RUN.md; R41 in
   # docs/decisions.md). The build job builds them as release.yml does, by release-files in the
@@ -150,11 +150,12 @@ jobs:
       # the release the shared workflows are pinned to, which Dependabot moves with them in the group
       # shared-workflows (R49 .github; R64 in docs/decisions.md): the file, image, path and key of
       # go.yml, so the entry of the image is the one its jobs fill and read, and the Go caches by a
-      # key of this job's own, the check binaries (R41 .github). What the cache gave, go mod verify
-      # checks first; only a push to main saves, the image at once and the Go caches by the second
-      # call at the end of the job, after the binaries are built and their reference written.
+      # key of this job's own, the check binaries (R41 .github). What an exact hit gave, go mod verify
+      # checks first, and an entry of another go.sum, by the prefix, loses its modules and keeps its
+      # builds (T75 .github); only a push to main saves, the image at once and the Go caches by the
+      # second call at the end of the job, after the binaries are built and their reference written.
       - name: Toolchain image and Go caches
-        uses: altnovatrail/.github/.github/actions/toolchain@1704f782e76cee50ea5392cc0ea0d4b76c4b3672 # v0.1.32
+        uses: altnovatrail/.github/.github/actions/toolchain@f1c7e9e6f8245fdbdbc23c4091f3c26350e3a44e # v0.1.33
         with:
           check: binaries
 
@@ -179,7 +180,7 @@ jobs:
           if-no-files-found: error
 
       - name: Go caches into the cache
-        uses: altnovatrail/.github/.github/actions/toolchain@1704f782e76cee50ea5392cc0ea0d4b76c4b3672 # v0.1.32
+        uses: altnovatrail/.github/.github/actions/toolchain@f1c7e9e6f8245fdbdbc23c4091f3c26350e3a44e # v0.1.33
         with:
           check: binaries
           save: "true"
