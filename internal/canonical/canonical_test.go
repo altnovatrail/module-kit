@@ -6,10 +6,9 @@ import (
 	"testing"
 )
 
-// Each character of the table of section 25 of format/README.md is written as the table says: ",
-// \ and five control characters by their short escapes, every other one up to U+001F as \u00 and
-// two lowercase hexadecimal digits, and the rest as it is, /, <, >, &, U+007F, U+2028, U+2029, a
-// letter outside the Basic Multilingual Plane and a combining accent among them.
+// ", \ and five control characters are written by their short escapes, every other one up to U+001F
+// as \u00 and two lowercase hexadecimal digits, and the rest as it is, /, <, >, &, U+007F, U+2028,
+// U+2029, a letter outside the Basic Multilingual Plane and a combining accent among them (R09).
 func TestEscapes(t *testing.T) {
 	for _, c := range []struct {
 		in, want string
@@ -40,8 +39,7 @@ func TestEscapes(t *testing.T) {
 	}
 }
 
-// Every character from U+0000 to U+001F has an escape, and every one gives the escape the table
-// gives it.
+// Every character from U+0000 to U+001F has an escape, the short one where it has one.
 func TestEveryControlCharacter(t *testing.T) {
 	shortOnes := map[rune]bool{'\b': true, '\t': true, '\n': true, '\f': true, '\r': true}
 	for r := rune(0); r < 0x20; r++ {
@@ -62,9 +60,6 @@ func TestEveryControlCharacter(t *testing.T) {
 	}
 }
 
-// A value of each kind is written in the canonical form: the members of an object in the order of
-// their names' UTF-16 code units, at every depth, with no whitespace; an integer in decimal digits,
-// with - before a negative one; and null, true and false.
 func TestText(t *testing.T) {
 	for _, c := range []struct {
 		name string
@@ -99,9 +94,8 @@ func TestText(t *testing.T) {
 	}
 }
 
-// Text stops with an *Error at the first value the canonical text cannot hold, naming its place:
-// a number with a fraction, an integer given as a double, an integer past ±(2^53 − 1), a string or
-// a name that is not UTF-8, and a value of a Go type that is no JSON value (R09).
+// Text stops with an *Error at the first value the canonical text cannot hold, naming its place
+// (R09).
 func TestRefusals(t *testing.T) {
 	for _, c := range []struct {
 		name    string
@@ -137,7 +131,6 @@ func TestRefusals(t *testing.T) {
 	}
 }
 
-// A digest is sha256: and 64 lowercase hexadecimal digits, and a descriptor its digest and size.
 func TestDigest(t *testing.T) {
 	const empty = "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
 	if got := Digest(nil); got != empty {

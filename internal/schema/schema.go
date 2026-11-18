@@ -21,7 +21,7 @@ var files embed.FS
 // An Error is one keyword that fails, at the place where the schema holding it applies, as an
 // example of the format names it: the object for required, unevaluatedProperties and the other
 // keywords of an object, the array for those of an array, and the value for type, pattern and the
-// other keywords of a value (format/README.md, section 8).
+// other keywords of a value (R23).
 type Error struct {
 	Keyword string
 	// The place in the value, token by token from its root: the name of a member, or the index of
@@ -41,7 +41,7 @@ func (e Error) String() string {
 }
 
 // Keywords are the keywords that a schema of the format uses, and so the only ones an Error may
-// name, as section 5 of format/README.md lists them; a test holds the list to the text.
+// name, in the order the format's text lists them; a test holds the list to the text.
 var Keywords = []string{
 	"$schema", "$id", "$ref", "$defs", "$comment",
 	"allOf", "anyOf", "oneOf", "not", "if", "then", "else", "prefixItems", "items", "contains", "properties",
@@ -80,13 +80,10 @@ func names(fsys fs.FS) []string {
 	return found
 }
 
-// format is the set of the schemas of the format, built once.
 var format = sync.OnceValue(func() *set { return newSet(files) })
 
-// A set is every schema of schemas/ in a file system, added to one compiler by its $id, and what
-// is compiled of them so far, by location. A schema once compiled is read without a lock, and the
-// compiler, which is not safe from many goroutines, is held by mu. The open view walks the schemas
-// as they are written, docs, and reads the keys of patternProperties as patterns, compiled once.
+// A schema once compiled is read without a lock; the compiler, which is not safe from many
+// goroutines, is held by mu.
 type set struct {
 	compiler *jsonschema.Compiler
 	ids      map[string]string // the $id of each schema, by the name of its file
@@ -97,9 +94,9 @@ type set struct {
 }
 
 // newSet adds every schema of schemas/ in fsys to a compiler. A reference between schemas resolves
-// against the $id of the schema it stands in (format/README.md, section 5), so each schema is added
-// by its own $id, which ends in the name of its file, and the compiler loads nothing else: its
-// loader reads only file: URLs, and no schema of the format has one.
+// against the $id of the schema it stands in, so each schema is added by its own $id, which ends in
+// the name of its file, and the compiler loads nothing else: its loader reads only file: URLs, and
+// no schema of the format has one.
 func newSet(fsys fs.FS) *set {
 	s := &set{compiler: jsonschema.NewCompiler(), ids: map[string]string{}, docs: map[string]any{}}
 	s.compiler.RegisterVocabulary(propertyNames)
@@ -139,7 +136,6 @@ func (s *set) validate(location string, value any) []Error {
 	return collect(verr, nil)
 }
 
-// schema compiles the schema at location, the first time it is asked for.
 func (s *set) schema(location string) *jsonschema.Schema {
 	name, fragment, hasFragment := strings.Cut(location, "#")
 	id, ok := s.ids[name]
@@ -183,10 +179,10 @@ func Decode[T any](value any) (T, error) {
 }
 
 // ValueOf gives a Go value, such as a part as its type of formatv0 holds it, as the reader of YAML
-// gives a JSON value, the other way from Decode: map[string]any, []any, string, int64 for a number
-// without a fraction or an exponent, float64 for another, bool or nil. A part of formatv0 holds only
-// strings, integers, booleans and lists and maps of them, so it is always JSON; a value that
-// encoding/json does not write, such as a NaN, is a fault of module-kit, and ValueOf panics.
+// gives a JSON value: map[string]any, []any, string, int64 for a number without a fraction or an
+// exponent, float64 for another, bool or nil. A part of formatv0 holds only strings, integers,
+// booleans and lists and maps of them, so it is always JSON; a value that encoding/json does not
+// write, such as a NaN, is a fault of module-kit, and ValueOf panics.
 func ValueOf(value any) any {
 	data, err := json.Marshal(value)
 	if err != nil {
@@ -200,7 +196,8 @@ func ValueOf(value any) any {
 	return numbers(v)
 }
 
-// numbers puts int64 or float64 in the place of each json.Number in v.
+// numbers puts int64 or float64 in the place of each json.Number, in the maps and slices of v
+// themselves.
 func numbers(v any) any {
 	switch v := v.(type) {
 	case map[string]any:

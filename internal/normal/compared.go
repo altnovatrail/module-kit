@@ -3,7 +3,7 @@ package normal
 import "github.com/altnovatrail/spec/types/formatv0"
 
 // Units gives the forms of the units of a number, Unit of each, those that are not empty: a check of
-// another kind has none (format/README.md, section 15).
+// another kind has none.
 func Units(c formatv0.Check) []string {
 	if c.Kind != formatv0.CheckKindNumber {
 		return nil
@@ -21,9 +21,8 @@ func Units(c formatv0.Check) []string {
 // normal form by its notation, ChoiceOf, always; a number, a fraction and a predicate, its value in
 // the kind's notation, exactly, written in lowest terms; a time, its hours and its minutes, each as a
 // number, when it is in the notation of a time read. units are the forms of a number's units, as
-// Units gives them. The verdict compares a value with the key and the trap values by it, and the
-// comparison of the versions of a module the keys and the trap values of two versions
-// (format/README.md, sections 15 and 27).
+// Units gives them. The verdict and the comparison of the versions of a module compare by it alike
+// (R36).
 func Compared(c formatv0.Check, units []string, text string) (string, bool) {
 	switch c.Kind {
 	case formatv0.CheckKindChoice:

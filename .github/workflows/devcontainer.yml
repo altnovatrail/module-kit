@@ -1,9 +1,9 @@
 # The image of the devcontainer, built whole on amd64 and on arm64, each on a standard runner of its
-# own architecture, and its tools held to the versions that the Dockerfile pins (Д12 and Д14 in
-# RUN.md; R44 in docs/decisions.md). The checks of ci.yml build the toolchain stage alone, on amd64:
-# the sums of arm64 and the steps of the devcontainer stage — gopls from its lock file among them —
-# are built here. It runs when what the image is built from changes, and by the button. The ruleset
-# of main does not require it: a check that a filter of paths skips would never report.
+# own architecture, and its tools held to the versions that the Dockerfile pins (R44).
+# The checks of ci.yml build the toolchain stage alone, on amd64: the sums of arm64 and the steps of
+# the devcontainer stage — gopls from its lock file among them — are built here. It runs when what
+# the image is built from changes, and by the button. The ruleset of main does not require it: a
+# check that a filter of paths skips would never report.
 name: Devcontainer
 
 on:

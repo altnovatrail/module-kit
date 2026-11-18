@@ -17,9 +17,8 @@ import (
 //   - an implicit key whose ":" stands more than 1024 characters after its start;
 //   - a byte order mark outside a string in quotes and outside the places of the stream pass.
 //
-// The pass finds where a string in quotes or a flow collection ends in the text. go-yaml has read
-// the text already, so the pass need not read its syntax again, only find the ends; the test suite
-// holds it to YAML 1.2.2.
+// go-yaml has read the text already, so the pass need not read its syntax again, only find where a
+// string in quotes or a flow collection ends; the test suite holds it to YAML 1.2.2 (R21).
 
 // A span is a string in quotes in src, from its opening quote to its closing one, at places from 0.
 type span struct {
@@ -31,9 +30,9 @@ func (s span) holds(line, column int) bool {
 		(line < s.endLine || line == s.endLine && column <= s.endColumn)
 }
 
-// start gives the place of a node's content: where go-yaml places the node, past its tag and its
-// anchor and the space after them, comments and line breaks among it. A verbatim tag, !<…>, ends at
-// its >, whatever it holds.
+// start gives the place of a node's content: past the tag and the anchor that go-yaml places the
+// node at, and past the spaces, tabs, comments and line breaks after them, so on a later line, it
+// may be. A verbatim tag, !<…>, ends at its >, whatever it holds.
 func (s *source) start(n *goyaml.Node) (line, column int) {
 	line, column = n.Line-1, n.Column-1
 	for {
@@ -67,7 +66,6 @@ func (s *source) start(n *goyaml.Node) (line, column int) {
 	}
 }
 
-// leadingSpaces counts the spaces a line of src begins with.
 func (s *source) leadingSpaces(line int) int {
 	n := 0
 	for n < len(s.lines[line]) && s.lines[line][n] == ' ' {
@@ -76,9 +74,7 @@ func (s *source) leadingSpaces(line int) int {
 	return n
 }
 
-// quotedEnd gives the place of the closing quote of a string whose opening quote is at a place: two
-// single quotes stand for one in single quotes, and a backslash escapes the next character in
-// double ones.
+// quotedEnd gives the place of the closing quote of a string whose opening quote is at a place.
 func (s *source) quotedEnd(line, column int) (int, int) {
 	quote := s.at(line, column)
 	for column++; ; column++ {
@@ -102,8 +98,8 @@ func (s *source) quotedEnd(line, column int) (int, int) {
 }
 
 // flowEnd gives the place of the bracket that closes a flow collection whose opening bracket is at
-// a place, past the strings in quotes, whose ends ends gives by their starts, and past comments. A
-// plain scalar in a flow collection holds no bracket (YAML 1.2.2, ns-plain-safe).
+// a place; ends gives the end of each string in quotes by its start. A plain scalar in a flow
+// collection holds no bracket (ns-plain-safe).
 func (s *source) flowEnd(line, column int, ends map[[2]int][2]int) (int, int) {
 	depth := 0
 	afterSpace := false
@@ -147,7 +143,6 @@ func blockCollection(n *goyaml.Node) bool {
 	return (n.Kind == goyaml.MappingNode || n.Kind == goyaml.SequenceNode) && n.Style&goyaml.FlowStyle == 0
 }
 
-// quotedSpans finds every string in quotes of the documents.
 func (r *reader) quotedSpans(docs []*goyaml.Node) []span {
 	var spans []span
 	var walk func(*goyaml.Node)
@@ -167,8 +162,8 @@ func (r *reader) quotedSpans(docs []*goyaml.Node) []span {
 	return spans
 }
 
-// layout runs the checks of this pass over every document, and over the whole text for byte order
-// marks when go-yaml read it to its end.
+// layout runs the checks of this pass; whole says go-yaml read the text to its end, and only then
+// are byte order marks looked for.
 func (r *reader) layout(docs []*goyaml.Node, whole bool) {
 	ends := map[[2]int][2]int{}
 	// The lines that start inside a string in quotes: there a line that begins with # is no comment.
@@ -197,8 +192,7 @@ type layout struct {
 // node checks a node and what it holds. indent is the indentation that the lines of a string in
 // quotes or a flow collection need here: the column, from 1, of the block collection around the
 // node, or 0 at the root, as s-flow-line-prefix(n) asks n spaces where the block collection stands
-// at n − 1 (YAML 1.2.2, 6.3 and 8.2). inFlow says the node is in a flow collection, whose own check
-// covers the node's lines.
+// at n − 1. inFlow says the node is in a flow collection, whose own check covers the node's lines.
 func (l *layout) node(n *goyaml.Node, indent int, inFlow bool) {
 	if n.Kind == goyaml.AliasNode {
 		return
@@ -222,9 +216,8 @@ func (l *layout) node(n *goyaml.Node, indent int, inFlow bool) {
 	}
 }
 
-// indentation gives the column, from 1, at which a block collection's entries stand: where go-yaml
-// places it, unless it has a tag or an anchor, where go-yaml places those, and the entries stand
-// past them.
+// indentation gives the column, from 1, at which a block collection's entries stand: past its tag
+// or its anchor, where go-yaml places it when it has one.
 func (l *layout) indentation(n *goyaml.Node) int {
 	if n.Anchor == "" && n.Style&goyaml.TaggedStyle == 0 && n.Tag != "!" {
 		return n.Column
@@ -234,9 +227,9 @@ func (l *layout) indentation(n *goyaml.Node) int {
 }
 
 // lines checks the lines after the first of a string in quotes or of a flow collection in block
-// context: each that holds more than spaces and tabs begins with at least indent spaces, since a
-// tab is no indentation (YAML 1.2.2, 6.1). In a flow collection a comment line may stand anywhere,
-// but not a line of a string in quotes that begins with #.
+// context: each that is not blank begins with at least indent spaces, since a tab is no
+// indentation. In a flow collection a comment line may stand anywhere, but a line of a string in
+// quotes that begins with # is no comment.
 func (l *layout) lines(n *goyaml.Node, indent int, flow bool) {
 	src := l.r.src
 	line, column := src.start(n)
@@ -269,9 +262,9 @@ func (l *layout) lines(n *goyaml.Node, indent int, flow bool) {
 }
 
 // blockScalar checks a block scalar with no indentation indicator: none of its leading empty
-// lines, which hold nothing but spaces, holds more spaces than its first line that is not empty,
-// when that line is the scalar's, with at least indent spaces (YAML 1.2.2, 8.1.1.1). go-yaml takes
-// such a first line for a comment when it begins with # (S98Z).
+// lines holds more spaces than its first line that is not empty, when that line is the scalar's,
+// with at least indent spaces. go-yaml takes such a first line for a comment when it begins with #
+// (S98Z).
 func (l *layout) blockScalar(n *goyaml.Node, indent int) {
 	src := l.r.src
 	line, column := src.start(n)
@@ -302,11 +295,11 @@ func (l *layout) blockScalar(n *goyaml.Node, indent int) {
 	}
 }
 
-// The most characters between the start of an implicit key and its ":" (YAML 1.2.2, 7.4.2, 8.2.2).
+// The most characters YAML 1.2.2 allows between the start of an implicit key and its ":".
 const implicitKeyLimit = 1024
 
-// implicitKeys checks that the ":" of each implicit key of a mapping stands at most 1024 characters
-// after the key's start. A key with "?" before it is explicit.
+// implicitKeys checks the implicit keys of a mapping against implicitKeyLimit. A key with "?"
+// before it is explicit.
 func (l *layout) implicitKeys(n *goyaml.Node) {
 	src := l.r.src
 	for i := 0; i < len(n.Content); i += 2 {
@@ -345,8 +338,8 @@ func (l *layout) implicitKeys(n *goyaml.Node) {
 }
 
 // byteOrderMarks refuses a byte order mark that the stream pass did not take out and that stands
-// outside a string in quotes: YAML 1.2.2 allows one only at the start of a document and in quotes
-// (5.2), and nb-char excludes it elsewhere.
+// outside a string in quotes: YAML 1.2.2 allows one only at the start of a document and in quotes,
+// and nb-char excludes it elsewhere.
 func (r *reader) byteOrderMarks() {
 	for line, text := range r.src.lines {
 		for column, c := range text {

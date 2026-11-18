@@ -17,8 +17,8 @@ import (
 	"github.com/altnovatrail/module-kit/internal/schema"
 )
 
-// MaxInteger is the largest integer that the canonical text writes, 2^53 − 1, as section 4 of
-// format/README.md bounds an integer; the smallest is −MaxInteger.
+// MaxInteger is the largest integer that the canonical text writes, 2^53 − 1, the bound of an
+// integer of the format; the smallest is −MaxInteger.
 const MaxInteger = 1<<53 - 1
 
 // An Error is a value that the canonical text cannot hold, at its place in the value as a JSON
@@ -33,11 +33,11 @@ func (e *Error) Error() string {
 	return "canonical: " + e.Pointer + ": " + e.Message
 }
 
-// Text gives the canonical text of a JSON value, as format/README.md, section 25, writes it — RFC
-// 8785, which for the data of the format comes to this: the members of an object in the order of
-// the UTF-16 code units of their names, no whitespace between tokens, an integer in decimal digits,
-// in a string only ", \, the five short escapes and \u00XX for the rest of U+0000 to U+001F, and
-// every other character as it is; UTF-8, with no byte order mark and no newline at the end (R09).
+// Text gives the canonical text of a JSON value — RFC 8785, which for the data of the format comes
+// to this: the members of an object in the order of the UTF-16 code units of their names, no
+// whitespace between tokens, an integer in decimal digits, in a string only ", \, the five short
+// escapes and \u00XX for the rest of U+0000 to U+001F, and every other character as it is; UTF-8,
+// with no byte order mark and no newline at the end (R09).
 //
 // value is a tree of map[string]any, []any, string, int64, bool and nil, as the reader of YAML
 // gives it once an integer that it gave as a double is an int64. Text stops with an *Error, rather
@@ -51,8 +51,7 @@ func Text(value any) ([]byte, error) {
 	return w.Bytes(), nil
 }
 
-// Digest gives the digest of bytes: sha256: and their SHA-256 in 64 lowercase hexadecimal digits
-// (format/README.md, section 25).
+// Digest gives the digest of bytes: sha256: and their SHA-256 in 64 lowercase hexadecimal digits.
 func Digest(data []byte) formatv0.Digest {
 	sum := sha256.Sum256(data)
 	return formatv0.Digest("sha256:" + hex.EncodeToString(sum[:]))
@@ -118,7 +117,7 @@ func (w *writer) value(value any, at []string) error {
 	return nil
 }
 
-// The short escapes of section 25; every other character from U+0000 to U+001F is written \u00XX.
+// The short escapes; every other character from U+0000 to U+001F is written \u00XX (R09).
 var short = map[rune]string{'"': `\"`, '\\': `\\`, '\b': `\b`, '\t': `\t`, '\n': `\n`, '\f': `\f`, '\r': `\r`}
 
 const hexDigits = "0123456789abcdef"
@@ -144,9 +143,9 @@ func (w *writer) string(s string, at []string) error {
 	return nil
 }
 
-// byCodeUnits orders two names by their UTF-16 code units, as RFC 8785, section 3.2.3, orders the
-// members of an object: a character outside the Basic Multilingual Plane, a surrogate pair, comes
-// before U+E000 to U+FFFF, though its code point is above them.
+// byCodeUnits orders names as RFC 8785 orders the members of an object: a character outside the
+// Basic Multilingual Plane, a surrogate pair, comes before U+E000 to U+FFFF, though its code point
+// is above them.
 func byCodeUnits(a, b string) int {
 	return slices.Compare(utf16.Encode([]rune(a)), utf16.Encode([]rune(b)))
 }

@@ -42,10 +42,8 @@ jobs:
       id-token: write
     uses: altnovatrail/.github/.github/workflows/go.yml@f1c7e9e6f8245fdbdbc23c4091f3c26350e3a44e # v0.1.33
 
-  # The six binaries of a release, each run on a runner of its own system (Д6 in RUN.md; R41 in
-  # docs/decisions.md). The build job builds them as release.yml does, by release-files in the
-  # toolchain stage, which holds what the release's toolchain-core does (R62), with the samples
-  # from spec's Go module, and runs the binary of linux/amd64 first: what it builds is the reference that every other runner's must equal, byte for byte.
+  # The six binaries of a release, each run on a runner of its own system: what the binary of
+  # linux/amd64 builds is the reference that every other runner's must equal, byte for byte (R41).
   binaries-build:
     name: Binaries / build
     runs-on: ubuntu-24.04
@@ -55,15 +53,10 @@ jobs:
         with:
           persist-credentials: false
 
-      # What this job still holds to the release of .github it pins, in place of the copy of the
-      # steps that the composite action took (R64 in docs/decisions.md): every reference to .github
-      # at one SHA, so the action is go.yml's of the same release, with its file, image, folder and
-      # keys; the mount of the Go caches in «Release files and samples», by the lines the header of
-      # the action names for a caller's docker run; and the awk of «The stage of the release» to
-      # that of the step «Toolchain stages» of the job toolchain of go.yml, which reads the
-      # Dockerfile for the stage of the checks as release.yml reads it for the release (R62). A
-      # move of .github that changes the mount or that reading fails here, and the pull request
-      # takes it by hand.
+      # Every reference to .github at one SHA, so the action is go.yml's of the same release; the
+      # mount of the Go caches by the lines of the action's header; the awk of «The stage of the
+      # release» as go.yml's (R64, R62). References at more than one SHA, or a move of .github that
+      # changes the mount or the awk, fail here, and the pull request takes it by hand.
       - name: As in the pinned .github
         env:
           GH_TOKEN: ${{ github.token }}
@@ -112,13 +105,9 @@ jobs:
           fi
           exit "$failed"
 
-      # The shared release.yml builds the release's files in the stage toolchain-core, and this job
-      # in toolchain, from the entry that go.yml fills (R47 .github). The two hold the same files
-      # while toolchain is FROM toolchain-core with its SHELL alone, as in every copy of the kind
-      # go: the step reads the Dockerfile by the awk of the step «Toolchain stages» of the job
-      # toolchain of go.yml, which the step before it holds to it, and fails once toolchain holds
-      # more than the core, so that this job then builds in the core, or when the Dockerfile cannot
-      # be read (R62 in docs/decisions.md).
+      # The shared release.yml builds the release's files in toolchain-core, and this job in
+      # toolchain, from the entry that go.yml fills (R47 .github): the two hold the same files only
+      # while toolchain is FROM toolchain-core with its SHELL alone (R62).
       - name: The stage of the release
         run: |
           status=0
@@ -146,15 +135,11 @@ jobs:
                   ;;
           esac
 
-      # The image of the stage toolchain and the caches of Go by the composite action of .github, at
-      # the release the shared workflows are pinned to, which Dependabot moves with them in the group
-      # shared-workflows (R49 .github; R64 in docs/decisions.md): the file, image, path and key of
-      # go.yml, so the entry of the image is the one its jobs fill and read, and the Go caches by a
-      # key of this job's own, the check binaries (R41 .github). The modules of an exact hit go mod
-      # verify checks first; an entry of another go.sum, by the prefix, loses its modules, with nothing
-      # left to verify, and keeps its builds, which main's scope holds, as on a hit (T75 .github). Only
-      # a push to main saves, the image at once and the Go caches by the second call at the end of the
-      # job, after the binaries are built and their reference written.
+      # The image of toolchain by go.yml's file, image, path and key, so its entry is the one go.yml's
+      # jobs fill and read, and the Go caches by a key of this job's own (R49 .github, R41 .github;
+      # R64). An entry of another go.sum, by the prefix, keeps its builds and drops its modules, which
+      # go mod verify checks on an exact hit alone (R68). Only a push to main saves: the image at once,
+      # the Go caches by the second call, once the binaries and their reference are built.
       - name: Toolchain image and Go caches
         uses: altnovatrail/.github/.github/actions/toolchain@f1c7e9e6f8245fdbdbc23c4091f3c26350e3a44e # v0.1.33
         with:

@@ -22,9 +22,7 @@ import (
 	"github.com/altnovatrail/module-kit/verdict"
 )
 
-// observationVector is a test vector of the observation, contracts/vectors/observation/v1/<case>.json
-// (contracts/README.md, section 10): the task's canvas and items, as the module format writes them,
-// and its cases.
+// observationVector is a vector of the observation, contracts/vectors/observation/v1/<case>.json.
 type observationVector struct {
 	Description string            `json:"description"`
 	Canvas      formatv0.Canvas   `json:"canvas"`
@@ -61,10 +59,10 @@ type observationCase struct {
 // observations passes a vector of the observation: each observation of a case is valid as valid
 // says; an essay's submission ends as submission says; any other case's two observations join into
 // joined, or into none when either is not valid, and the joined observation, or none, with the
-// options tapped, gives each item the verdicts that verdicts gives it (contracts/README.md, section
-// 10). The vector is read as that section has it: JSON with no field that it does not name, its
-// canvas and items by the schema of a task and strictly by the types of formatv0, and its
-// observations by protojson, which refuses a field that the message does not have.
+// options tapped, gives each item the verdicts that verdicts gives it. The vector is read strictly:
+// JSON with no field that it does not name, its canvas and items by the schema of a task and the
+// types of formatv0, and its observations by protojson, which refuses a field that the message
+// does not have (R29).
 func observations(v vector) error {
 	data, err := fs.ReadFile(v.fsys, v.path)
 	if err != nil {
@@ -87,8 +85,6 @@ func observations(v vector) error {
 	return nil
 }
 
-// observationTask holds the canvas and the items of a vector to the schema of a task, as the module
-// format writes them.
 func observationTask(data []byte) error {
 	var task struct {
 		Canvas any   `json:"canvas"`
@@ -112,7 +108,6 @@ func observationTask(data []byte) error {
 	return nil
 }
 
-// observationCaseOf passes one case of a vector of the observation.
 func observationCaseOf(items []formatv0.Item, c observationCase) error {
 	if len(c.Valid) != len(c.Observations) {
 		return fmt.Errorf("%d observations, and valid says of %d", len(c.Observations), len(c.Valid))

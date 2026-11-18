@@ -9,11 +9,9 @@ import (
 )
 
 // On every value that the format admits, Text writes what jsontext's Canonicalize writes, RFC 8785
-// in the standard library of Go (R09). The fuzz test builds a value from its input: a stream of
-// bytes read as a small program, so that every input is a value of the format — objects, arrays,
-// strings of valid UTF-8, integers within ±(2^53 − 1), true, false and null. Canonicalize is the
-// reference here alone: under GOEXPERIMENT=nojsonv2 this file is not built, and the other tests run
-// without it.
+// in the standard library of Go (R09). The input is read as a small program that builds a value,
+// so that every input is a value of the format. Canonicalize is the reference here alone: under
+// GOEXPERIMENT=nojsonv2 this file is not built, and the other tests run without it.
 func FuzzText(f *testing.F) {
 	for _, seed := range []string{
 		"", "o", "a", "s\"\\\b\t\n\f\r\x07", "i\x01\x02\x03\x04\x05\x06\x07", "t", "f", "n",
@@ -40,8 +38,7 @@ func FuzzText(f *testing.F) {
 // The depth below which build nests no object or array, so that a value stays small.
 const maxDepth = 4
 
-// build reads one value from the front of data, and takes what it read off data. Its first byte
-// says what the value is; a value ends when data does.
+// build takes one value off the front of data; a value ends when data does.
 func build(data *[]byte, depth int) any {
 	if len(*data) == 0 {
 		return nil
@@ -89,7 +86,6 @@ func build(data *[]byte, depth int) any {
 	return nil
 }
 
-// next takes one byte off data, or 0 when it is empty.
 func next(data *[]byte) byte {
 	if len(*data) == 0 {
 		return 0

@@ -10,13 +10,13 @@ import (
 )
 
 // The pass over go-yaml's tree for the rules about nodes, which builds the value as it goes, as
-// the Walker of spec's tools/format-check/yaml.mjs does. go-yaml resolves a plain scalar by its own
-// schema, so the pass reads its text by section 4 instead. It never follows an alias.
+// the Walker of spec's tools/format-check/yaml.mjs does (R21). go-yaml resolves a plain scalar by
+// its own schema, so the pass reads its text by the rules yaml.* instead. It never follows an
+// alias.
 
 // The largest integer a double holds exactly, and every one below it: 2^53 − 1.
 const maxSafeInteger = 1<<53 - 1
 
-// The styles of a scalar that is not plain: in quotes, or a block scalar.
 const nonPlainStyles = goyaml.DoubleQuotedStyle | goyaml.SingleQuotedStyle | goyaml.LiteralStyle | goyaml.FoldedStyle
 
 // value checks a node and gives its value. key says the node is a key of a mapping.
@@ -60,8 +60,8 @@ func (r *reader) value(n *goyaml.Node, key bool) any {
 	return nil
 }
 
-// mapping checks the keys and the values of a mapping. A key that is no string has no member: the
-// file breaks yaml.string-keys and has no value anyway.
+// mapping checks a mapping and gives its members. A key that is no string has no member: the file
+// breaks yaml.string-keys and has no value anyway.
 func (r *reader) mapping(n *goyaml.Node) map[string]any {
 	members := make(map[string]any, len(n.Content)/2)
 	first := map[string]int{}
@@ -82,8 +82,8 @@ func (r *reader) mapping(n *goyaml.Node) map[string]any {
 	return members
 }
 
-// scalar checks a scalar and gives its value: a plain one as section 4 reads it, any other the
-// string it holds.
+// scalar checks a scalar and gives its value: a plain one as the rules yaml.* read it, any other
+// the string it holds.
 func (r *reader) scalar(n *goyaml.Node, key bool) any {
 	text := r.restored(n.Value)
 	line, column := n.Line-1, n.Column-1
@@ -102,8 +102,7 @@ func (r *reader) scalar(n *goyaml.Node, key bool) any {
 // of the Core schema in another letter case (yaml.plain-strings).
 var otherWords = map[string]bool{"y": true, "n": true, "yes": true, "no": true, "on": true, "off": true, "true": true, "false": true, "null": true}
 
-// plain reads a plain scalar: null, true, false or a JSON number, as written, or else a string
-// (yaml.json-scalars, yaml.plain-strings).
+// plain reads a plain scalar by the rules yaml.json-scalars and yaml.plain-strings.
 func (r *reader) plain(text string, key bool, line, column int) any {
 	switch {
 	case text == "null", text == "true", text == "false":
@@ -157,7 +156,7 @@ func (r *reader) number(text string, line, column int) any {
 	return f
 }
 
-// jsonNumber says whether a text is a JSON number (RFC 8259, 6).
+// jsonNumber says whether a text is a JSON number (RFC 8259).
 func jsonNumber(text string) bool {
 	at := 0
 	digits := func() int {

@@ -14,9 +14,8 @@ import (
 // is none: the function draws no integer, and no place is built (R10).
 var ErrDomain = errors.New("outside the domain")
 
-// The constants of the generator, as the format's text gives them (format/README.md, section 22):
-// the multiplier M and the increment C of a step, each a high and a low word, and the multiplier of
-// DXSM.
+// The multiplier M and the increment C of a step, each a high and a low word, and the multiplier
+// of DXSM, as the format's text gives them (R10).
 const (
 	multiplierHigh = 2549297995355413924  // 0x2360ed051fc65da4
 	multiplierLow  = 4865540595714422341  // 0x4385df649fccf645
@@ -25,21 +24,20 @@ const (
 	dxsmMultiplier = 15750249268501108917 // 0xda942042e4dd58b5
 )
 
-// The constants of FNV-1a of 64 bits (RFC 9923, sections 2 and 5): where it starts, and the prime
-// it multiplies by.
+// The offset basis and the prime of FNV-1a of 64 bits.
 const (
 	fnvOffset = 14695981039346656037 // 0xcbf29ce484222325
 	fnvPrime  = 1099511628211        // 0x100000001b3
 )
 
-// Stream is the generator, PCG with 128 bits of state, its state the number high · 2^64 + low. It
-// gives numbers only through its five functions, each drawing as many integers as the format's text
-// says. A Stream is not for two goroutines at once: each use builds its own, and lives in one call.
+// Stream is the generator, PCG with 128 bits of state, its state the number high · 2^64 + low. Each
+// of its five functions draws as many integers as the format's text says. A Stream is not for two
+// goroutines at once: each use builds its own, and lives in one call.
 type Stream struct {
 	high, low uint64
 }
 
-// New gives the stream that starts from two words, taken as its state as they are.
+// New gives the stream whose state is the two words as they are.
 func New(high, low uint64) *Stream {
 	return &Stream{high, low}
 }
@@ -107,7 +105,6 @@ func (s *Stream) Below(b uint64) (uint64, error) {
 	return s.below(b), nil
 }
 
-// below is Below on a bound already in its domain.
 func (s *Stream) below(b uint64) uint64 {
 	if b&(b-1) == 0 {
 		return s.Integer() & (b - 1)
@@ -124,7 +121,7 @@ func (s *Stream) below(b uint64) uint64 {
 }
 
 // Between gives a + below(c − a + 1), an integer from a to c, both included, for signed integers a
-// ≤ c with c − a + 1 at most 2^63 − 1. It checks a ≤ c first, so that c − a, taken in the words of
+// ≤ c with c − a + 1 at most 2^63 − 1. a ≤ c is checked first, so that c − a, taken in the words of
 // 64 bits that wrap, is the count less one and overflows nothing.
 func (s *Stream) Between(a, c int64) (int64, error) {
 	if a > c {
@@ -143,7 +140,7 @@ func (s *Stream) Fraction() float64 {
 	return float64(s.Integer()&(1<<53-1)) / (1 << 53)
 }
 
-// MaxPermutation is the greatest count that Permutation orders, 2^31 − 1.
+// MaxPermutation is the greatest count that Permutation orders.
 const MaxPermutation = math.MaxInt32
 
 // Permutation gives an order of the integers from 0 to n − 1, for n from 0 to 2^31 − 1: from them

@@ -10,11 +10,10 @@ import (
 	"testing"
 )
 
-// The YAML test suite, as testdata/yaml-test-suite/README.md says where it comes from: the cases
-// YAML 1.2.2 reads in valid.json, and those it refuses in error.json.
+// The YAML test suite, whose source testdata/yaml-test-suite/README.md names: the cases YAML 1.2.2
+// reads in valid.json, and those it refuses in error.json.
 const suiteRoot = "testdata/yaml-test-suite"
 
-// A case of the suite.
 type suiteCase struct {
 	ID, Name, YAML string
 	// The JSON value of what YAML reads, as text, when JSON can hold it.
@@ -23,7 +22,6 @@ type suiteCase struct {
 	Error bool
 }
 
-// suiteCases reads every case of the suite, the valid ones first.
 func suiteCases() ([]suiteCase, error) {
 	var cases []suiteCase
 	for _, group := range []string{"valid", "error"} {

@@ -11,7 +11,6 @@ import (
 	"github.com/altnovatrail/module-kit/internal/yaml"
 )
 
-// holds says whether value has a place at location.
 func holds(value any, location []string) bool {
 	for _, token := range location {
 		switch v := value.(type) {
@@ -97,8 +96,8 @@ func FuzzOpen(f *testing.F) {
 }
 
 // On any value that the reader of YAML gives, every schema of the format gives its errors without a
-// panic, each naming a keyword of section 5 at a place the value has, with a message. The corpus is
-// the examples of the format.
+// panic, each naming one of Keywords at a place the value has, with a message. The corpus is the
+// examples of the format.
 func FuzzValidate(f *testing.F) {
 	names, err := fs.Glob(spec.Format, "examples/*/*/*.yaml")
 	if err != nil {

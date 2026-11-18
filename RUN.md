@@ -44,30 +44,6 @@ A task starts with «Выполни задачу T01 из RUN.md» in a new sess
 - **A done epic** goes to `docs/plan/<epic>.md` (R59 canvas-api): bodies and gist sentences are there already (rule 9); move its description and table of tasks verbatim; questions and debt stay in `run/`; until the next epic, table 1 reads «Current epic — none» and names the last done epic. Measure the epic's sessions — `just -f spec/justfile tokens-report --since <first day of the epic> --row` — as a row of [docs/measurements.md](docs/measurements.md), after measurements 1.9 spec; a new analysis by the threshold of R145 spec.
 - Never read an archive whole: find a task by heading — `grep -n '^#### T03\.' RUN.md docs/plan/*.md`; from another repository — «T03 module-kit». Task numbers are global, never reused, and taken free at the moment of writing.
 
-## Table 1. Current epic — E11. Тексты без истории (R160 spec)
+## Table 1. Current epic — none
 
-| Статус | ID | Задача | Кто | План | Зависит от |
-|---|---|---|---|---|---|
-| [x] | T57 | Тексты без истории (R160 spec) и тег `spec` v0.18.34 — тело в [docs/plan/E11.md](docs/plan/E11.md) | Claude | — | — |
-| [x] | T58 | Документы без истории: `docs/architecture.md` без раздела 3.6, `docs/README.md`, README, CLAUDE.md, `.claude/rules/` — тело в [docs/plan/E11.md](docs/plan/E11.md) | Claude | — | T57 |
-| [x] | T59 | Документы без истории: раздел 3.6 `docs/architecture.md` — тело в [docs/plan/E11.md](docs/plan/E11.md) | Claude | — | T57 |
-| [x] | T60 | Комментарии кода по R160 spec: `module`, `template`, `cmd/module-kit` — тело в [docs/plan/E11.md](docs/plan/E11.md) | Claude | — | T57 |
-| [x] | T61 | Комментарии кода по R160 spec: `moduleversion`, `moduleindex`, `modulepackage`, `observation`, `verdict`, `leak`, `openview`, `page`, `picture` — тело в [docs/plan/E11.md](docs/plan/E11.md) | Claude | — | T57 |
-| [ ] | T62 | Комментарии кода по R160 spec: `internal/`, `.github/`, `justfile` | Claude | — | T57 |
-
-## Epic E11. Тексты без истории (R160 spec)
-
-**Почему эпик такой.** Строка 7.27 COORDINATION.md spec — правило эпика E16 `spec` в этом репозитории, по тексту T206 spec: тег `spec` с T205, `docs-budgets.json` с `entry` 12 и `comments`, план, документы и комментарии кода без истории (R160 spec; R76 spec, R156 spec). Текст задачи дал оркестратор (правило 6 COORDINATION.md spec). Текущего эпика не было, а задача не из эпика — первая задача следующего (R56): T57 начала эпик E11, как T56 начала E10 (R57). Всё вместе — больше одного ревью: 149 КБ `docs/architecture.md` и около 300 КБ комментариев Go. T57 разделила его по правилу 11: сама — тег, `docs-budgets.json` и план; документы — T58 и T59, комментарии кода — T60, T61 и T62, по пакетам, примерно по 100 КБ комментариев. Задачи вне эпика стоят в таблице 1, а не в `run/TASKS.md`, которого здесь нет (R56); оркестратор читает их оттуда (README оркестратора spec, раздел 2).
-
-**Не входит:** новый код библиотеки и CLI — формат тот же; записи журнала целиком — каждую переписывает задача, которая её касается (R160 spec, «Decisions»); `docs/sources.md`, `docs/measurements.md`, архивы `docs/plan/` — вне правила (R160 spec, «Outside the rule»); `.devcontainer/` — это файлы заготовки `spec` (R51), их комментарии приходят переходом на тег.
-
-## Задачи эпика
-
-#### T62. Комментарии кода по R160 spec: `internal/`, `.github/`, `justfile`
-
-- **Цель:** комментарии Go пакетов `internal/`, тесты тоже, и комментарии `#` `.github/` и `justfile` — как в T60.
-- **Почему:** как T60; около 100 КБ комментариев Go и 25 КБ CI.
-- **Сделать:** как пункты 1 и 2 T60; в `.github/` и `justfile` — `Д… in RUN.md` строки, которых нет в [run/DEBT.md](run/DEBT.md), — убрать, причину оставить решением.
-- **Не делать:** `.devcontainer/` — файлы заготовки `spec` (R51).
-- **Как проверить:** правила [go](.claude/rules/go.md) и [ci](.claude/rules/ci.md) — `just ci-lint`, `just ci-test`; `just -f spec/justfile docs-check-repo`; `/code-review high`. Больше одного ревью — разделить по правилу 11.
-- **Разделы:** R160 spec, R32 spec; RULES.md spec — The bar.
+Last done epic: E11, [docs/plan/E11.md](docs/plan/E11.md). Next — the author picks it from [run/EPICS.md](run/EPICS.md), empty now, and splits it into tasks (Epics, «Next epic»).

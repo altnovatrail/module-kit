@@ -8,10 +8,9 @@ import (
 	"github.com/altnovatrail/spec/types/formatv0"
 )
 
-// FuzzNotation writes numbers in the notation of each kind and reads them back: an integer, a
-// simple fraction with spaces or none, and a decimal, of at most 16 characters, read as the same
-// rational, in lowest terms when the numerator and the denominator as written have no common
-// divisor; longer, they are out of the notation. Text of any other form is read without a panic.
+// A number written in the notation of each kind reads back as the same rational, in lowest terms
+// when the numerator and the denominator as written have no common divisor; longer than MaxNotation,
+// it is out of the notation. Text of any other form is read without a panic.
 func FuzzNotation(f *testing.F) {
 	f.Add(int64(7), int64(4), "7")
 	f.Add(int64(-6), int64(8), "-6/8")
@@ -54,8 +53,6 @@ func FuzzNotation(f *testing.F) {
 	})
 }
 
-// read says that a text is in the notation of a kind, with a value, when it is short enough and the
-// value is given, and out of it otherwise.
 func read(t *testing.T, text string, kind formatv0.CheckKind, value *big.Rat, lowest bool) {
 	t.Helper()
 	w, ok := Notation(text, kind)

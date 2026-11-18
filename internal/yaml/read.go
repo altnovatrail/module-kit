@@ -11,7 +11,7 @@ import (
 	goyaml "go.yaml.in/yaml/v4"
 )
 
-// The rules of section 4 of format/README.md, in its order.
+// The IDs of the rules yaml.* of the format.
 const (
 	RuleEncoding       = "yaml.encoding"
 	RulePrintable      = "yaml.printable"
@@ -26,7 +26,7 @@ const (
 	RuleCharacters     = "yaml.characters"
 )
 
-// Rules are the IDs of the rules yaml.*, in the order of section 4.
+// Rules are the IDs of the rules yaml.*, in the order the format gives them.
 var Rules = []string{
 	RuleEncoding, RulePrintable, RuleSingleDocument, RuleNoDirectives, RuleNoAnchors, RuleNoTags,
 	RuleStringKeys, RuleUniqueKeys, RuleJSONScalars, RulePlainStrings, RuleCharacters,
@@ -34,7 +34,7 @@ var Rules = []string{
 
 // A Breach is one reason a file is refused: a rule it breaks, or, when Rule is empty, that it is
 // not YAML 1.2.2 at all. The format gives that refusal no ID: a file that is not YAML is no module
-// file, whatever its rules say (format/README.md, section 4).
+// file, whatever its rules say.
 type Breach struct {
 	Rule string
 	// The place in the file as written: the line and the column, both from 1. The column counts
@@ -72,8 +72,7 @@ const panicMessage = "go-yaml failed on this file: "
 
 // Read reads a file of a module into its JSON value: a map[string]any, []any, string, int64 for a
 // number written with neither a fraction nor an exponent, float64 for any other number, bool, or
-// nil. A file that breaks a rule yaml.*, or is not YAML 1.2.2, gives a *Refusal and no value
-// (format/README.md, section 4).
+// nil. A file that breaks a rule yaml.*, or is not YAML 1.2.2, gives a *Refusal and no value.
 func Read(data []byte) (any, error) {
 	r := reader{shifted: map[int]bool{}, tagHandles: map[string]bool{}}
 	value := r.read(data)
@@ -89,22 +88,19 @@ func Read(data []byte) (any, error) {
 // reader holds what the passes find and what they need of one another.
 type reader struct {
 	breaches []Breach
-	// The text go-yaml reads, by lines, and the places in it that the passes look up.
-	src *source
+	src      *source
 	// The lines of src, from 0, whose byte order mark the stream pass took out: their columns in
 	// the file are one more.
 	shifted map[int]bool
 	// The handles the directives %TAG gave, which the stream pass made comments.
 	tagHandles map[string]bool
 	// What turns the stand-ins of U+0085, U+2028 and U+2029 back into them, or nil when the file
-	// has none (text.go).
+	// has none.
 	restore *strings.Replacer
-	// The strings in quotes, from their opening quotes to their closing ones (layout.go).
-	quoted []span
+	quoted  []span
 }
 
-// read runs the passes in order and gives the value of the file, which counts only when no pass
-// found a breach.
+// read gives the value of the file, which counts only when no pass found a breach.
 func (r *reader) read(data []byte) any {
 	text, ok := r.decode(data)
 	if !ok {
@@ -138,8 +134,8 @@ func (r *reader) read(data []byte) any {
 	return value
 }
 
-// parse reads the documents of the text with go-yaml, each as its tree of nodes, until the end or
-// the first error. A panic of go-yaml comes back as an error.
+// parse reads the documents of the text until the end or the first error. A panic of go-yaml comes
+// back as an error.
 func parse(text string) (docs []*goyaml.Node, err error) {
 	defer func() {
 		if p := recover(); p != nil {

@@ -8,8 +8,8 @@ import (
 	"github.com/altnovatrail/spec/types/formatv0"
 )
 
-// The notation of the numbers that number, fraction and predicate take (format/README.md, section
-// 15): an integer, a decimal with a point and a simple fraction, of at most 16 characters.
+// The notation of the numbers that number, fraction and predicate take, each of at most MaxNotation
+// characters.
 var (
 	integerNotation  = regexp.MustCompile(`^-?(0|[1-9][0-9]*)$`)
 	decimalNotation  = regexp.MustCompile(`^-?(0|[1-9][0-9]*)\.[0-9]+$`)
@@ -32,7 +32,7 @@ var one = big.NewInt(1)
 
 // Notation reads a text in the notation that a kind takes — number all three, fraction a simple
 // fraction, predicate an integer — and says whether it is in it. big.Rat reduces a fraction, so
-// whether it is in lowest terms is read off the numerator and the denominator as they are written.
+// whether it is in lowest terms is read off the numerator and the denominator as written.
 func Notation(text string, kind formatv0.CheckKind) (Written, bool) {
 	if len(text) > MaxNotation {
 		return Written{}, false

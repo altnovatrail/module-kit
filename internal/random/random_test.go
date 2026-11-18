@@ -9,9 +9,8 @@ import (
 	"testing"
 )
 
-// The words of a place: the high one is FNV-1a of the text of the seed and the names, which the
-// vectors give, and the low one the seed. A list with no name, and a name that is empty, holds | or
-// is not UTF-8, builds no place, wherever it stands in the list.
+// A list with no name, and a name that is empty, holds | or is not UTF-8, builds no place, wherever
+// it stands in the list.
 func TestWords(t *testing.T) {
 	for _, c := range []struct {
 		seed      uint64
@@ -49,8 +48,7 @@ func TestWords(t *testing.T) {
 	}
 }
 
-// drawn counts the integers that a call draws from a stream: the steps from the state before it to
-// the state after it, up to limit.
+// drawn counts the steps from the state before a call to the state after it, up to limit.
 func drawn(t *testing.T, before Stream, call func(*Stream), limit int) int {
 	t.Helper()
 	after := before
@@ -65,10 +63,7 @@ func drawn(t *testing.T, before Stream, call func(*Stream), limit int) int {
 	return 0
 }
 
-// Each function draws as many integers as the format's text says: one each for an integer, a bound
-// that is a power of two, below(1) and between(a, a) among them, and a fraction; one more for each
-// product that Lemire's method refuses; none for an order of 0 or 1 integers, and one for each swap
-// of a longer one (format/README.md, section 22).
+// Each function draws as many integers as the format's text says (R10).
 func TestDraws(t *testing.T) {
 	below := func(b uint64) func(*Stream) { return func(s *Stream) { s.Below(b) } }
 	between := func(a, c int64) func(*Stream) { return func(s *Stream) { s.Between(a, c) } }
@@ -135,8 +130,6 @@ func TestRefusals(t *testing.T) {
 	}
 }
 
-// At the edges of their domains the functions give what their domains hold: between(a, a) gives
-// a at both ends of the integers, the widest counts reach their ends, and below(1) gives 0.
 func TestEdges(t *testing.T) {
 	s := New(1, 2)
 	for _, c := range []struct{ a, c int64 }{

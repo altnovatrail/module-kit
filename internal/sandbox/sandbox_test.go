@@ -19,7 +19,6 @@ import (
 	"go.starlark.net/syntax"
 )
 
-// formatText gives the text of the format, format/README.md.
 func formatText(t *testing.T) string {
 	t.Helper()
 	data, err := fs.ReadFile(spec.Format, "README.md")
@@ -29,8 +28,8 @@ func formatText(t *testing.T) string {
 	return string(data)
 }
 
-// The dialect is the format's: the options of section 24, and as the built-in names the 33 that it
-// lists, in its order, which are those of starlark.Universe at the version that go.mod pins.
+// The dialect is the format's: its options, and as the built-in names the 33 that the format lists,
+// in its order, which are those of starlark.Universe at the version that go.mod pins (R88 spec).
 func TestDialect(t *testing.T) {
 	want := syntax.FileOptions{Set: true, While: true, TopLevelControl: true, GlobalReassign: true}
 	if got := *options(); got != want {
@@ -52,8 +51,7 @@ func TestDialect(t *testing.T) {
 	}
 }
 
-// go.mod pins go.starlark.net at the version that the format names (format/README.md, section 24;
-// R88 spec).
+// go.mod pins go.starlark.net at the version that the format names (R88 spec).
 func TestVersionIsTheFormats(t *testing.T) {
 	named := regexp.MustCompile("go\\.starlark\\.net at the version `([^`]+)`").FindStringSubmatch(formatText(t))
 	if named == nil {
@@ -285,7 +283,7 @@ func TestConcurrentEval(t *testing.T) {
 
 // FuzzCheckExpr checks any text: without a panic, the same way twice, and a text that it takes is
 // an expression that the parser of the dialect takes. It evaluates nothing: a built-in function
-// takes a gigabyte in a step, which no limit of the sandbox stops (RUN.md, Д10).
+// takes a gigabyte in a step, which no limit of the sandbox stops (Д10).
 func FuzzCheckExpr(f *testing.F) {
 	for _, src := range []string{
 		"value % 3 == 0 and value % 4 == 0", "value in [n * n for n in range(99997)]", "12 % value == 0",
@@ -407,8 +405,8 @@ func TestCheckProgram(t *testing.T) {
 	}
 }
 
-// solveTurns is a program whose solve(n) takes 20 + 10·n steps, as go.starlark.net at the version of
-// the format counts them — 10 for the call, 10 for range and 10 for each turn —, after the 10 of its
+// solveTurns is a program whose solve(n) takes 20 + 10·n steps, as go.starlark.net at the format's
+// version counts them — 10 for the call, 10 for range and 10 for each turn —, after the 10 of its
 // top level.
 const solveTurns = "def solve(n):\n    for turn in range(n):\n        pass\n    return n\n"
 
@@ -445,7 +443,6 @@ func TestProgramSteps(t *testing.T) {
 		}
 		p.Close()
 		p.Close()
-		// After Close the program has no clock and no watch of ctx, so it is called no more.
 		if _, err := p.Call(solve, starlark.MakeInt(0)); !errors.Is(err, ErrClosed) || err.Error() != "sandbox: the program is closed" {
 			t.Errorf("a call after Close gives %v", err)
 		}
@@ -576,7 +573,7 @@ func TestConcurrentExec(t *testing.T) {
 // FuzzCheckProgram checks any text: without a panic, the same way twice, and a text that it takes is
 // a program that the parser of the dialect takes, with no load, and that compiles as Exec compiles it.
 // It runs nothing: a built-in function takes a gigabyte in a step, and x = x + x doubles a string
-// with no loop, which no limit of the sandbox stops (RUN.md, Д10).
+// with no loop, which no limit of the sandbox stops (Д10).
 func FuzzCheckProgram(f *testing.F) {
 	for _, src := range []string{
 		solveTurns, "def solve(numbers)\n    return 1\n", "load(\"f.star\", \"f\")\n", "def solve(numbers):\n    return gcd(1, 2)\n",

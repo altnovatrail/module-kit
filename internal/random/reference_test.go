@@ -22,15 +22,13 @@ import (
 
 // The reference is Go's: the generator PCG of math/rand/v2 with its methods Uint64, Uint64N,
 // Int64N, Float64 and Perm, and FNV-1a of 64 bits of hash/fnv, which the format's text names beside
-// its own (format/README.md, section 22). It lives in the tests alone (R10), and a failure here
-// after a move to a newer Go means that Go changed its streams: a question for spec, while the code
-// stays as the format's text has it.
+// its own. It lives in the tests alone (R10), and a failure here after a move to a newer Go means
+// that Go changed its streams: a question for spec, while the code stays as the format's text has
+// it.
 
-// An input is what the generator is compared with the reference on: the words that start a stream,
-// the arguments of below, between and permutation, and the seed and names of a place. The names are
-// one string, joined by | as the text of their place joins them: a name holds no |, so every list of
-// names is one such string, and a fuzzer reaches every name, a line break in it too. That a name
-// with a | builds no place, TestWords holds.
+// The names of an input are one string, joined by | as the text of their place joins them: a name
+// holds no |, so every list of names is one such string, and a fuzzer reaches every name, a line
+// break in it too. That a name with a | builds no place, TestWords holds.
 type input struct {
 	high, low uint64
 	bound     uint64
@@ -44,7 +42,7 @@ type input struct {
 const maxCompared = 1024
 
 // The bounds of below, from 0, which is refused: 1, every power of two, the integers on either side
-// of each, and those of the vectors (format/README.md, section 22).
+// of each, and those of the vectors.
 func bounds() []uint64 {
 	b := []uint64{0, 3, 5, 6, 7, 10, 1000, 10000, math.MaxInt64, 1<<63 + 1, math.MaxUint64 - 1, math.MaxUint64}
 	for k := range 64 {
@@ -58,8 +56,7 @@ func bounds() []uint64 {
 }
 
 // The arguments of between, those it refuses among them: one integer alone at either end, the
-// widest counts, 2^63 − 1, and the counts past them, and the vectors' (format/README.md, section
-// 22).
+// widest counts, 2^63 − 1, and the counts past them, and the vectors'.
 var betweens = [][2]int64{
 	{-10, 10}, {-3, -3}, {0, 0}, {math.MinInt64, math.MinInt64}, {math.MaxInt64, math.MaxInt64},
 	{math.MinInt64, -2}, {math.MinInt64, math.MinInt64 + math.MaxInt64 - 1}, {1, math.MaxInt64}, {0, math.MaxInt64 - 1},
@@ -75,8 +72,7 @@ var counts = []int{0, 1, 2, 3, 16, 100, maxCompared, -1}
 // UTF-8.
 var placeNames = []string{"template|heads-and-legs-2|instance", "a", "a line\nand the next", "", "|a", "a||b", "a|", "\xff", "e-a3|g2/0|params"}
 
-// vectorInputs gives the words, the seed and the names of each vector of the generator, read from
-// spec.Format by the reader of YAML. A vector of words alone takes a seed and names of its own.
+// A vector of words alone takes a seed and names of its own.
 func vectorInputs(tb testing.TB) []input {
 	tb.Helper()
 	files, err := fs.Glob(spec.Format, "vectors/random/*.yaml")
@@ -118,9 +114,7 @@ func parse(tb testing.TB, text any) uint64 {
 	return n
 }
 
-// fixedInputs gives the words of every vector, and of 0 and of 2^64 − 1, each with every bound and
-// with the arguments of between, the counts and the names in turn: the inputs of the ordinary test
-// and the corpus of the fuzz test.
+// fixedInputs gives the inputs of the ordinary test and the corpus of the fuzz test.
 func fixedInputs(tb testing.TB) []input {
 	tb.Helper()
 	words := append(vectorInputs(tb), input{high: 0, low: 0, names: "zero"}, input{high: math.MaxUint64, low: math.MaxUint64, seed: math.MaxUint64, names: "max"})
@@ -140,10 +134,8 @@ func fixedInputs(tb testing.TB) []input {
 	return inputs
 }
 
-// generatedInputs gives inputs that the generator itself draws, from a place of a constant seed:
-// bounds and arguments of every magnitude, orders of up to 64 integers, and names of letters that
-// UTF-8 writes in one byte and in more, a space and a line break among them, with a | that ends a
-// name now and then, and so an empty name too.
+// generatedInputs draws from a place of a constant seed, with a | that ends a name now and then, and
+// so an empty name too.
 func generatedInputs(tb testing.TB, n int) []input {
 	tb.Helper()
 	g, err := Place(2026, "reference")
@@ -177,10 +169,9 @@ func state(s *Stream) []byte {
 	return binary.BigEndian.AppendUint64(b, s.low)
 }
 
-// compare holds the generator to the reference on one input: the words of the place, and then, on
-// one stream, an integer and each of the four other functions, with the stream's state the
-// reference's after each, so that each function draws as many integers as Go's. On an argument
-// outside its domain a function gives ErrDomain and draws nothing, where Go would panic.
+// compare checks the stream's state against the reference's after each function, so that each draws
+// as many integers as Go's. On an argument outside its domain a function gives ErrDomain and draws
+// nothing, where Go would panic.
 func compare(t testing.TB, in input) {
 	t.Helper()
 	list := strings.Split(in.names, "|")
@@ -265,9 +256,7 @@ func TestStateAsPCGWritesIt(t *testing.T) {
 	}
 }
 
-// The generator, the five functions and the words of a place are Go's, on every go test: on the
-// words of every vector, on the bounds and the edges of each domain, and on several thousand inputs
-// that the generator itself draws from a constant seed (R10).
+// The generator, the five functions and the words of a place are Go's, on every go test (R31).
 func TestReference(t *testing.T) {
 	for _, in := range fixedInputs(t) {
 		compare(t, in)
@@ -277,9 +266,7 @@ func TestReference(t *testing.T) {
 	}
 }
 
-// FuzzReference holds the generator to the reference on any input, its corpus the inputs of
-// TestReference that do not depend on the generator: the words of the vectors with the bounds and
-// the edges of each domain (R10; R33 spec).
+// The corpus is the inputs of TestReference that do not depend on the generator (R31).
 func FuzzReference(f *testing.F) {
 	for _, in := range fixedInputs(f) {
 		f.Add(in.high, in.low, in.bound, in.from, in.to, in.count, in.seed, in.names)

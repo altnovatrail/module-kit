@@ -17,8 +17,7 @@ import (
 
 // pages passes a case of the workbook's page: the layout of its items by page.yaml is the vector's
 // page and its bottom, whatever the order of keys, or has no room at the row of the item that
-// no_room_at gives, counted from 0 (format/README.md, sections 9 and 14). The vector is read by its
-// schema and its type of formatv0.
+// no_room_at gives, counted from 0 (R52).
 func pages(v vector) error {
 	var pv formatv0.PageVector
 	value, err := readVector(v.fsys, v.path, "page-vector.schema.json", &pv)

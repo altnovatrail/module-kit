@@ -6,9 +6,7 @@ import (
 	"github.com/altnovatrail/spec/types/formatv0"
 )
 
-// A time is read in steps 1 to 5 of a number, and is in the notation of a time read when it is H:MM
-// or HH:MM, its minutes two digits or three that begin with no zero; it compares by its hours and its
-// minutes, each as a number, and never by their sum (format/README.md, section 15).
+// A time compares by its hours and its minutes, each as a number, and never by their sum (R52).
 func TestTimeNotation(t *testing.T) {
 	for _, c := range []struct {
 		value, want string
