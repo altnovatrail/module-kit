@@ -49,7 +49,7 @@ A task starts with «Выполни задачу T01 из RUN.md» in a new sess
 | Статус | ID | Задача | Кто | План | Зависит от |
 |---|---|---|---|---|---|
 | [x] | T57 | Тексты без истории (R160 spec) и тег `spec` v0.18.34 — тело в [docs/plan/E11.md](docs/plan/E11.md) | Claude | — | — |
-| [ ] | T58 | Документы без истории: `docs/architecture.md` без раздела 3.6, `docs/README.md`, README, CLAUDE.md, `.claude/rules/` | Claude | — | T57 |
+| [x] | T58 | Документы без истории: `docs/architecture.md` без раздела 3.6, `docs/README.md`, README, CLAUDE.md, `.claude/rules/` — тело в [docs/plan/E11.md](docs/plan/E11.md) | Claude | — | T57 |
 | [ ] | T59 | Документы без истории: раздел 3.6 `docs/architecture.md` | Claude | — | T57 |
 | [ ] | T60 | Комментарии кода по R160 spec: `module`, `template`, `cmd/module-kit` | Claude | — | T57 |
 | [ ] | T61 | Комментарии кода по R160 spec: `moduleversion`, `moduleindex`, `modulepackage`, `observation`, `verdict`, `leak`, `openview`, `page`, `picture` | Claude | — | T57 |
@@ -62,19 +62,6 @@ A task starts with «Выполни задачу T01 из RUN.md» in a new sess
 **Не входит:** новый код библиотеки и CLI — формат тот же; записи журнала целиком — каждую переписывает задача, которая её касается (R160 spec, «Decisions»); `docs/sources.md`, `docs/measurements.md`, архивы `docs/plan/` — вне правила (R160 spec, «Outside the rule»); `.devcontainer/` — это файлы заготовки `spec` (R51), их комментарии приходят переходом на тег.
 
 ## Задачи эпика
-
-#### T58. Документы без истории: `docs/architecture.md` без раздела 3.6, `docs/README.md`, README, CLAUDE.md, `.claude/rules/`
-
-- **Цель:** эти документы держат текущее состояние, а не историю (R160 spec, «One home», «A done task»): без хроник версий, статусов и повышений; значение — файлом, где оно задано; архитектура описывает текущее устройство и ссылается на решение номером, не пересказывая его.
-- **Почему:** строка 7.27 COORDINATION.md spec, пункт «Документы» текста T206 spec; T57 выделила его в задачу по правилу 11 (R76 spec, R156 spec).
-- **Сделать:**
-  1. `docs/architecture.md`, кроме раздела 3.6 (абзац «Status» убрала T57): разделы 1, 2, 3, 3.1–3.5 и 4 — без «since T…», «until v…», «с переходом на…», дат и пересказа решений; версия, тег, коммит — файлом, где они заданы: `go.mod`, подмодуль `spec/`, `ARG` `.devcontainer/Dockerfile`, `uses:` `.github/workflows/`; решение — номером.
-  2. `docs/README.md`, README.md, CLAUDE.md, `.claude/rules/go.md`, `.claude/rules/ci.md` — так же.
-  3. Ссылка на поправку записи `spec`, которую тег переписал на месте (R143, R145, R154, R155 spec и те, что перепишут задачи E16 `spec`), — на запись.
-  4. Факт, который теряет единственный дом, — в запись журнала, которая его держит, или рецептом в `.claude/rules/`; запись журнала, которую правка меняет, переписать на месте целиком, её поправки внутрь (R160 spec, «Decisions»); её свой предел в `entries` [docs-budgets.json](docs-budgets.json) — убрать, если она уложилась в 12 КБ.
-- **Не делать:** раздел 3.6 — T59; комментарии кода — T60–T62; `docs/sources.md`, `docs/measurements.md`, `docs/plan/`.
-- **Как проверить:** `just -f spec/justfile docs-check-repo`; правила частей, которые задача меняет; `/code-review high`. Больше одного ревью — разделить по правилу 11.
-- **Разделы:** R160 spec; RULES.md spec — The bar; R145 spec; текст T206 spec; architecture 3.7 spec.
 
 #### T59. Документы без истории: раздел 3.6 `docs/architecture.md`
 
