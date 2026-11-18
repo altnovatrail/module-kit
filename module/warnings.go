@@ -14,7 +14,7 @@ import (
 
 // A Warning is what a text of the module asks of its author, though the format refuses nothing for
 // it: a text of the whole module that holds a number — a rung template, a trap's advice, a
-// technique, a solving step (format/README.md, section 20; the 2026-11-08 amendment to R57 in spec).
+// technique, a solving step (format/README.md, section 20; the 2026-11-08 amendment to R57 spec).
 // A warning is no rule: it has no ID and no test vectors, and changes no report's verdict (R50).
 // Path is the file from the module's folder, with / between names, and Pointer the place of the
 // text in it.

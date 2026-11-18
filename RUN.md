@@ -1,6 +1,6 @@
 # RUN.md — work plan of module-kit
 
-What module-kit does, does not do and has still to decide — [docs/architecture.md](docs/architecture.md); why — [docs/decisions.md](docs/decisions.md). The platform is in `spec/`, a submodule at tag v0.18.27: the component's card — architecture 3.7 spec; the order of repositories — repositories 6 spec. Small tasks, one at a time, gathered in epics; only the current epic is in detail (R19 spec). Other tables, each a file opening with its rules (R153 spec): 2, epics for later — [run/EPICS.md](run/EPICS.md); 3, questions to the author — [run/QUESTIONS.md](run/QUESTIONS.md); 4, debt — [run/DEBT.md](run/DEBT.md). No `run/TASKS.md`: a task outside an epic stands in table 1 (R56, R57).
+What module-kit does, does not do and has still to decide — [docs/architecture.md](docs/architecture.md); why — [docs/decisions.md](docs/decisions.md). The platform is in `spec/`, a submodule at tag v0.18.34: the component's card — architecture 3.7 spec; the order of repositories — repositories 6 spec. Small tasks, one at a time, gathered in epics; only the current epic is in detail (R19 spec). Other tables, each a file opening with its rules (R153 spec): 2, epics for later — [run/EPICS.md](run/EPICS.md); 3, questions to the author — [run/QUESTIONS.md](run/QUESTIONS.md); 4, debt — [run/DEBT.md](run/DEBT.md). No `run/TASKS.md`: a task outside an epic stands in table 1 (R56, R57).
 
 Language (R154 spec): rules and tables in English, terse, for the session; the epic's description, table 1 and the bodies of tasks in Russian — the author writes and reviews them.
 
@@ -19,7 +19,7 @@ A task starts with «Выполни задачу T01 из RUN.md» in a new sess
 6. End with the checks of what the task changed; documents — `just -f spec/justfile docs-check-repo` (R32 spec). Then `/code-review high`, one round; a small change may skip the review.
 7. Do not commit: the author commits after review. A run of spec's orchestrator, «Сделай эпик E…», is the author's word otherwise: its executor works by the contract `spec/tools/orchestrator/executor.md` — commits, pushes and opens the pull request, never merges (R156 spec).
 8. End with a short report in Russian: what was done, files, how to check, what the review found or why there was none, what is open and what goes «в реестр spec».
-9. When done: table 1 `[ ]` → `[x]`; append to the body «Сделано (дата)» — what was done, how checked — and «Открыто». A question for the author from «Открыто» is also a row of [run/QUESTIONS.md](run/QUESTIONS.md); what is put off, a row of [run/DEBT.md](run/DEBT.md).
+9. When done: table 1 `[ ]` → `[x]`; append to the body «Сделано (дата)» — one line, what was done and its pull request, which says how it was checked; where the author commits after review, the report says it. What stays open is rows, not text: a question for the author, of [run/QUESTIONS.md](run/QUESTIONS.md); what is put off, of [run/DEBT.md](run/DEBT.md) (R160 spec).
    - Then move the body verbatim, relative links fixed, to the epic archive `docs/plan/<epic>.md`, with a gist sentence — an unheaded list item at the start of the receiving section: «T01 — сделана <дата>: <итог одной фразой>». Neither stays here, and a search by heading finds one body, in the archive (R153 spec).
 10. Language (R143 spec, R154 spec): this plan and `run/` in English, the epic's description, table 1, the bodies of tasks, the epic archives `docs/plan/` and the reports in Russian; `docs/`, README, CLAUDE.md, code and comments in English; commit messages and a pull request's title and description in English and terse, for the session, never a copy of the report (the 2026-11-17 amendment to R14 spec).
 11. A task larger than one review (≈ 30–60 minutes of reading): propose a split before starting.
@@ -34,7 +34,7 @@ A task starts with «Выполни задачу T01 из RUN.md» in a new sess
 
 **Plan:** «да» — plan mode first: decisions missing from the documents, or larger than one review (rule 11); «—» — run at once.
 
-**Task body** (Russian): «Цель», «Сделать», «Как проверить», «Разделы»; as needed «Не делать», «Решить при планировании», «Мой шаг», «Стоимость», «Риски»; from planning «Почему», «Решено автором (дата)», «Выяснилось при планировании»; when done «Сделано (дата)», «Открыто» (rule 9).
+**Task body** (Russian): «Цель», «Сделать», «Как проверить», «Разделы»; as needed «Не делать», «Решить при планировании», «Мой шаг», «Стоимость», «Риски»; from planning «Почему», «Решено автором (дата)», «Выяснилось при планировании»; when done «Сделано (дата)» (rule 9).
 
 ## Epics
 
@@ -44,6 +44,73 @@ A task starts with «Выполни задачу T01 из RUN.md» in a new sess
 - **A done epic** goes to `docs/plan/<epic>.md` (R59 canvas-api): bodies and gist sentences are there already (rule 9); move its description and table of tasks verbatim; questions and debt stay in `run/`; until the next epic, table 1 reads «Current epic — none» and names the last done epic. Measure the epic's sessions — `just -f spec/justfile tokens-report --since <first day of the epic> --row` — as a row of [docs/measurements.md](docs/measurements.md), after measurements 1.9 spec; a new analysis by the threshold of R145 spec.
 - Never read an archive whole: find a task by heading — `grep -n '^#### T03\.' RUN.md docs/plan/*.md`; from another repository — «T03 module-kit». Task numbers are global, never reused, and taken free at the moment of writing.
 
-## Table 1. Current epic — none
+## Table 1. Current epic — E11. Тексты без истории (R160 spec)
 
-Last done epic: E10, [docs/plan/E10.md](docs/plan/E10.md). Next — the author picks it from [run/EPICS.md](run/EPICS.md), empty now, and splits it into tasks (Epics, «Next epic»).
+| Статус | ID | Задача | Кто | План | Зависит от |
+|---|---|---|---|---|---|
+| [x] | T57 | Тексты без истории (R160 spec) и тег `spec` v0.18.34 — тело в [docs/plan/E11.md](docs/plan/E11.md) | Claude | — | — |
+| [ ] | T58 | Документы без истории: `docs/architecture.md` без раздела 3.6, `docs/README.md`, README, CLAUDE.md, `.claude/rules/` | Claude | — | T57 |
+| [ ] | T59 | Документы без истории: раздел 3.6 `docs/architecture.md` | Claude | — | T57 |
+| [ ] | T60 | Комментарии кода по R160 spec: `module`, `template`, `cmd/module-kit` | Claude | — | T57 |
+| [ ] | T61 | Комментарии кода по R160 spec: `moduleversion`, `moduleindex`, `modulepackage`, `observation`, `verdict`, `leak`, `openview`, `page`, `picture` | Claude | — | T57 |
+| [ ] | T62 | Комментарии кода по R160 spec: `internal/`, `.github/`, `justfile` | Claude | — | T57 |
+
+## Epic E11. Тексты без истории (R160 spec)
+
+**Почему эпик такой.** Строка 7.27 COORDINATION.md spec — правило эпика E16 `spec` в этом репозитории, по тексту T206 spec: тег `spec` с T205, `docs-budgets.json` с `entry` 12 и `comments`, план, документы и комментарии кода без истории (R160 spec; R76 spec, R156 spec). Текст задачи дал оркестратор (правило 6 COORDINATION.md spec). Текущего эпика не было, а задача не из эпика — первая задача следующего (R56): T57 начала эпик E11, как T56 начала E10 (R57). Всё вместе — больше одного ревью: 149 КБ `docs/architecture.md` и около 300 КБ комментариев Go. T57 разделила его по правилу 11: сама — тег, `docs-budgets.json` и план; документы — T58 и T59, комментарии кода — T60, T61 и T62, по пакетам, примерно по 100 КБ комментариев. Задачи вне эпика стоят в таблице 1, а не в `run/TASKS.md`, которого здесь нет (R56); оркестратор читает их оттуда (README оркестратора spec, раздел 2).
+
+**Не входит:** новый код библиотеки и CLI — формат тот же; записи журнала целиком — каждую переписывает задача, которая её касается (R160 spec, «Decisions»); `docs/sources.md`, `docs/measurements.md`, архивы `docs/plan/` — вне правила (R160 spec, «Outside the rule»); `.devcontainer/` — это файлы заготовки `spec` (R51), их комментарии приходят переходом на тег.
+
+## Задачи эпика
+
+#### T58. Документы без истории: `docs/architecture.md` без раздела 3.6, `docs/README.md`, README, CLAUDE.md, `.claude/rules/`
+
+- **Цель:** эти документы держат текущее состояние, а не историю (R160 spec, «One home», «A done task»): без хроник версий, статусов и повышений; значение — файлом, где оно задано; архитектура описывает текущее устройство и ссылается на решение номером, не пересказывая его.
+- **Почему:** строка 7.27 COORDINATION.md spec, пункт «Документы» текста T206 spec; T57 выделила его в задачу по правилу 11 (R76 spec, R156 spec).
+- **Сделать:**
+  1. `docs/architecture.md`, кроме раздела 3.6 (абзац «Status» убрала T57): разделы 1, 2, 3, 3.1–3.5 и 4 — без «since T…», «until v…», «с переходом на…», дат и пересказа решений; версия, тег, коммит — файлом, где они заданы: `go.mod`, подмодуль `spec/`, `ARG` `.devcontainer/Dockerfile`, `uses:` `.github/workflows/`; решение — номером.
+  2. `docs/README.md`, README.md, CLAUDE.md, `.claude/rules/go.md`, `.claude/rules/ci.md` — так же.
+  3. Ссылка на поправку записи `spec`, которую тег переписал на месте (R143, R145, R154, R155 spec и те, что перепишут задачи E16 `spec`), — на запись.
+  4. Факт, который теряет единственный дом, — в запись журнала, которая его держит, или рецептом в `.claude/rules/`; запись журнала, которую правка меняет, переписать на месте целиком, её поправки внутрь (R160 spec, «Decisions»); её свой предел в `entries` [docs-budgets.json](docs-budgets.json) — убрать, если она уложилась в 12 КБ.
+- **Не делать:** раздел 3.6 — T59; комментарии кода — T60–T62; `docs/sources.md`, `docs/measurements.md`, `docs/plan/`.
+- **Как проверить:** `just -f spec/justfile docs-check-repo`; правила частей, которые задача меняет; `/code-review high`. Больше одного ревью — разделить по правилу 11.
+- **Разделы:** R160 spec; RULES.md spec — The bar; R145 spec; текст T206 spec; architecture 3.7 spec.
+
+#### T59. Документы без истории: раздел 3.6 `docs/architecture.md`
+
+- **Цель:** раздел 3.6 `docs/architecture.md` — библиотека и CLI — описывает текущее устройство, без истории (R160 spec, «One home», «A done task»).
+- **Почему:** строка 7.27 COORDINATION.md spec, пункт «Документы» текста T206 spec; раздел — 60 КБ, одно ревью сам по себе; T57 выделила его по правилу 11 (R76 spec, R156 spec).
+- **Сделать:**
+  1. Раздел 3.6 и его подразделы — как пункт 1 T58: без «since T…», «until…», дат и пересказа решений; значение — файлом, где оно задано; решение — номером.
+  2. Свой предел `"architecture 3.6": 66` в [docs-budgets.json](docs-budgets.json) — по новому размеру с запасом 10–20% (measurements 1.9 spec) или убрать, если раздел уложился в предел блока `repository`.
+  3. Запись журнала, которую правка меняет, — как пункт 4 T58.
+- **Не делать:** остальные разделы — T58; комментарии кода — T60–T62.
+- **Как проверить:** `just -f spec/justfile docs-check-repo`; `/code-review high`. Больше одного ревью — разделить по правилу 11.
+- **Разделы:** R160 spec; RULES.md spec — The bar; R145 spec; текст T206 spec.
+
+#### T60. Комментарии кода по R160 spec: `module`, `template`, `cmd/module-kit`
+
+- **Цель:** комментарии Go пакетов `module`, `template` и `cmd/module-kit`, тесты тоже, — по R160 spec, «Comments»: почему, ограничение, ловушка, контракт экспортируемого API; без пересказа кода, истории, номеров задач и разделов документов; где причина — решение, ограничение одной фразой и номер в конце, `(R25)`.
+- **Почему:** строка 7.27 COORDINATION.md spec, пункт «Комментарии» текста T206 spec; около 100 КБ комментариев, одно ревью; T57 выделила его по правилу 11 (R76 spec, R156 spec).
+- **Сделать:**
+  1. Каждый блок комментария: пересказ кода — убрать; `since T…`, `until v…`, `T37`, `architecture 3.6`, `format/README.md, section 20` — убрать или заменить номером решения; `R… in docs/decisions.md` — `R…`; решение `spec` — `R… spec`; номер, который не держит то, что говорит комментарий, — поправить.
+  2. Doc comment пакета и экспортируемого имени — его контракт, для `go doc`; код не меняется.
+- **Как проверить:** правило [go](.claude/rules/go.md) — `just ci-lint`, `just ci-test`; `just -f spec/justfile docs-check-repo` — номера в комментариях; `/code-review high`. Больше одного ревью — разделить по правилу 11.
+- **Разделы:** R160 spec, R32 spec; RULES.md spec — The bar.
+
+#### T61. Комментарии кода по R160 spec: `moduleversion`, `moduleindex`, `modulepackage`, `observation`, `verdict`, `leak`, `openview`, `page`, `picture`
+
+- **Цель:** комментарии Go этих пакетов, тесты тоже, — как в T60.
+- **Почему:** как T60; около 110 КБ комментариев.
+- **Сделать:** как пункты 1 и 2 T60, для этих пакетов.
+- **Как проверить:** как T60.
+- **Разделы:** R160 spec, R32 spec; RULES.md spec — The bar.
+
+#### T62. Комментарии кода по R160 spec: `internal/`, `.github/`, `justfile`
+
+- **Цель:** комментарии Go пакетов `internal/`, тесты тоже, и комментарии `#` `.github/` и `justfile` — как в T60.
+- **Почему:** как T60; около 100 КБ комментариев Go и 25 КБ CI.
+- **Сделать:** как пункты 1 и 2 T60; в `.github/` и `justfile` — `Д… in RUN.md` строки, которых нет в [run/DEBT.md](run/DEBT.md), — убрать, причину оставить решением.
+- **Не делать:** `.devcontainer/` — файлы заготовки `spec` (R51).
+- **Как проверить:** правила [go](.claude/rules/go.md) и [ci](.claude/rules/ci.md) — `just ci-lint`, `just ci-test`; `just -f spec/justfile docs-check-repo`; `/code-review high`. Больше одного ревью — разделить по правилу 11.
+- **Разделы:** R160 spec, R32 spec; RULES.md spec — The bar.
