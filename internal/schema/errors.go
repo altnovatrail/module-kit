@@ -18,7 +18,9 @@ import (
 // format name (R23):
 //
 //   - $ref, allOf, properties, items and if, then and else are never named: the keyword that
-//     failed inside them is. Of these, only $ref and allOf have a node of their own in the tree;
+//     failed inside them is. The validator gives the errors of properties, items, then and else
+//     straight in their place, and those of $ref and allOf under a node of their own, which collect
+//     goes through, as it goes through the group of several errors at one place and the root;
 //   - every other keyword is named where it fails, and what failed inside it is not: the branches
 //     of anyOf and oneOf, which are named when none of them passes, what not holds, the elements
 //     that contains tried and the names that propertyNames read;

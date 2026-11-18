@@ -55,8 +55,8 @@ jobs:
 
       # Every reference to .github at one SHA, so the action is go.yml's of the same release; the
       # mount of the Go caches by the lines of the action's header; the awk of «The stage of the
-      # release» as go.yml's (R64, R62). A move of .github that changes either fails here, and its
-      # pull request takes it by hand.
+      # release» as go.yml's (R64, R62). References at more than one SHA, or a move of .github that
+      # changes the mount or the awk, fail here, and the pull request takes it by hand.
       - name: As in the pinned .github
         env:
           GH_TOKEN: ${{ github.token }}
@@ -138,8 +138,8 @@ jobs:
       # The image of toolchain by go.yml's file, image, path and key, so its entry is the one go.yml's
       # jobs fill and read, and the Go caches by a key of this job's own (R49 .github, R41 .github;
       # R64). An entry of another go.sum, by the prefix, keeps its builds and drops its modules, which
-      # go mod verify checks on an exact hit alone (R68). Only a push to main saves: the Go caches by
-      # the second call, once the binaries and their reference are built.
+      # go mod verify checks on an exact hit alone (R68). Only a push to main saves: the image at once,
+      # the Go caches by the second call, once the binaries and their reference are built.
       - name: Toolchain image and Go caches
         uses: altnovatrail/.github/.github/actions/toolchain@f1c7e9e6f8245fdbdbc23c4091f3c26350e3a44e # v0.1.33
         with:

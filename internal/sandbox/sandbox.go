@@ -103,8 +103,9 @@ type Func struct {
 	prog   *starlark.Program
 }
 
-// Compile compiles src, as CheckExpr checks it on names, into a Func of names, in their order. The
-// error is CheckExpr's.
+// Compile compiles src, an expression of the dialect that names nothing but names, the names that it
+// binds itself and the built-in names of the dialect, as CheckExpr checks it, into a Func of names,
+// in their order. The error is CheckExpr's.
 //
 // The Func is a program of one statement, which assigns the parsed src to a global that names do not
 // hold: built from its tree rather than its text, so that it compiles whatever CheckExpr takes — a

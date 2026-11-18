@@ -16,7 +16,7 @@ import (
 // An anchor or an alias whose name ends in a colon go-yaml refuses for a reason that names none,
 // and the file breaks yaml.no-anchors (R46).
 // The messages matched are go-yaml's at the version go.mod requires: TestRead fails on a version
-// that words one otherwise (R21). Any other error is the file's not being YAML.
+// that words one otherwise (R21). Any other error is the file's not being YAML, at go-yaml's place.
 func (r *reader) parseError(err error) {
 	var loadError *goyaml.LoadError
 	if !errors.As(err, &loadError) {
@@ -92,7 +92,8 @@ func (s *source) colonAnchor(line, column int) (int, int, bool) {
 }
 
 // nodeStart says whether the character at a place stands where a node may start: first on its line
-// but for blanks, after a flow indicator, or after an indicator - ? or : and a blank.
+// but for spaces and tabs, after a flow indicator [, { or , or after an indicator - ? or : and the
+// space or tab that follows it.
 func (s *source) nodeStart(line, column int) bool {
 	p := column - 1
 	for p >= 0 && (s.lines[line][p] == ' ' || s.lines[line][p] == '\t') {

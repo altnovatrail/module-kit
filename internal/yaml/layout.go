@@ -30,8 +30,9 @@ func (s span) holds(line, column int) bool {
 		(line < s.endLine || line == s.endLine && column <= s.endColumn)
 }
 
-// start gives the place of a node's content: go-yaml places the node at its tag or its anchor. A
-// verbatim tag, !<…>, ends at its >, whatever it holds.
+// start gives the place of a node's content: past the tag and the anchor that go-yaml places the
+// node at, and past the spaces, tabs, comments and line breaks after them, so on a later line, it
+// may be. A verbatim tag, !<…>, ends at its >, whatever it holds.
 func (s *source) start(n *goyaml.Node) (line, column int) {
 	line, column = n.Line-1, n.Column-1
 	for {

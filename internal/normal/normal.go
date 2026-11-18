@@ -95,9 +95,10 @@ func Unit(unit string) string {
 	return Lower(trimmed(upToStep5(unit)))
 }
 
-// withoutUnit takes step 6: of the units that end the text, the longest is dropped, with a space
-// before it, unless nothing but spaces stands before it. The lengths are counted in characters: a
-// character and its lowercase can differ in bytes, as İ and i do.
+// withoutUnit takes step 6: of the units that end the text, with a space before it or none, the
+// longest is dropped, with the space, unless nothing but spaces stands before it. The text and the
+// units compare in lowercase, and the lengths are counted in characters: a character and its
+// lowercase can differ in bytes, as İ and i do.
 func withoutUnit(text string, units []string) string {
 	runes := []rune(text)
 	lowered := []rune(Lower(text))

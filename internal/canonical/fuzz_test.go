@@ -95,8 +95,8 @@ func next(data *[]byte) byte {
 	return b
 }
 
-// text replaces each byte that is not part of a UTF-8 character, so that the string is valid
-// UTF-8.
+// text takes a string off data: as many bytes as its first byte says, at most 15, with each byte
+// that is not part of a UTF-8 character replaced, so that the string is valid UTF-8.
 func text(data *[]byte) string {
 	n := min(int(next(data)%16), len(*data))
 	s := string((*data)[:n])
