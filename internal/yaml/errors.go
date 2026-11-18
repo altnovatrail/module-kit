@@ -13,12 +13,10 @@ import (
 // nor every tag it allows; it refuses an alias with no anchor; and a tag whose handle a %TAG gave,
 // which the stream pass made a comment, has none left. Where YAML 1.2.2 refuses the text too — an
 // anchor with no name, a tag outside its grammar, a handle no %TAG gave — the file is not YAML.
-// An anchor or an alias whose name ends in a colon go-yaml reads otherwise than YAML 1.2.2, and it
-// refuses the file for a reason that names none: colonAnchor finds it, and the file breaks
-// yaml.no-anchors (R46).
-// Each message is the one go-yaml gives at the version go.mod requires, and TestRead holds each: a
-// version that words one otherwise fails it. Any other error is the file's not being YAML, at
-// go-yaml's place.
+// An anchor or an alias whose name ends in a colon go-yaml refuses for a reason that names none,
+// and the file breaks yaml.no-anchors (R46).
+// The messages matched are go-yaml's at the version go.mod requires: TestRead fails on a version
+// that words one otherwise (R21). Any other error is the file's not being YAML.
 func (r *reader) parseError(err error) {
 	var loadError *goyaml.LoadError
 	if !errors.As(err, &loadError) {
@@ -59,14 +57,11 @@ func (r *reader) parseError(err error) {
 }
 
 // colonAnchor finds the first anchor or alias, at or before the place go-yaml refused, whose name
-// as YAML 1.2.2 reads it ends in a colon, as &a: and *a: do (6.9.2): go-yaml leaves the last colons
-// of a name out on purpose, to read *a: b as an alias that is a key (yaml/go-yaml#109, closed as
-// not planned), so it reads the colon as a separator and refuses the file further on, for a reason
-// that names no anchor. YAML 1.2.2 reads the anchor, so the file breaks yaml.no-anchors. Only an &
-// or a * that starts a node counts: at the start of a line, after a flow indicator or after the
-// space of an indicator - ? or :, and not in a comment. go-yaml has refused the file already, so a
-// place taken wrongly changes only which reason the refusal gives. line -1 is no place: then every
-// line is looked at.
+// as YAML 1.2.2 reads it ends in a colon, as &a: and *a: do: go-yaml leaves the last colons of a
+// name out on purpose, to read *a: b as an alias that is a key (yaml/go-yaml#109, closed as not
+// planned), and refuses the file further on (R46). Only an & or a * that starts a node counts, not
+// one in a comment. go-yaml has refused the file already, so a place taken wrongly changes only
+// which reason the refusal gives. line -1 is no place: then every line is looked at.
 func (s *source) colonAnchor(line, column int) (int, int, bool) {
 	last := len(s.lines) - 1
 	if line >= 0 && line < last {
@@ -97,8 +92,7 @@ func (s *source) colonAnchor(line, column int) (int, int, bool) {
 }
 
 // nodeStart says whether the character at a place stands where a node may start: first on its line
-// but for spaces and tabs, after a flow indicator [, { or , or after an indicator - ? or : and the
-// space or tab that follows it.
+// but for blanks, after a flow indicator, or after an indicator - ? or : and a blank.
 func (s *source) nodeStart(line, column int) bool {
 	p := column - 1
 	for p >= 0 && (s.lines[line][p] == ' ' || s.lines[line][p] == '\t') {
@@ -113,13 +107,12 @@ func (s *source) nodeStart(line, column int) bool {
 	return p < column-1 && strings.ContainsRune("-?:", s.lines[line][p])
 }
 
-// anchorChar says whether a character is an ns-anchor-char of YAML 1.2.2 (6.9.2): no white space,
-// line break, byte order mark or flow indicator.
+// anchorChar says whether a character is an ns-anchor-char of YAML 1.2.2.
 func anchorChar(c rune) bool {
 	return c != ' ' && c != '\t' && c != '\n' && c != 0 && c != 0xfeff && !strings.ContainsRune(",[]{}", c)
 }
 
-// at records a breach at a place of go-yaml, or at the start of the file when go-yaml gives none.
+// at records a breach at a place of go-yaml, whose line 0 is no place: the start of the file.
 func (r *reader) at(rule string, mark goyaml.Mark, message string) {
 	if mark.Line == 0 {
 		r.breaches = append(r.breaches, Breach{rule, 1, 1, message})
@@ -129,21 +122,19 @@ func (r *reader) at(rule string, mark goyaml.Mark, message string) {
 }
 
 // named says whether the anchor or the alias whose & or * stands at a place has a name, at least
-// one ns-anchor-char (YAML 1.2.2, 6.9.2).
+// one ns-anchor-char.
 func (s *source) named(line, column int) bool {
 	c := s.at(line, column+1)
 	return c != ' ' && c != '\t' && c != '\n' && c != 0 && !strings.ContainsRune(",[]{}", c)
 }
 
-// tag says whether the text at a place is a tag of YAML 1.2.2 with a space, a tab or the end of a
-// line after it (6.8.2, 6.9.1): verbatim, !<…>; a shorthand, a handle and a suffix; or the
-// non-specific !. go-yaml refuses a tag in block context that a flow indicator follows, which YAML
-// 1.2.2 refuses there too, and reads one in a flow collection; so a flow indicator after a tag that
-// go-yaml refused makes it no tag.
+// tag says whether the text at a place is a tag of YAML 1.2.2 with a blank or the end of a line
+// after it. go-yaml refuses a tag in block context that a flow indicator follows, as YAML 1.2.2
+// does, and reads one in a flow collection; so a flow indicator after a tag that go-yaml refused
+// makes it no tag.
 func (s *source) tag(line, column int) bool {
 	at := column + 1
-	// uri passes the characters of a URI from at, ns-uri-char, or of a tag's suffix, ns-tag-char,
-	// which is no ! and no flow indicator, and says how many it passed.
+	// uri passes the ns-uri-char from at, or the ns-tag-char of a suffix, and says how many.
 	uri := func(suffix bool) int {
 		n := 0
 		for ; ; n++ {
@@ -173,7 +164,7 @@ func (s *source) tag(line, column int) bool {
 			handle++
 		}
 		if s.at(line, handle) == '!' {
-			// !! or !name!: a handle, which needs a suffix.
+			// A handle, !! or !name!, needs a suffix.
 			at = handle + 1
 		}
 		if uri(true) == 0 && at != column+1 {
@@ -196,7 +187,7 @@ func (s *source) handle(line, column int) string {
 	return string(s.lines[line][column : end+1])
 }
 
-// wordCharacter is ns-word-char: a digit, an ASCII letter or - (YAML 1.2.2, 5.6).
+// wordCharacter is ns-word-char of YAML 1.2.2.
 func wordCharacter(c rune) bool {
 	return c >= '0' && c <= '9' || c >= 'a' && c <= 'z' || c >= 'A' && c <= 'Z' || c == '-'
 }

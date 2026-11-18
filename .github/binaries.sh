@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Runs one binary of a release on the runner of its own system, as the job Binaries of ci.yml does on
-# each of the six (Д6 in RUN.md; R41 in docs/decisions.md). Bash on Linux, macOS and the Git Bash of
+# each of the six (R41). Bash on Linux, macOS and the Git Bash of
 # Windows, with nothing but coreutils.
 #
 #   .github/binaries.sh <dist> <binary> <samples> <reference>
@@ -13,8 +13,7 @@
 # test vectors hold the package by its digest here, and the index and the open views by the tests
 # of the commands (TestIndexVectors, TestOpenPackages).
 # The build job writes the reference by the binary of linux/amd64, and each runner holds its own to
-# it: the package and the index depend on the module's files alone, wherever they are built
-# (format/README.md, sections 25 and 26).
+# it: the package and the index depend on the module's files alone, wherever they are built.
 set -euo pipefail
 
 if (($# != 4)); then

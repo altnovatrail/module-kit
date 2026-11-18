@@ -8,10 +8,10 @@ import (
 	"github.com/altnovatrail/spec"
 )
 
-// Every YAML file of the format but the vectors of the rules yaml.* follows section 4 — the
-// examples, invalid ones too, and the other vectors (format/README.md, sections 8 and 9) — so the
-// reader reads each with no breach: 2302 files at v0.9.2. It holds each move to a newer go-yaml
-// too, since the format's files use most of what YAML 1.2.2 has (R21).
+// Every YAML file of the format but the vectors of the rules yaml.* keeps those rules — the
+// examples, invalid ones too, and the other vectors — so the reader reads each with no breach. It
+// holds each move to a newer go-yaml too, since the format's files use most of what YAML 1.2.2 has
+// (R21).
 func TestReadsTheFormat(t *testing.T) {
 	read := 0
 	err := fs.WalkDir(spec.Format, ".", func(name string, entry fs.DirEntry, err error) error {

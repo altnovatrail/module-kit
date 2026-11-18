@@ -19,8 +19,8 @@ import (
 // On any input the reader gives a value or a refusal, and does not panic, nor lets go-yaml panic.
 // A refusal names a rule yaml.* or that the file is not YAML, at a place in it. A value is one the
 // format allows, and its JSON text reads back to it: a file in JSON syntax is YAML, under the same
-// rules (format/README.md, section 4). The corpus is the vectors of the rules yaml.*, the YAML test
-// suite and the cases of TestRead.
+// rules. The corpus is the vectors of the rules yaml.*, the YAML test suite and the cases of
+// TestRead.
 func FuzzRead(f *testing.F) {
 	vectors, err := fs.Glob(spec.Format, "vectors/rules/yaml.*/*.yaml")
 	if err != nil || len(vectors) == 0 {

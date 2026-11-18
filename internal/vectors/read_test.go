@@ -21,8 +21,7 @@ import (
 
 // readVector reads a file of a vector as the format has a reader do it: by the YAML rules, then
 // against its schema, and only then into its type of formatv0, strictly, refusing a field that the
-// type does not know (format/README.md, section 9; R72 spec). It gives the JSON value too. The
-// runner of each kind reads its files so, as the tasks of the epic of code bring them.
+// type does not know (R23). It gives the JSON value too.
 func readVector(fsys fs.FS, name, schemaFile string, into any) (any, error) {
 	data, err := fs.ReadFile(fsys, name)
 	if err != nil {
@@ -39,8 +38,8 @@ func readVector(fsys fs.FS, name, schemaFile string, into any) (any, error) {
 }
 
 // readOpenView reads open-view.yaml of a vector of the open view, which has no schema of its own:
-// by the YAML rules, then strictly into its type of formatv0/open (format/README.md, section 9;
-// R72 spec). It gives the JSON value too.
+// by the YAML rules, then strictly into its type of formatv0/open (R24). It gives the JSON value
+// too.
 func readOpenView(fsys fs.FS, name string, into any) (any, error) {
 	data, err := fs.ReadFile(fsys, name)
 	if err != nil {
@@ -53,7 +52,6 @@ func readOpenView(fsys fs.FS, name string, into any) (any, error) {
 	return value, decodeStrictly(value, into)
 }
 
-// decodeStrictly reads a JSON value into a type, refusing a field that the type does not know.
 func decodeStrictly(value, into any) error {
 	text, err := json.Marshal(value)
 	if err != nil {
@@ -75,11 +73,9 @@ type vectorFile struct {
 
 func typeOf[T any]() func() any { return func() any { return new(T) } }
 
-// The files of the vectors that the format gives a schema of their own: the file of each case of a
-// kind of vectors, by the paths of spec.Format they stand at, with * for a name (format/README.md,
-// sections 3 and 9). A published version of an earlier format in versions/ is the files of its
-// package, read by their places alone (section 2), and open-view.yaml is the open view, which the
-// type open reads.
+// The files of the vectors that the format gives a schema of their own, by the paths of spec.Format
+// they stand at. Not here: a published version of an earlier format in versions/, the files of its
+// package read by their places alone, and open-view.yaml, which the type open reads.
 var vectorFiles = map[string]vectorFile{
 	"vectors/verdicts/*/*.yaml":       {"verdict-vector.schema.json", typeOf[formatv0.VerdictVector]()},
 	"vectors/leaks/*.yaml":            {"leak-vector.schema.json", typeOf[formatv0.LeakVector]()},
@@ -92,8 +88,7 @@ var vectorFiles = map[string]vectorFile{
 	"vectors/versions/*/version.yaml": {"version-vector.schema.json", typeOf[formatv0.VersionVector]()},
 }
 
-// A part of a module's layout as the types hold it: its type of formatv0, its open view's of
-// formatv0/open, and what gives the one from the other (R72 spec).
+// A part of a module's layout as the types hold it (R72 spec).
 type partType struct {
 	value func() any                  // a new value of its type of formatv0
 	view  func() any                  // a new value of its type of formatv0/open

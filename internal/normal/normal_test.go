@@ -5,7 +5,6 @@ import (
 	"testing"
 )
 
-// The steps of the normalization, each on its own.
 func TestSteps(t *testing.T) {
 	for _, c := range []struct {
 		step func(string) string

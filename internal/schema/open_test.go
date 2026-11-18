@@ -13,8 +13,7 @@ import (
 	"github.com/altnovatrail/module-kit/internal/yaml"
 )
 
-// openSet is a set of small schemas, one field for each way a mark counts or does not
-// (format/README.md, section 6).
+// openSet is a set of small schemas, one field for each way a mark counts or does not.
 var openSet = newSet(fstest.MapFS{
 	"schemas/o.schema.json": {Data: []byte(`{
   "$schema": "https://json-schema.org/draft/2020-12/schema",

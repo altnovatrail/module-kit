@@ -14,9 +14,7 @@ import (
 // one: a number written with neither a fraction nor an exponent as an int64, when it fits one, and
 // any other number as a float64, which Text then refuses. A text with anything after its value is
 // no JSON text, and neither is one that is not UTF-8, which encoding/json would read with U+FFFD in
-// the place of each bad byte (RFC 8259, section 8.1), nor one with a number past the range of a
-// double. Package modulepackage reads the texts of a package by it, and package moduleindex the
-// module index (R34, R35).
+// the place of each bad byte, nor one with a number past the range of a double (R34, R35).
 func Parse(data []byte) (any, error) {
 	if !utf8.Valid(data) {
 		return nil, errors.New("not UTF-8")
@@ -33,9 +31,8 @@ func Parse(data []byte) (any, error) {
 	return numbers(value)
 }
 
-// numbers puts an int64, or else a float64, in the place of each json.Number in a value. A number
-// past the range of a float64, such as 1e400, is no number a reader can hold, and an error: as the
-// float64 ±Inf it would stop the validator of the schemas.
+// A number past the range of a float64, such as 1e400, is an error: as the float64 ±Inf it would
+// stop the validator of the schemas.
 func numbers(value any) (any, error) {
 	var err error
 	switch v := value.(type) {

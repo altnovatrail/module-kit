@@ -29,8 +29,6 @@ func Parse(s string) (Version, error) {
 	return v, nil
 }
 
-// numeral reports whether s is a decimal numeral with no leading zero: 0, or a digit 1 to 9 and
-// more digits.
 func numeral(s string) bool {
 	if s == "" || s[0] == '0' && len(s) > 1 {
 		return false
@@ -43,9 +41,9 @@ func numeral(s string) bool {
 	return true
 }
 
-// Compare gives -1, 0 or +1 as v stands below, at or above w by Semantic Versioning, section 11: by
-// the major number, then the minor, then the patch, each by its value and not its text, so that
-// 1.10.0 stands above 1.9.0.
+// Compare gives -1, 0 or +1 as v stands below, at or above w by Semantic Versioning: by the major
+// number, then the minor, then the patch, each by its value and not its text, so that 1.10.0 stands
+// above 1.9.0.
 func (v Version) Compare(w Version) int {
 	for i := range v.numbers {
 		// A numeral has no leading zero, so the longer one is the larger, and of two as long the
@@ -70,8 +68,8 @@ const (
 )
 
 // Raise gives the version with the number at place raised by one and every lower number 0, as a
-// step to the next version by that part does (format/README.md, section 27): 1.2.3 raised at Minor
-// is 1.3.0. The number has no bound: 9 is raised to 10 in its text, digit by digit.
+// step to the next version by that part does: 1.2.3 raised at Minor is 1.3.0. The number has no
+// bound: 9 is raised to 10 in its text, digit by digit.
 func (v Version) Raise(place int) Version {
 	w := v
 	w.numbers[place] = increment(v.numbers[place])
@@ -86,8 +84,6 @@ func (v Version) Zero(place int) bool {
 	return v.numbers[place] == "0"
 }
 
-// increment adds one to a decimal numeral with no leading zero: the last digit that is not 9 goes
-// up, the 9s after it become 0s, and a numeral of 9s alone gets a 1 before it.
 func increment(n string) string {
 	digits := []byte(n)
 	for i := len(digits) - 1; i >= 0; i-- {

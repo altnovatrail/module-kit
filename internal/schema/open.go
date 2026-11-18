@@ -10,18 +10,15 @@ import (
 )
 
 // Open gives the open view of value at location, as Validate takes them: value without its closed
-// fields, which is what the learner's app receives of a part (format/README.md, section 6). A
-// field is open when a subschema of its place that applies and passes carries "x-open": true, an
-// element of an open array is open, and the root is open; an open object whose fields are all
-// closed stays, as an empty object. The view is made of new maps and slices, and value is left as
-// it is.
+// fields, which is what the learner's app receives of a part. A field is open when a subschema of
+// its place that applies and passes carries "x-open": true, as JSON Schema 2020-12 collects an
+// annotation; an element of an open array is open, and the root is open; an open object whose
+// fields are all closed stays, as an empty object. The view is made of new maps and slices, and
+// value is left as it is.
 //
-// A mark counts only where its subschema applies and passes, as JSON Schema 2020-12 collects an
-// annotation (core, section 7.7.1.2), so Open asks the validator whether each branch of anyOf and
-// oneOf, and each if, passes. The view is the format's of a value valid against the schema at
-// location; of another value Open gives what the same walk gives. Like Validate, it panics on a
-// location or a reference that names nothing in the set, and it may be called from many goroutines
-// at once.
+// The view is the format's of a value valid against the schema at location; of another value Open
+// gives what the same walk gives. Like Validate, it panics on a location or a reference that names
+// nothing in the set, and it may be called from many goroutines at once (R24).
 func Open(location string, value any) any {
 	return format().open(location, value)
 }
@@ -31,8 +28,8 @@ func (s *set) open(location string, value any) any {
 	return s.view(value, s.applicable(value, s.subschemaAt(file, fragment)))
 }
 
-// A subschema is what stands at a place in a schema of the set: the name of the schema's file, the
-// tokens of the place, and the JSON there — an object, or true or false, which carry no marks.
+// A subschema is what stands at a place in a schema of the set: an object, or true or false, which
+// carry no marks.
 type subschema struct {
 	file string
 	at   []string
@@ -72,13 +69,10 @@ func (n subschema) child(tokens ...string) subschema {
 	return subschema{n.file, slices.Concat(n.at, tokens), node}
 }
 
-// marked says whether a subschema carries the mark that opens its field.
 func marked(n subschema) bool {
 	return n.object()["x-open"] == true
 }
 
-// subschemaAt is the subschema at fragment, a JSON Pointer in URI fragment form, in the schema of
-// file.
 func (s *set) subschemaAt(file, fragment string) subschema {
 	doc, ok := s.docs[file]
 	if !ok {
@@ -87,10 +81,9 @@ func (s *set) subschemaAt(file, fragment string) subschema {
 	return subschema{file: file, json: doc}.child(tokensOf(file, fragment)...)
 }
 
-// unescapeToken reads a token of a JSON Pointer: ~1 as / and ~0 as ~ (RFC 6901, section 4).
 var unescapeToken = strings.NewReplacer("~1", "/", "~0", "~")
 
-// tokensOf reads the tokens of a JSON Pointer in URI fragment form, without its #.
+// tokensOf reads the tokens of a JSON Pointer in URI fragment form, without its # (RFC 6901).
 func tokensOf(file, fragment string) []string {
 	pointer, err := url.PathUnescape(fragment)
 	if err != nil || pointer != "" && !strings.HasPrefix(pointer, "/") {
@@ -108,8 +101,8 @@ func tokensOf(file, fragment string) []string {
 
 // resolve gives the subschema that a reference in the schema of from names. A reference is
 // relative, to a definition of the same schema, another schema or a definition of another schema,
-// and the $id of every schema of the set is the same but for the name of its file (format/README.md,
-// section 5), so the part before # is that name.
+// and the $id of every schema of the set is the same but for the name of its file, so the part
+// before # is that name.
 func (s *set) resolve(from subschema, reference string) subschema {
 	file, fragment, _ := strings.Cut(reference, "#")
 	if file == "" {
@@ -124,11 +117,8 @@ func (s *set) passes(n subschema, value any) bool {
 }
 
 // applicable gives the subschemas that start at a place, and every subschema they bring to it, that
-// apply to value and pass (format/README.md, section 6): what a $ref names, beside the other
-// keywords there; every branch of allOf, each branch of anyOf that passes and the branch of oneOf
-// that passes; then when if passes, and else when it fails; and each branch of dependentSchemas
-// whose key value has. true and false carry no marks and bring nothing. A subschema reached twice —
-// two references to one definition, or references that run in a circle — is taken once.
+// apply to value and pass. A subschema reached twice — two references to one definition, or
+// references that run in a circle — is taken once (R24).
 func (s *set) applicable(value any, start ...subschema) []subschema {
 	var found []subschema
 	seen := map[string]bool{}
@@ -208,9 +198,6 @@ func (s *set) view(value any, applied []subschema) any {
 	return value
 }
 
-// fieldSchemas gives the subschemas of the field key that the subschemas of its object give: under
-// properties, under each key of patternProperties that matches it, and under additionalProperties
-// where neither matches in the same subschema.
 func (s *set) fieldSchemas(applied []subschema, key string) []subschema {
 	var subs []subschema
 	for _, n := range applied {
@@ -236,8 +223,6 @@ func (s *set) fieldSchemas(applied []subschema, key string) []subschema {
 	return subs
 }
 
-// elementSchema gives the subschema of the element at index that the subschema of its array gives:
-// under prefixItems at the index, or else under items.
 func elementSchema(n subschema, index int) (subschema, bool) {
 	node := n.object()
 	if prefix, ok := node["prefixItems"].([]any); ok && index < len(prefix) {
@@ -250,8 +235,8 @@ func elementSchema(n subschema, index int) (subschema, bool) {
 }
 
 // pattern compiles a key of patternProperties once. The format writes a pattern only with what Go
-// and JavaScript read the same way (format/README.md, section 5), and a pattern that does not
-// compile is a fault, as a schema that does not compile is.
+// and JavaScript read the same way, and a pattern that does not compile is a fault, as a schema
+// that does not compile is.
 func (s *set) pattern(p string) *regexp.Regexp {
 	if re, ok := s.patterns.Load(p); ok {
 		return re.(*regexp.Regexp)

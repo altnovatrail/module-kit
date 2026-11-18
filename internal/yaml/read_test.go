@@ -49,7 +49,7 @@ var readCases = []readCase{
 		value: "%!PS-Adobe-2.0\n"},
 	{name: "a quoted merge key", in: "\"<<\": base\n", value: map[string]any{"<<": "base"}},
 
-	// U+0085, U+2028 and U+2029, which go-yaml takes for line breaks (text.go, standIns).
+	// U+0085, U+2028 and U+2029, which go-yaml takes for line breaks (standIns).
 	{name: "line separator in a plain scalar", in: "a: x\u2028  y\n", value: map[string]any{"a": "x\u2028  y"}},
 	{name: "line separator in a block scalar", in: "a: |\n  x\u2028  y\n", value: map[string]any{"a": "x\u2028  y\n"}},
 	{name: "next line in a key and in quotes", in: "\u0085: \"x\u0085y\"\n", value: map[string]any{"\u0085": "x\u0085y"}},

@@ -11,7 +11,6 @@ import (
 	"github.com/altnovatrail/spec"
 )
 
-// files makes a file system of empty files at the names given.
 func files(names ...string) fstest.MapFS {
 	fsys := fstest.MapFS{}
 	for _, name := range names {
@@ -247,8 +246,7 @@ func TestExampleRunners(t *testing.T) {
 }
 
 // A valid example of the module index is refused when its root names another format version than
-// format/VERSION, or when an entry lists teaches out of order: section 26 asks both, and its schema
-// can say neither, as indexFormProblems of spec's format-check holds them.
+// format/VERSION, or when an entry lists teaches out of order, which its schema cannot say (R35).
 func TestIndexForm(t *testing.T) {
 	const entry = `{module_format_version: "0.4", package_digest: "sha256:fcbe6e68430776b0506c93ab51b155f8e7f92e2b3ecbe03e34e2afb91b4d4d08", release: v0.1.0`
 	for _, c := range []struct{ data, refused string }{

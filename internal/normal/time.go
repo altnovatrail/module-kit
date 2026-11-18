@@ -7,7 +7,7 @@ import (
 )
 
 // Time gives a value as a time reads it: steps 1 to 5 of a number, with the spaces at either end
-// dropped, so that "07:30." is "07:30"; "" when it is blank (format/README.md, section 15).
+// dropped, so that "07:30." is "07:30"; "" when it is blank (R52).
 func Time(value string) string {
 	return trimmed(upToStep5(value))
 }
@@ -27,7 +27,7 @@ func (c Clock) String() string {
 }
 
 // TimeNotation reads a text that Time normalized as a time, and says whether it is in the notation
-// of a time read (format/README.md, section 15): 7:3, 007:30, 7.30, 7 : 30 and 7:30 pm are not.
+// of a time read: 7:3, 007:30, 7.30, 7 : 30 and 7:30 pm are not.
 func TimeNotation(text string) (Clock, bool) {
 	m := timeForm.FindStringSubmatch(text)
 	if m == nil {

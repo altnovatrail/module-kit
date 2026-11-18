@@ -12,8 +12,7 @@ updates:
       # Every reference to a shared workflow of .github in one pull request, to one release, and the
       # composite action that "Binaries / build" takes with them: Dependabot names each
       # altnovatrail/.github/.github/workflows/<file>.yml and the action
-      # altnovatrail/.github/.github/actions/toolchain (Д88 spec; R49 .github; R58 and R64 in
-      # docs/decisions.md).
+      # altnovatrail/.github/.github/actions/toolchain (R49 .github; R58, R64).
       shared-workflows:
         patterns: ["altnovatrail/.github/*"]
 
@@ -29,8 +28,7 @@ updates:
   # Neither is .devcontainer/gopls/, the lock file of gopls: it is the go kind's of spec's
   # repo-template, and a move to a tag of spec raises it together with GOPLS_VERSION in the
   # Dockerfile. Dependabot alerts and security updates still read that go.mod; a security update
-  # that raises gopls itself fails ci-lint until GOPLS_VERSION moves with it (R19 and R51 in
-  # docs/decisions.md).
+  # that raises gopls itself fails ci-lint until GOPLS_VERSION moves with it (R19, R51).
   - package-ecosystem: gomod
     directory: /
     schedule:
@@ -38,11 +36,11 @@ updates:
     cooldown:
       default-days: 3
     # spec's Go modules move together with the spec submodule, to its tag, in a task of its own, and
-    # ci-lint holds them to it (R64 spec; R20 in docs/decisions.md): a tag of spec comes out with
-    # every change to its documents, so Dependabot does not raise them.
+    # ci-lint holds them to it (R64 spec; R20): a tag of spec comes out with every change to its
+    # documents, so Dependabot does not raise them.
     # go.starlark.net is part of the format: its version counts the steps of the format's limits, and
     # raising it is a new version of the format, so it moves with a tag of spec whose format names
-    # another (R88 spec; R11 and R28 in docs/decisions.md).
+    # another (R88 spec; R11, R28).
     ignore:
       - dependency-name: github.com/altnovatrail/spec
       - dependency-name: github.com/altnovatrail/spec/contracts

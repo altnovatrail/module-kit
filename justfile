@@ -5,9 +5,8 @@
 # every Go repository of NovaTrail, and what they run is this repository's own.
 
 # The tools only the checks need, at exact versions. Each is a Go program run straight from its
-# module, as canvas-api's justfile runs them, so nothing is installed for it: the Go module proxy
-# serves that version and the checksum database vouches for it. Dependabot does not see them,
-# so they are raised by hand.
+# module, so nothing is installed for it: the Go module proxy serves that version and the checksum
+# database vouches for it. Dependabot does not see them, so they are raised by hand (R04).
 GOVULNCHECK := "golang.org/x/vuln/cmd/govulncheck@v1.9.0"
 GO_LICENSES := "github.com/google/go-licenses/v2@v2.0.1"
 
@@ -21,9 +20,9 @@ build:
 
 # What .github's shared release.yml runs to build a release, in the toolchain-core stage of the
 # commit it releases, from that commit's tree with no git in it, and then signs every file (R07;
-# R18 .github, R47 .github). dist/ is made afresh and holds plain files alone: the CLI for each platform below,
-# built without cgo and named module-kit_<version>_<os>_<arch>, the licenses a binary has to come
-# with, and SHA256SUMS over the rest.
+# R18 .github, R47 .github). dist/ is made afresh and holds plain files alone: the CLI for each
+# platform below, built without cgo and named module-kit_<version>_<os>_<arch>, the licenses a
+# binary has to come with, and SHA256SUMS over the rest.
 # Build a release's files into dist/, for a version such as v0.1.0.
 release-files version:
     #!/usr/bin/env bash
@@ -102,7 +101,7 @@ binaries-samples folder:
 # The modules besides the standard library that the CLI is built from, on any of the six platforms
 # of a release, each with the name its license takes in a release: LICENSE-<name>, and NOTICE-<name>
 # beside it when the module has a NOTICE. spec's LICENSE is this repository's own, Apache-2.0 word
-# for word, so LICENSE stands for it, and the recipe checks that it still is (R38; Д15 in RUN.md).
+# for word, so LICENSE stands for it, and the recipe checks that it still is (R38).
 THIRD_PARTY := "go.yaml.in/yaml/v4=go-yaml github.com/santhosh-tekuri/jsonschema/v6=jsonschema go.starlark.net=starlark golang.org/x/text=x-text golang.org/x/sys=x-sys golang.org/x/image=x-image"
 SAME_LICENSE := "github.com/altnovatrail/spec"
 

@@ -13,10 +13,9 @@ import (
 
 // decode is the first pass. It refuses, with yaml.encoding, a file that is not UTF-8, at its first
 // byte that is no part of a UTF-8 character, and, with yaml.printable, a character outside the
-// printable set of YAML 1.2.2, in a comment and in quotes too, where YAML 1.2.2 takes more, as
-// format 0.4 has it (format/README.md, section 4; R102 spec); go-yaml refuses one too, but without
-// its place (TestRead, "control character"). Either file is read no further, and
-// ok is false: in a file that is not UTF-8 the text is not known, and two keys that differ only in
+// printable set of YAML 1.2.2, in a comment and in quotes too, where YAML 1.2.2 takes more (R102
+// spec); go-yaml refuses one too, but without its place. Either file is read no further, and ok
+// is false: in a file that is not UTF-8 the text is not known, and two keys that differ only in
 // the bytes that are not UTF-8 would read as the same key.
 func (r *reader) decode(data []byte) (text string, ok bool) {
 	var b strings.Builder
@@ -47,7 +46,7 @@ func (r *reader) decode(data []byte) (text string, ok bool) {
 	return b.String(), ok
 }
 
-// printable says whether YAML 1.2.2 allows a character in its streams (5.1, c-printable). U+FFFD,
+// printable says whether YAML 1.2.2 allows a character in its streams, c-printable. U+FFFD,
 // which decode puts for a byte that is no part of a UTF-8 character, is one.
 func printable(c rune) bool {
 	return c == 0x09 || c == 0x0a || c == 0x0d || (c >= 0x20 && c <= 0x7e) || c == 0x85 ||
@@ -64,13 +63,13 @@ const byteOrderMark = "\ufeff"
 // of the file and after each line "...", while they hold nothing but comments. There a byte order
 // mark breaks yaml.encoding, and so does one at the start of a line that a document "---" follows
 // with nothing but comments between, and a line that begins with % is a directive, which breaks
-// yaml.no-directives (YAML 1.2.2, 9.2). go-yaml refuses %YAML 1.2 and a byte order mark after
-// "...", so the pass takes each mark out and turns each % into #, which leaves a comment of the
-// same length (TestRead, "directive" and "byte order mark"). A directive that no document "---"
-// follows is no YAML, and the pass says so, since go-yaml then reads what follows as a document.
+// yaml.no-directives. go-yaml refuses %YAML 1.2 and a byte order mark after "...", so the pass
+// takes each mark out and turns each % into #, which leaves a comment of the same length. A
+// directive that no document "---" follows is no YAML, and the pass says so, since go-yaml then
+// reads what follows as a document.
 //
 // A line "---" or "..." ends whatever stands before it, even a block scalar or a string in quotes
-// (YAML 1.2.2, c-forbidden), so the pass reads these lines alike in any file that is YAML.
+// (c-forbidden), so the pass reads these lines alike in any file that is YAML.
 func (r *reader) streamLevel(text string) string {
 	lines := splitLines(text)
 	between := true
@@ -120,8 +119,7 @@ func (r *reader) streamLevel(text string) string {
 }
 
 // beforeDocument says whether a line whose rest is given, and the lines after it, hold nothing but
-// comments up to a document "---", so that a byte order mark at its start is one (YAML 1.2.2, 9.2,
-// l-yaml-stream).
+// comments up to a document "---", so that a byte order mark at its start is one (l-yaml-stream).
 func beforeDocument(lines []line, rest string) bool {
 	for i, l := range lines {
 		content := l.content
@@ -138,8 +136,7 @@ func beforeDocument(lines []line, rest string) bool {
 	return false
 }
 
-// marker says whether a line is the marker "---" or "...": the three characters in its first
-// column, and after them a space, a tab or the end of the line.
+// marker says whether a line is the marker m, "---" or "...".
 func marker(content, m string) bool {
 	return strings.HasPrefix(content, m) && (len(content) == 3 || content[3] == ' ' || content[3] == '\t')
 }
@@ -155,11 +152,11 @@ var lineSeparators = []rune{0x85, 0x2028, 0x2029}
 // standIns is the third pass. go-yaml takes U+0085, U+2028 and U+2029 for line breaks, as YAML
 // 1.1 does, and reads a text with them otherwise than YAML 1.2.2, which takes them for characters
 // like any other: `a: x<U+2028>  y` is "x<U+2028>y" to it, and where YAML 1.2.2 reads one line it
-// may refuse the file or count lines that are not there (TestRead, "line separator"). The pass puts
-// for each a character of the private use area that the text neither holds nor writes with an
-// escape. Such a character is ns-char to YAML 1.2.2, as the three are, and go-yaml reads it as one,
-// so go-yaml reads the text as YAML 1.2.2 reads the file. The values get the three back through
-// r.restore, and since one character stands for one, no place moves.
+// may refuse the file or count lines that are not there. The pass puts for each a character of the
+// private use area that the text neither holds nor writes with an escape. Such a character is
+// ns-char to YAML 1.2.2, as the three are, and go-yaml reads it as one, so go-yaml reads the text
+// as YAML 1.2.2 reads the file. The values get the three back through r.restore, and since one
+// character stands for one, no place moves.
 func (r *reader) standIns(text string) string {
 	var present []rune
 	for _, c := range lineSeparators {
@@ -216,8 +213,6 @@ func escapedCharacters(text string) []rune {
 	return found
 }
 
-// restored gives a value of go-yaml with U+0085, U+2028 and U+2029 back in place of their
-// stand-ins.
 func (r *reader) restored(s string) string {
 	if r.restore == nil {
 		return s
@@ -226,7 +221,7 @@ func (r *reader) restored(s string) string {
 }
 
 // A line of a text: what it holds, and the line break that ends it — CRLF, CR, LF, or nothing at
-// the end of the text. These are the line breaks of YAML 1.2.2 (5.4), and once U+0085, U+2028 and
+// the end of the text. These are the line breaks of YAML 1.2.2, and once U+0085, U+2028 and
 // U+2029 have stand-ins, go-yaml's too.
 type line struct {
 	content, end string
@@ -275,8 +270,6 @@ func (s *source) at(line, column int) rune {
 	return s.lines[line][column]
 }
 
-// escapeWidth gives how many hexadecimal digits follow the escape \x, \u or \U, and 0 after any
-// other.
 func escapeWidth(kind rune) int {
 	switch kind {
 	case 'x':

@@ -20,7 +20,7 @@ import (
 
 // The copy of the schemas is schemas/ of spec.Format: the same files, byte for byte, of the version
 // that spec.Format holds. A move to a new tag of spec that changes a schema fails it until the copy
-// follows, as R20 has the move take the copy along.
+// follows (R20).
 func TestSchemasAreSpecs(t *testing.T) {
 	version, err := fs.ReadFile(spec.Format, "VERSION")
 	if err != nil {
@@ -53,7 +53,7 @@ func TestSchemasAreSpecs(t *testing.T) {
 	}
 }
 
-// Keywords is the list of section 5 of format/README.md, in its order.
+// Keywords is the list of the format's text, in its order.
 func TestKeywordsAreTheFormats(t *testing.T) {
 	data, err := fs.ReadFile(spec.Format, "README.md")
 	if err != nil {
@@ -189,8 +189,8 @@ func TestCollect(t *testing.T) {
 		{"else", `{"id": "a", "kind": "y", "list": [1, 2]}`, []string{"maxItems at #/list"}},
 		{"an unknown field at its object", `{"id": "a", "colour": "red"}`, []string{"unevaluatedProperties at #"}},
 		{"dependentRequired at the object", `{"id": "a", "pair": {"a": 1}}`, []string{"dependentRequired at #/pair"}},
-		// A subschema that fails gives no annotations (JSON Schema 2020-12 core, section 7.7.1.2), so the
-		// fields that $ref declares are unevaluated beside it, as ajv has them too.
+		// A subschema that fails gives no annotations by JSON Schema 2020-12, so the fields that $ref
+		// declares are unevaluated beside it, as ajv has them too.
 		{"escaped tokens", `{"id": "a", "deep": {"a/b~c": 1, "é": 2, "x y": 3}}`, []string{
 			"type at #/deep/%C3%A9", "type at #/deep/a~1b~0c",
 			"unevaluatedProperties at #/deep", "unevaluatedProperties at #/deep", "unevaluatedProperties at #/deep",
