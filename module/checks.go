@@ -14,7 +14,7 @@ import (
 	"github.com/altnovatrail/module-kit/verdict"
 )
 
-// The rules of a task that the check of an answer slot sees itself (format/README.md, section 15).
+// The rules of a task that the check of an answer slot sees itself (R27, R28).
 const (
 	RuleTaskChoiceKey           = "task.choice-key"
 	RuleTaskChoiceOptions       = "task.choice-options"
@@ -25,7 +25,7 @@ const (
 
 // slotsOf gives the answer slots of an item as their checks read them, in the order of
 // verdict.AnswerSlots, with the place of each in the task: an answer slot of a handwriting sheet,
-// and a box of a workbook's line (format/README.md, section 14).
+// and a box of a workbook's line.
 func slotsOf(item formatv0.Item, i int) (slots []verdict.AnswerSlot, places [][]string) {
 	slots = verdict.AnswerSlots(item)
 	for j := range item.AnswerSlots {
@@ -53,10 +53,10 @@ type slotBreach struct {
 // checkRules checks the rules of a task that the check of each answer slot sees itself:
 // task.choice-key, task.choice-options, task.fraction-key, task.trap-values and
 // task.predicate-expression. It reads a task that is no template: a template is checked through its
-// instances, each a task of its own (templates.go). The key or a trap value of a number or a fraction
-// that holds a placeholder outside a template breaks task.placeholders, since no instance puts a
-// number in its place, and nothing more of its check is read; and so does the picture path of a part
-// of its statement or its solution that holds a brace (format/README.md, section 23).
+// instances, each a task of its own (R32). The key or a trap value of a number or a fraction that
+// holds a placeholder outside a template breaks task.placeholders, since no instance puts a number
+// in its place, and nothing more of its check is read; and so does the picture path of a part of its
+// statement or its solution that holds a brace.
 func (c *checker) checkRules(path string, task formatv0.Task) {
 	for _, list := range []struct {
 		parts []formatv0.StatementPart
@@ -92,9 +92,8 @@ func holdsPlaceholder(slot verdict.AnswerSlot) bool {
 }
 
 // slotRules gives the breaches of the rules that the check of an answer slot sees itself, by the
-// verdicts that the check gives, and a predicate by verdict.CheckPredicate (format/README.md,
-// section 15). It reads one answer slot of a task, or of an instance of a template, which is checked
-// as a task.
+// verdicts that the check gives, and a predicate by verdict.CheckPredicate. It reads one answer slot
+// of a task, or of an instance of a template, which is checked as a task.
 func slotRules(slot verdict.AnswerSlot) []slotBreach {
 	var found []slotBreach
 	check := slot.Check
@@ -134,8 +133,7 @@ func slotRules(slot verdict.AnswerSlot) []slotBreach {
 
 // choiceRules gives the breaches of task.choice-key and task.choice-options: the key is one of the
 // options as written, and with notation: word one word of letters, its end kept; no two options are
-// alike once normalized by the notation, and with notation: word none is left empty
-// (format/README.md, section 15).
+// alike once normalized by the notation, and with notation: word none is left empty.
 func choiceRules(slot verdict.AnswerSlot) []slotBreach {
 	var found []slotBreach
 	options := slot.ChoiceOptions()

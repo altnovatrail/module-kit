@@ -48,9 +48,9 @@ func publishedOf(indexFile string, id formatv0.ModuleID, folders []string) ([]mo
 }
 
 // packagesByDigest gives each package folder by its digest, the digest of the bytes of its
-// inventory.json (format/README.md, section 25), so that an entry of an index finds its package by
-// package_digest. A folder with no inventory.json is no package. The package is not read yet: whoever
-// takes one reads it by the chain of digests from that digest.
+// inventory.json, so that an entry of an index finds its package by package_digest. A folder with no
+// inventory.json is no package. The package is not read yet: whoever takes one reads it by the chain
+// of digests from that digest.
 func packagesByDigest(folders []string) (map[formatv0.Digest]string, error) {
 	byDigest := map[formatv0.Digest]string{}
 	for _, dir := range folders {

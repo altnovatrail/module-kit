@@ -24,11 +24,11 @@ var solverLimits = sandbox.Solver
 // Inputs gives the names of the numbers that the solver of a template gets on each instance, in the
 // order of their names, compared by code units: each parameter and derived number whose placeholder
 // stands in an open field of the template — the statement, the givens, the unknown, the text of an
-// item, a text piece of its line, an option of an answer slot bound choice (format/README.md,
-// sections 6 and 24). A number that only a closed field shows — a key, a trap value, the solution —
-// is not among them, so the solver solves the task that the learner sees and cannot read an answer
-// that an expression already gives. The open view is that of the template as it is written, as
-// spec's second implementation builds it.
+// item, a text piece of its line, an option of an answer slot bound choice. A number that only a
+// closed field shows — a key, a trap value, the solution — is not among them, so the solver solves
+// the task that the learner sees and cannot read an answer that an expression already gives. The
+// open view is that of the template as it is written, as spec's second implementation builds it
+// (R33).
 //
 // A task that is no template gives none, and a string that breaks task.placeholders gives none of
 // its own.
@@ -54,9 +54,8 @@ func Inputs(task formatv0.Task) []formatv0.TemplateName {
 
 // programBreaches gives the breach of task.template-solver of a solver whose program is no program
 // of the dialect: one that does not parse, that holds load, or that names a name that it does not
-// bind and that is no built-in name of the dialect (format/README.md, section 24). It fails before
-// the first instance, whatever the instances are, so it stands with the breaches of names,
-// expressions and placeholders.
+// bind and that is no built-in name of the dialect. It fails before the first instance, whatever
+// the instances are, so it stands with the breaches of names, expressions and placeholders.
 func programBreaches(t formatv0.Template) []Breach {
 	if t.Solver == nil {
 		return nil
@@ -67,18 +66,15 @@ func programBreaches(t formatv0.Template) []Breach {
 	return nil
 }
 
-// beforeTheFirst gives the breach of task.template-solver of a solver that fails before the first
-// instance, for the reason given.
 func beforeTheFirst(reason string) Breach {
 	return Breach{RuleSolver, at("template", "solver", "program"), "the solver fails before the first instance: " + reason}
 }
 
-// solve runs the solver of a template on its instances, as section 24 of the format text runs it:
-// the program once, on one thread with the budget of 100 000 000 steps and module-kit's clock of a
-// minute, and then solve on every instance in their order, on the same thread, each with a frozen
-// dict of the numbers that Inputs names, inserted in their order. The top level and every call count
-// their steps together, and one clock runs for them all: the budget is the template's, not each
-// instance's (R11).
+// solve runs the solver of a template on its instances: the program once, on one thread within
+// solverLimits, and then solve on every instance in their order, on the same thread, each with a
+// frozen dict of the numbers that Inputs names, inserted in their order. The top level and every call
+// count their steps together, and one clock runs for them all: the budget is the template's, not each
+// instance's (R11, R33).
 //
 // It gives the numbers of every instance with the results that solve returns among them; or the
 // breach of task.template-solver where the solver first fails — before the first instance, or on an
@@ -154,10 +150,9 @@ func stopped(err error, failing string) string {
 }
 
 // notSolve says why the global solve of a program is no function of one parameter, as the solver
-// calls it, or "" when it is one (format/README.md, section 24). A function of one parameter is one
-// that the program defines, with def or lambda, with one parameter that the dict is passed to by its
-// place, which may have a default: no other parameter, no keyword-only one, and neither *args nor
-// **kwargs.
+// calls it, or "" when it is one. A function of one parameter is one that the program defines, with
+// def or lambda, with one parameter that the dict is passed to by its place, which may have a
+// default: no other parameter, no keyword-only one, and neither *args nor **kwargs.
 func notSolve(fn starlark.Value, defined bool) string {
 	if !defined {
 		return "its program defines no solve"
@@ -210,11 +205,11 @@ func parametersOf(f *starlark.Function) []string {
 	return params
 }
 
-// resultsOf reads what solve returns on an instance: a dict whose keys are the names of the results,
-// exactly these, and whose values are ints between −(2^53−1) and 2^53−1 (format/README.md, section
-// 24). It gives the results by their names, or why the value is none such: the first key that names
-// no result, in the order of the dict, and else the first result, in the order of results, that it
-// lacks or whose value is no such int.
+// resultsOf reads what solve returns on an instance: a dict whose keys are the names of the
+// results, exactly these, and whose values are ints between −(2^53−1) and 2^53−1. It gives the
+// results by their names, or why the value is none such: the first key that names no result, in the
+// order of the dict, and else the first result, in the order of results, that it lacks or whose
+// value is no such int.
 func resultsOf(v starlark.Value, names []formatv0.TemplateName) (formatv0.Numbers, string) {
 	dict, ok := v.(*starlark.Dict)
 	if !ok {

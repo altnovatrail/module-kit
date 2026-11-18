@@ -19,9 +19,8 @@ import (
 )
 
 // The rules of templates that a template breaks by itself — by its names, its expressions, its
-// placeholders, the combinations of its parameters and its solver — whatever its instances hold
-// (format/README.md, sections 23 and 24). task.placeholders holds outside a template too, and the
-// check of a module reads it there.
+// placeholders, the combinations of its parameters and its solver — whatever its instances hold.
+// task.placeholders holds outside a template too, and the check of a module reads it there.
 const (
 	RuleNames        = "task.template-names"
 	RuleExpressions  = "task.template-expressions"
@@ -37,18 +36,16 @@ type Breach struct {
 	Rule, Pointer, Message string
 }
 
-// limit is how far a derived number may lie from 0, as an integer of YAML does: 2^53 − 1
-// (format/README.md, sections 4 and 23).
+// limit is how far a derived number may lie from 0, as an integer of YAML does: 2^53 − 1.
 const limit = 1<<53 - 1
 
 // Instances counts the instances of a template and gives the numbers of each, in their order: every
-// parameter, every derived number and every result of the solver of the instance, by its name
-// (format/README.md, sections 23 and 24). The combinations of the parameters come in the order of an
-// odometer — the parameters in the order of their names, the first changing slowest, each through
-// its domain upwards —, and on each the derived numbers are computed and then the constraint, in the
-// sandbox of Starlark; those for which the constraint holds, or all of them when there is none, are
-// the instances. A solver then runs on them in their order, on one thread of its own, and its results
-// join the numbers of each.
+// parameter, every derived number and every result of the solver of the instance, by its name. The
+// combinations of the parameters come in the order of an odometer — the parameters in the order of
+// their names, the first changing slowest, each through its domain upwards —, and on each the
+// derived numbers are computed and then the constraint, in the sandbox of Starlark; those for which
+// the constraint holds, or all of them when there is none, are the instances. A solver then runs on
+// them in their order, on one thread of its own, and its results join the numbers of each.
 //
 // A template that breaks a rule of templates gives its breaches and no numbers, in the order of
 // spec's second implementation: every breach of its names, its expressions, its placeholders and the
@@ -56,7 +53,7 @@ const limit = 1<<53 - 1
 // domain, or too many combinations, or the first combination on which an expression fails or a
 // derived number lies past ±(2^53 − 1), where the count stops, or none that gives an instance; and
 // only when it has instances, that of its solver on the first instance where it fails, or before the
-// first. A task that is no template gives neither.
+// first (R32, R33). A task that is no template gives neither.
 //
 // The count looks at ctx before each combination, and the solver runs with it, on the caller's
 // goroutine; how many templates the caller counts at once is its own to say (R11). The error is that
@@ -88,7 +85,6 @@ func Instances(ctx context.Context, task formatv0.Task) ([]formatv0.Numbers, []B
 	return instances, breaches, nil
 }
 
-// results gives the names of the results of a template's solver: none when it has none.
 func results(t formatv0.Template) []formatv0.TemplateName {
 	if t.Solver == nil {
 		return nil
@@ -126,7 +122,7 @@ func namesBreaches(t formatv0.Template) []Breach {
 // expression of the subset that names only parameters, and the constraint a bool expression of it
 // that names only parameters and derived numbers. The subset is of Starlark and runs in the dialect
 // of the format: an expression of it begins with a token and nests at most 64 levels, so that
-// go.starlark.net at its version parses every one (format/README.md, sections 23 and 24; R102 spec).
+// go.starlark.net at its version parses every one (R32, R102 spec).
 // An expression of the subset that go.starlark.net still does not parse is a breach rather than a
 // panic of compiled: the check goes on, and the subset and the dialect are held to each other twice.
 func expressionBreaches(t formatv0.Template, parameters, derived []formatv0.TemplateName) []Breach {
@@ -153,7 +149,6 @@ func expressionBreaches(t formatv0.Template, parameters, derived []formatv0.Temp
 	return found
 }
 
-// plain gives names as strings.
 func plain(names []formatv0.TemplateName) []string {
 	words := make([]string, len(names))
 	for i, name := range names {
@@ -166,8 +161,7 @@ func plain(names []formatv0.TemplateName) []string {
 // task outside its template, every brace is doubled or part of a placeholder that names a parameter,
 // a derived number or a result of the solver, and a placeholder of a result stands only in a key or
 // a trap value of a check of a number or a fraction, in the text of the solution or in a leak phrase,
-// and in no picture path (format/README.md, sections 23 and 24). A breach for each string that breaks
-// it, at the string.
+// and in no picture path (R61 spec). A breach for each string that breaks it, at the string.
 func placeholderBreaches(task formatv0.Task) []Breach {
 	t := *task.Template
 	known := func(name formatv0.TemplateName) bool {
@@ -202,7 +196,7 @@ func placeholderBreaches(task formatv0.Task) []Breach {
 // takesResults says whether a placeholder of a result of the solver may stand in the string of a task
 // at the place tokens: in the key or the value of a trap value of a check of a number or a fraction,
 // in the text of the solution and in a leak phrase, and in no picture path, not even the solution's,
-// since a picture of every instance is a file of the module (format/README.md, sections 23 and 24).
+// since a picture of every instance is a file of the module.
 func takesResults(task formatv0.Task, tokens []string) bool {
 	switch tokens[0] {
 	case "solution":
@@ -232,13 +226,12 @@ func takesResults(task formatv0.Task, tokens []string) bool {
 	return len(tokens) == 6 && tokens[5] == "key" || len(tokens) == 8 && tokens[5] == "trap_values" && tokens[7] == "value"
 }
 
-// at writes a place in a task as a JSON Pointer in URI fragment form.
 func at(tokens ...string) string {
 	return schema.Pointer(tokens)
 }
 
 // count counts the instances of a template whose names, expressions, placeholders and program break
-// no rule, as Instances does, with ctx, whose error is the error when it is done.
+// no rule; its error is that of ctx when ctx is done.
 func count(ctx context.Context, t formatv0.Template, parameters, derived []formatv0.TemplateName) ([]formatv0.Numbers, []Breach, error) {
 	var empty []Breach
 	combinations := big.NewInt(1)
@@ -328,7 +321,7 @@ func compiled(t formatv0.Template, parameters, derived []formatv0.TemplateName) 
 // breach of task.template-instances when an expression fails on it or a derived number lies past
 // ±(2^53 − 1). An expression of the subset calls no function and holds no loop, so its steps are
 // bounded by its length, and it runs with no limit of steps, no clock and no context: count looks at
-// the caller's before each combination (format/README.md, section 23).
+// the caller's before each combination (R32).
 func (e expressions) on(parameters []formatv0.TemplateName, values []int64) (formatv0.Numbers, bool, *Breach) {
 	numbers := formatv0.Numbers{}
 	args := make(starlark.Tuple, len(values), len(values)+len(e.derived))
@@ -396,10 +389,9 @@ func Shown(t formatv0.Template, numbers formatv0.Numbers) string {
 
 // Instance gives the instance of a template with the numbers of one of its instances: the task with
 // every placeholder replaced by its number, in decimal digits with - before a negative one, and every
-// doubled brace by one, in a single pass, without its template, and with the template's id
-// (format/README.md, section 23). It evaluates no expression and runs no Starlark: api puts in the
-// numbers that the package carries, picked by AttemptInstance, and the open view of the instance is
-// openview.Task of it (section 25).
+// doubled brace by one, in a single pass, without its template, and with the template's id. It
+// evaluates no expression and runs no Starlark: api puts in the numbers that the package carries,
+// picked by AttemptInstance, and the open view of the instance is openview.Task of it (R32).
 //
 // The error is for a task that is no template, a string of it that breaks task.placeholders, and a
 // placeholder whose number numbers does not give. The instance is not checked against the schema of

@@ -11,15 +11,14 @@ import (
 )
 
 // isAnchor says whether a prerequisite names an anchor skill of the shared taxonomy, core.<name>,
-// rather than a skill of the module by its local ID, which has no dot (format/README.md, section
-// 13).
+// rather than a skill of the module by its local ID, which has no dot (R25).
 func isAnchor(id string) bool {
 	return strings.HasPrefix(id, "core.")
 }
 
-// skillGraph checks the rules within a skill graph (format/README.md, section 12):
-// skill-graph.known-skills, skill-graph.retired-ids, skill-graph.own-anchors and
-// skill-graph.acyclic. teachers are the skills of the graph that teach each anchor skill.
+// skillGraph checks the rules within a skill graph: skill-graph.known-skills,
+// skill-graph.retired-ids, skill-graph.own-anchors and skill-graph.acyclic. teachers are the skills
+// of the graph that teach each anchor skill.
 func (c *checker) skillGraph(path string, g formatv0.SkillGraph, teachers map[formatv0.SharedTaxonomy][]string) {
 	for id, skill := range g.Skills {
 		for i, prerequisite := range skill.Prerequisites {
@@ -149,12 +148,11 @@ func cycles[K ~string](edges map[K][]K) map[K][]string {
 	return found
 }
 
-// Tiers gives the tier of each skill of a skill graph (format/README.md, section 12): tier 1 for a
-// skill with no prerequisite among the module's skills, and one tier above the highest of its
-// prerequisites among them for every other, so that an anchor skill counts for none. The package
-// holds them in its canonical view, as skill_tiers (section 25). A graph whose prerequisites name a
-// skill that it does not have, or run in a cycle, has no tiers: it breaks skill-graph.known-skills
-// or skill-graph.acyclic, and Tiers gives an error.
+// Tiers gives the tier of each skill of a skill graph: tier 1 for a skill with no prerequisite among
+// the module's skills, and one tier above the highest of its prerequisites among them for every
+// other, so that an anchor skill counts for none. The package holds them in its canonical view, as
+// skill_tiers. A graph whose prerequisites name a skill that it does not have, or run in a cycle,
+// has no tiers: it breaks skill-graph.known-skills or skill-graph.acyclic, and Tiers gives an error.
 func Tiers(g formatv0.SkillGraph) (formatv0.SkillTiers, error) {
 	for _, id := range slices.Sorted(maps.Keys(g.Skills)) {
 		for _, prerequisite := range g.Skills[id].Prerequisites {

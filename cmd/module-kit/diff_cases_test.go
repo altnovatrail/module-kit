@@ -10,9 +10,8 @@ import (
 	"testing"
 )
 
-// The cases of diff that architecture 3.5 names besides the vectors: a first version by --first and
-// by an index that does not name the module, a package for the new version, a module that its check
-// refuses, and --json.
+// The cases of diff besides the vectors: a first version by --first and by an index that does not
+// name the module, a package for the new version, a module that its check refuses, and --json.
 func TestDiffCases(t *testing.T) {
 	root := "vectors/versions/media-changed"
 	folders, indexFile := publishedFolders(t, root)

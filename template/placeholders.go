@@ -20,16 +20,16 @@ type piece struct {
 }
 
 // templateName says whether a text is a name as a placeholder names it: lowercase letters, digits
-// and _, beginning with a letter (task.schema.json, $defs/template_name). How long it is, and whether
-// it is a keyword of Starlark, the schema of the template's names says: a placeholder that names no
-// number of the template names nothing.
+// and _, beginning with a letter. How long it is, and whether it is a keyword of Starlark, the
+// schema of the template's names says: a placeholder that names no number of the template names
+// nothing.
 func templateName(text string) bool {
 	return text != "" && text[0] >= 'a' && text[0] <= 'z' && strings.Trim(text, "abcdefghijklmnopqrstuvwxyz0123456789_") == ""
 }
 
 // piecesOf reads a string of a template from left to right: {{ is {, }} is }, and {name} is a
-// placeholder (format/README.md, section 23). Any other brace is an error, at the place of its
-// character from 1, as the rule task.placeholders has it.
+// placeholder. Any other brace is an error, at the place of its character from 1, as the rule
+// task.placeholders has it.
 func piecesOf(s string) ([]piece, error) {
 	var pieces []piece
 	var text strings.Builder
@@ -73,7 +73,6 @@ func piecesOf(s string) ([]piece, error) {
 	return pieces, nil
 }
 
-// placeholdersOf gives the names that the placeholders of the pieces name, in order.
 func placeholdersOf(pieces []piece) []formatv0.TemplateName {
 	var names []formatv0.TemplateName
 	for _, p := range pieces {
@@ -91,7 +90,7 @@ type stringAt struct {
 }
 
 // stringsOf gives every string of a task outside its template, as its JSON value holds it, each with
-// its place, the members of an object in the order of their names (format/README.md, section 23).
+// its place, the members of an object in the order of their names.
 func stringsOf(task formatv0.Task) []stringAt {
 	value := schema.ValueOf(task).(map[string]any)
 	delete(value, "template")
@@ -122,9 +121,9 @@ func stringsIn(value any) []stringAt {
 
 // fill gives the instance of a template, as its JSON value: the task's value without its template,
 // with every placeholder of every string replaced by its number, in decimal digits with - before a
-// negative one, and every doubled brace by one, in a single pass, so that what is put in is not read
-// again (format/README.md, section 23). A string that breaks task.placeholders, and a placeholder
-// whose number numbers does not give, are errors.
+// negative one, and every doubled brace by one, in a single pass, so that what is put in is not
+// read again. A string that breaks task.placeholders, and a placeholder whose number numbers does
+// not give, are errors.
 func fill(task formatv0.Task, numbers formatv0.Numbers) (any, error) {
 	value := schema.ValueOf(task).(map[string]any)
 	delete(value, "template")

@@ -40,7 +40,6 @@ func vectorPackages(t *testing.T, names ...string) map[string]string {
 	return folders
 }
 
-// allPackages is every test vector of packages.
 func allPackages(t *testing.T) map[string]string {
 	t.Helper()
 	entries, err := fs.ReadDir(spec.Format, "vectors/packages")
@@ -94,7 +93,6 @@ func indexText(t *testing.T, entries map[string]map[string]entry) []byte {
 	return text
 }
 
-// inventoryOf reads the ID and the version of the package in a folder.
 func inventoryOf(t *testing.T, folder string) (id, version string) {
 	t.Helper()
 	data, err := os.ReadFile(filepath.Join(folder, modulepackage.InventoryFile))
@@ -108,7 +106,6 @@ func inventoryOf(t *testing.T, folder string) (id, version string) {
 	return string(inventory.ID), string(inventory.Version)
 }
 
-// releaseOf gives the text of an index that names each package folder as its own ID and version.
 func releaseOf(t *testing.T, folders map[string]string) []byte {
 	t.Helper()
 	entries := map[string]map[string]entry{}

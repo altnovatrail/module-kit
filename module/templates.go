@@ -15,9 +15,8 @@ import (
 	"github.com/altnovatrail/module-kit/template"
 )
 
-// The rules of templates (format/README.md, sections 23 and 24): those that a template breaks by
-// itself, which package template reads, and task.instances, which holds each of its instances to the
-// schema of a task.
+// The IDs of the rules of templates: those that a template breaks by itself, which package template
+// reads, and task.instances, which holds each of its instances to the schema of a task (R32, R33).
 const (
 	RuleTaskTemplateNames       = template.RuleNames
 	RuleTaskTemplateExpressions = template.RuleExpressions
@@ -37,9 +36,8 @@ type instance struct {
 }
 
 // What the check of a module reads of a template: the breaches of its own rules, and, when it breaks
-// none, its instances, in their order, with the results of its solver among their numbers
-// (format/README.md, sections 23 and 24): numbers as template.Instances gives them, and each
-// instance as the rules read it.
+// none, its instances, in their order, with the results of its solver among their numbers: numbers
+// as template.Instances gives them, and each instance as the rules read it.
 type expansion struct {
 	breaches  []template.Breach
 	numbers   []formatv0.Numbers
@@ -72,10 +70,10 @@ func expand(ctx context.Context, task formatv0.Task) (*expansion, error) {
 
 // expandAll expands every template among the tasks of parts, one on each CPU that the process may use
 // at once, runtime.GOMAXPROCS(0), each solver on a Starlark thread of its own, and puts each
-// expansion under the path of its task, whatever order they end in (architecture 3.4). The solvers
-// share the wall time of their clocks and the memory of the process, so no more run at once than the
-// CPUs that serve them. The error is that of ctx, once it is done; the templates that have not begun
-// then do not run.
+// expansion under the path of its task, whatever order they end in. The solvers share the wall time
+// of their clocks and the memory of the process, so no more run at once than the CPUs that serve
+// them (R38). The error is that of ctx, once it is done; the templates that have not begun then do
+// not run.
 func (p *parts) expandAll(ctx context.Context) error {
 	var paths []string
 	for path, task := range p.tasks {
@@ -114,7 +112,7 @@ func (p *parts) expandAll(ctx context.Context) error {
 }
 
 // instancesOf gives the numbers of the instances of each template of a module by the local ID of its
-// task, as the canonical view holds them (format/README.md, section 25).
+// task, as the canonical view holds them.
 func (p *parts) instancesOf() map[string][]formatv0.Numbers {
 	if len(p.templates) == 0 {
 		return nil
@@ -130,7 +128,7 @@ func (p *parts) instancesOf() map[string][]formatv0.Numbers {
 // causes gives the keywords that an instance of a template fails but those of unevaluatedProperties,
 // unless they are all. An instance holds the fields of its template, which the schema of a task took,
 // so a field is left unevaluated only where a subschema that evaluates it fails, which is a keyword
-// of its own: the author mends that one (R23).
+// of its own: the author mends that one (R32).
 func causes(errs []schema.Error) []schema.Error {
 	if kept := slices.DeleteFunc(slices.Clone(errs), func(e schema.Error) bool { return e.Keyword == "unevaluatedProperties" }); len(kept) > 0 {
 		return kept
@@ -139,10 +137,10 @@ func causes(errs []schema.Error) []schema.Error {
 }
 
 // templateRules checks the rules of templates on a template, and the rules of a task within its part
-// on each of its instances (format/README.md, section 23): its own rules; task.instances, of an
-// instance that the schema of a task does not take, each keyword at each place by the first instance
-// that fails it there, since each keyword is a mistake of its own; and on every other instance the
-// rules that the check of an answer slot sees itself and task.no-leaks on the texts of the task.
+// on each of its instances: its own rules; task.instances, of an instance that the schema of a task
+// does not take, each keyword at each place by the first instance that fails it there, since each
+// keyword is a mistake of its own; and on every other instance the rules that the check of an answer
+// slot sees itself and task.no-leaks on the texts of the task (R32).
 func (c *checker) templateRules(path string, e *expansion) {
 	for _, b := range e.breaches {
 		c.add(b.Rule, path, 0, 0, b.Pointer, b.Message)
@@ -168,12 +166,11 @@ func (c *checker) templateRules(path string, e *expansion) {
 
 // onInstances checks rules on each instance of a template, by check on a checker of its own. The
 // author mends a rule broken at a place there, so the report holds the breaches at a place of the
-// first instance that breaks the rule there, each naming the instance's numbers (format/README.md,
-// section 23): 10 000 instances whose trap value is their key give one breach, not 10 000. Another
-// instance that breaks the rule at the same place otherwise — a text that holds the key of one
-// instance and the key of another — shows once the place is mended. A rule of a task reads an
-// instance only when it is valid against the schema of a task, as it reads a file that passed its
-// schema.
+// first instance that breaks the rule there, each naming the instance's numbers (R32): 10 000
+// instances whose trap value is their key give one breach, not 10 000. Another instance that breaks
+// the rule at the same place otherwise — a text that holds the key of one instance and the key of
+// another — shows once the place is mended. A rule of a task reads an instance only when it is valid
+// against the schema of a task, as it reads a file that passed its schema.
 func (c *checker) onInstances(e *expansion, check func(sub *checker, i instance)) {
 	first := map[string]int{} // the instance that first breaks each rule at each place
 	for n, i := range e.instances {

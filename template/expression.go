@@ -7,7 +7,7 @@ import (
 	"strings"
 )
 
-// The type of an expression of a template: an int or a bool (format/README.md, section 23).
+// The type of an expression of a template: an int or a bool.
 type exprType string
 
 const (
@@ -35,10 +35,10 @@ type token struct {
 func wordCharacter(c byte) bool { return c >= 'a' && c <= 'z' || c >= '0' && c <= '9' || c == '_' }
 func digit(c byte) bool         { return c >= '0' && c <= '9' }
 
-// tokensOf reads an expression into its tokens, which spaces, U+0020, or nothing separate
-// (format/README.md, section 23). A character outside the tokens, a run that is neither an integer
-// nor a name, and an integer with a leading zero are errors. Every character of a token is ASCII, so
-// the place of a byte is the place of its character up to the first that is not, which is an error.
+// tokensOf reads an expression into its tokens, which spaces, U+0020, or nothing separate. A
+// character outside the tokens, a run that is neither an integer nor a name, and an integer with a
+// leading zero are errors. Every character of a token is ASCII, so the place of a byte is the place
+// of its character up to the first that is not, which is an error.
 func tokensOf(src string) ([]token, error) {
 	var found []token
 	for at := 0; at < len(src); {
@@ -79,7 +79,7 @@ func tokensOf(src string) ([]token, error) {
 }
 
 // typeOf reads src as an expression of the narrow subset of Starlark of templates and gives its
-// type, when every name in it is one of names (format/README.md, section 23):
+// type, when every name in it is one of names:
 //
 //	expression  = disjunction
 //	disjunction = conjunction { "or" conjunction }
@@ -99,7 +99,7 @@ func tokensOf(src string) ([]token, error) {
 // parenthesis, unary - and not is a level within the one around it, so -(a - (b)) nests three. The
 // dialect reads a space before an expression as an indent, and go.starlark.net at the version of the
 // format parses no deeper than about 75 parentheses, or 987 unary minus signs in a row, so every
-// expression of the subset is one of the dialect (format/README.md, section 23; R102 spec; R32).
+// expression of the subset is one of the dialect (R32, R102 spec).
 func typeOf(src string, names []string) (t exprType, err error) {
 	if strings.HasPrefix(src, " ") {
 		return "", errors.New("it begins with a space, where an expression begins with a token")
@@ -130,7 +130,7 @@ type problem string
 
 func (p problem) Error() string { return string(p) }
 
-// maxDepth is the most levels an expression of a template nests (format/README.md, section 23).
+// maxDepth is the most levels an expression of a template nests (R102 spec).
 const maxDepth = 64
 
 // parser reads the tokens of an expression by the grammar of the subset, and types each part as it

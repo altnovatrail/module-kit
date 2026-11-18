@@ -12,8 +12,8 @@ import (
 	"unicode/utf8"
 )
 
-// The rules of the files of a module that no schema checks (format/README.md, section 10): its
-// media files, the text of its license and its notices.
+// The rules of the files of a module that no schema checks: its media files, the text of its license
+// and its notices.
 
 // A signature of a media format: its name, and whether the first bytes of a file are of it.
 type signature struct {
@@ -22,8 +22,7 @@ type signature struct {
 }
 
 // signatures holds the signature of each media format by its extension, as WHATWG MIME Sniffing,
-// 6.1 and 6.2, gives them (format/README.md, section 10). headLength bytes of a file are enough for
-// each.
+// 6.1 and 6.2, gives them. headLength bytes of a file are enough for each.
 var signatures = map[string]signature{
 	"png": {"PNG", func(head []byte) bool { return bytes.HasPrefix(head, []byte("\x89PNG\r\n\x1a\n")) }},
 	"jpg": {"JPEG", func(head []byte) bool { return bytes.HasPrefix(head, []byte{0xff, 0xd8, 0xff}) }},
@@ -71,7 +70,6 @@ func (c *checker) media() error {
 	return nil
 }
 
-// readHead reads the first headLength bytes of a file, or all of a shorter one.
 func readHead(fsys fs.FS, name string) ([]byte, error) {
 	f, err := fsys.Open(name)
 	if err != nil {

@@ -15,7 +15,6 @@ import (
 	"github.com/altnovatrail/module-kit/internal/yaml"
 )
 
-// examplePart gives an example of a part from spec.Format, examples/<part>/valid/<name>.yaml.
 func examplePart(part, name string) *fstest.MapFile {
 	data, err := fs.ReadFile(spec.Format, "examples/"+part+"/valid/"+name+".yaml")
 	if err != nil {

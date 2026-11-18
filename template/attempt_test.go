@@ -28,10 +28,9 @@ type attempt struct {
 	instance   int
 }
 
-// The vectors of templates, by their files, each with every attempt it holds (format/README.md,
-// section 23). The order of the odometer: the parameters by their names, compared
-// by code units, the first changing slowest, and the combinations that the constraint leaves out
-// not numbered.
+// The vectors of templates, by their files, each with every attempt it holds. The order of the
+// odometer: the parameters by their names, compared by code units, the first changing slowest, and
+// the combinations that the constraint leaves out not numbered.
 var vectorAttempts = map[string][]attempt{
 	// rows from 2 to 3 and total from 6 to 8, where rows divides total: (2, 6), (2, 8) and (3, 6).
 	"picture-of-the-instance.yaml": {

@@ -14,10 +14,9 @@ import (
 
 // A Warning is what a text of the module asks of its author, though the format refuses nothing for
 // it: a text of the whole module that holds a number — a rung template, a trap's advice, a
-// technique, a solving step (format/README.md, section 20; the 2026-11-08 amendment to R57 spec).
-// A warning is no rule: it has no ID and no test vectors, and changes no report's verdict (R50).
-// Path is the file from the module's folder, with / between names, and Pointer the place of the
-// text in it.
+// technique, a solving step (R57 spec). A warning is no rule: it has no ID and no test vectors, and
+// changes no report's verdict (R50). Path is the file from the module's folder, with / between
+// names, and Pointer the place of the text in it.
 type Warning struct {
 	Path    string
 	Pointer string
@@ -31,10 +30,9 @@ func (w Warning) String() string {
 // warn gives the warnings of the texts of the whole module: a rung template of the manifest, the
 // advice of a trap, the title and description of a technique, and the title and description of a
 // solving step, each that holds a number as the leak check reads it. task.no-leaks searches such a
-// text for the keys of every task that can show it, so it SHOULD hold no number (format/README.md,
-// section 20): the rule finds one only once it is the key of such a task, and the warning before.
-// It reads each part whose file passed its schema, whatever else the module breaks, in the order of
-// their places.
+// text for the keys of every task that can show it, so it SHOULD hold no number: the rule finds one
+// only once it is the key of such a task, and the warning before. It reads each part whose file
+// passed its schema, whatever else the module breaks, in the order of their places.
 func (p parts) warn() []Warning {
 	var warnings []Warning
 	add := func(text, path string, tokens ...string) {

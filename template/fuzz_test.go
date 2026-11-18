@@ -72,9 +72,9 @@ func expressionsOfTheFormat(f *testing.F) (expressions, texts []string) {
 // on the names a and b, go.starlark.net at the version of the format takes too, but for one that
 // begins with a space or nests past the depth of its parser, and evaluates on any two ints to a value
 // of the type that typeOf gives, or fails only by dividing by zero. So the grammar and the types of
-// the subset are those of Starlark, which gives an expression its meaning (format/README.md, section
-// 23), and the two ways go.starlark.net parses less are all (В28). The corpus is every expression of
-// a template in spec.Format.
+// the subset are those of Starlark, which gives an expression its meaning, and the two ways
+// go.starlark.net parses less are all (R102 spec). The corpus is every expression of a template in
+// spec.Format.
 func FuzzTypeOf(f *testing.F) {
 	expressions, _ := expressionsOfTheFormat(f)
 	for _, e := range expressions {

@@ -11,8 +11,7 @@ import (
 	"github.com/altnovatrail/module-kit/page"
 )
 
-// The rules of a workbook's page and of a worked example on a workbook (format/README.md, sections
-// 14 and 21).
+// The IDs of the rules of a workbook's page and of a worked example on a workbook (R52).
 const (
 	RuleTaskWorkbookPage   = "task.workbook-page"
 	RuleLessonExampleFills = "lesson.example-fills"
@@ -26,9 +25,9 @@ type exampleBox struct {
 }
 
 // exampleFills checks lesson.example-fills on each worked example on a workbook of a lesson: every
-// fill of its demo names a box of its lines, and the demo fills each box of its lines once
-// (format/README.md, section 21). A fill of no box and a second fill of a box stand where the demo
-// fills it, and a box that no fill fills where the line holds it.
+// fill of its demo names a box of its lines, and the demo fills each box of its lines once. A fill of
+// no box and a second fill of a box stand where the demo fills it, and a box that no fill fills where
+// the line holds it.
 func (c *checker) exampleFills(path string, lesson formatv0.Lesson) {
 	for i, segment := range lesson.Segments {
 		example := segment.WorkedExample
@@ -75,9 +74,8 @@ func (c *checker) exampleFills(path string, lesson formatv0.Lesson) {
 
 // workbookPage checks task.workbook-page on a task on a workbook that is no template, or on an
 // instance of one, whose texts hold the numbers of the instance: its items fit its page as the page
-// of a workbook lays them out, every row with room and no more items than most_items
-// (format/README.md, section 14). The breach stands at the first item of the row that has no room,
-// as canvas refuses to draw the page there.
+// of a workbook lays them out, every row with room and no more items than most_items. The breach
+// stands at the first item of the row that has no room, as canvas refuses to draw the page there.
 func (c *checker) workbookPage(path string, task formatv0.Task) {
 	if task.Canvas.Kind != formatv0.CanvasKindWorkbook {
 		return
@@ -95,7 +93,7 @@ func (c *checker) workbookPage(path string, task formatv0.Task) {
 
 // exampleOnPage checks lesson.workbook-page on each worked example on a workbook of a lesson: its
 // lines fit the page as a task's lines do, and the value of each box is no wider, as a text of the
-// line, than the box (format/README.md, section 21).
+// line, than the box.
 func (c *checker) exampleOnPage(path string, lesson formatv0.Lesson) {
 	for i, segment := range lesson.Segments {
 		example := segment.WorkedExample

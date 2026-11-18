@@ -14,8 +14,7 @@ import (
 	"github.com/altnovatrail/module-kit/moduleindex"
 )
 
-// index builds the module index of a release of modules within the shared release (format/README.md,
-// section 26; R63 spec; R40):
+// index builds the module index of a release of modules within the shared release (R63 spec; R40):
 //
 //	module-kit index (--previous <module-index.json> | --first) --tag vX.Y.Z
 //	    (--withdrawals <withdrawals.yaml> | --no-withdrawals) --out <file> <package folder>...
@@ -86,9 +85,9 @@ func index(_ context.Context, args []string, stdout, stderr io.Writer) int {
 }
 
 // readWithdrawals reads the withdrawals of a release, withdrawals.yaml of modules: YAML by the rules
-// of section 4 of the format, in the form of $defs/withdrawals of the schema of the module index
-// (format/README.md, sections 4 and 26). An empty file withdraws nothing, and is no file of
-// withdrawals: a release that withdraws none says so by --no-withdrawals.
+// of the format, in the form of $defs/withdrawals of module-index.schema.json. An empty file
+// withdraws nothing, and is no file of withdrawals: a release that withdraws none says so by
+// --no-withdrawals.
 func readWithdrawals(file string) (formatv0.Withdrawals, error) {
 	data, err := os.ReadFile(file)
 	if err != nil {
@@ -109,7 +108,6 @@ func readWithdrawals(file string) (formatv0.Withdrawals, error) {
 	return w, nil
 }
 
-// plural gives the noun that counts n.
 func plural(n int, one, many string) string {
 	if n == 1 {
 		return one
@@ -117,8 +115,6 @@ func plural(n int, one, many string) string {
 	return many
 }
 
-// usageOf writes why a command line is not one the command takes, if it says, and the usage, and
-// gives status 2.
 func usageOf(stderr io.Writer, command string, err error) int {
 	if err != nil && !errors.Is(err, errUsage) {
 		fmt.Fprintf(stderr, "module-kit %s: %v\n", command, err)

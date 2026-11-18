@@ -28,8 +28,8 @@ func TestFormatVersionIsSpecs(t *testing.T) {
 	}
 }
 
-// formatText reads the rows of a table of format/README.md whose header begins with the cells of
-// header, each row by its cells with the backquotes of code taken out.
+// formatText reads the rows of a table of the format's text, README.md of spec.Format, whose header
+// begins with the cells of header, each row by its cells with the backquotes of code taken out.
 func formatText(t *testing.T, header string) [][]string {
 	t.Helper()
 	data, err := fs.ReadFile(spec.Format, "README.md")
@@ -57,7 +57,7 @@ func formatText(t *testing.T, header string) [][]string {
 	return rows
 }
 
-// The layout is the table of section 10: each path, with its part, in order.
+// The layout is the format's table of the layout: each path, with its part, in order.
 func TestLayoutIsTheFormats(t *testing.T) {
 	var text []row
 	for _, cells := range formatText(t, "| Path | Part |") {
@@ -72,8 +72,8 @@ func TestLayoutIsTheFormats(t *testing.T) {
 	}
 }
 
-// The rules of a whole module are those of section 10, in its order, the format version is a rule of
-// the manifest, and the text lists every rule of the parts that the check holds.
+// The rules of a whole module are those of the format's text, in its order, the format version is a
+// rule of the manifest, and the text lists every rule of the parts that the check holds.
 func TestRulesAreTheFormats(t *testing.T) {
 	var module, manifest, all []string
 	for _, cells := range formatText(t, "| ID | Rule |") {
@@ -149,8 +149,8 @@ func TestFormsAreTheSchemas(t *testing.T) {
 	}
 }
 
-// moduleFolders finds the folders of spec.Format laid out as a module (format/README.md, sections
-// 8 and 9), each with the rule it is a case of, or "" for a module that breaks no rule.
+// moduleFolders finds the folders of spec.Format laid out as a module, each with the rule it is a
+// case of, or "" for a module that breaks no rule.
 func moduleFolders(t testing.TB) map[string]string {
 	t.Helper()
 	folders := map[string]string{}
@@ -216,10 +216,10 @@ func partFiles(t testing.TB) map[string][2]string {
 // Every module laid out in spec.Format and every file of a part breaks nothing that the check holds
 // but the rule it is a case of: each of them breaks that rule and nothing else, its files are valid
 // against their schemas, and a valid example and a module that is no case break nothing at all. An
-// invalid example breaks its schema alone (format/README.md, sections 8 and 9). That a case breaks
-// its rule, and an invalid example the keyword it names, the test of vectors checks. Each module
-// and each file is a subtest of its own, named by its path in spec.Format, and they run in
-// parallel: they share nothing but spec.Format, which is read-only (R59).
+// invalid example breaks its schema alone. That a case breaks its rule, and an invalid example the
+// keyword it names, the test of vectors checks. Each module and each file is a subtest of its own,
+// named by its path in spec.Format, and they run in parallel: they share nothing but spec.Format,
+// which is read-only (R59).
 func TestChecksTheFormat(t *testing.T) {
 	// beside says whether a breach is other than the one its case may have: of its rule, or, for an
 	// invalid example, of its schema.

@@ -9,7 +9,7 @@ import (
 )
 
 // MaxInstances is the most instances a template has: the sizes of its domains multiply to at most
-// 10 000 (format/README.md, section 23).
+// 10 000 (R60 spec).
 const MaxInstances = 10000
 
 // ErrDomain is what AttemptInstance gives on an argument outside its domain: a count outside 1 to
@@ -18,24 +18,23 @@ const MaxInstances = 10000
 var ErrDomain = random.ErrDomain
 
 // The names of the place of randomness of a template, around the ID of its task: its first name
-// says what the place is of (format/README.md, section 22).
+// says what the place is of (R31).
 const (
 	placeOfTemplate = "template"
 	placeOfInstance = "instance"
 )
 
 // AttemptInstance gives the number of the instance that an attempt on a template gets, from 0:
-// below(count) of the place of randomness of the attempt's seed whose names are template, the ID
-// of the task and instance, where count is how many instances the template has, from 1 to
-// MaxInstances (format/README.md, sections 22 and 23; R60 spec). Nothing else draws from that
-// place, so the same package and the same seed give the same instance (R03 spec). The instances
-// are numbered in the order of the odometer, as the package carries their numbers.
+// below(count) of the place of randomness of the attempt's seed whose names are template, the ID of
+// the task and instance, where count is how many instances the template has, from 1 to MaxInstances
+// (R31, R60 spec). Nothing else draws from that place, so the same package and the same seed give the
+// same instance (R03 spec). The instances are numbered in the order of the odometer, as the package
+// carries their numbers.
 //
 // api draws the seed from a cryptographic source when the attempt begins and passes it here as a
 // number; neither the seed nor the words of the place reach the learner's device, since the words
-// show the seed (format/README.md, section 22). A count outside its domain gives ErrDomain, and so
-// does an ID that is no name of a place: empty, or holding | or what is not UTF-8. The ID of a
-// valid task is neither (common.schema.json).
+// show the seed. A count outside its domain gives ErrDomain, and so does an ID that is no name of a
+// place: empty, or holding | or what is not UTF-8. The ID of a task that the schema takes is neither.
 func AttemptInstance(seed uint64, task formatv0.TaskID, count int) (int, error) {
 	if count < 1 || count > MaxInstances {
 		return 0, fmt.Errorf("template: %d instances: a template has from 1 to %d: %w", count, MaxInstances, ErrDomain)

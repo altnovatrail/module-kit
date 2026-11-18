@@ -64,7 +64,6 @@ func publishedFolders(t *testing.T, root string) (folders []string, indexFile st
 	return folders, writeTemp(t, "module-index.json", text)
 }
 
-// diffArgs gives the command line of diff on a module against an index and package folders.
 func diffArgs(indexFile string, folders []string, module string, more ...string) []string {
 	args := append([]string{"diff"}, more...)
 	args = append(args, "--index", indexFile)
