@@ -50,7 +50,7 @@ A task starts with «Выполни задачу T01 из RUN.md» in a new sess
 |---|---|---|---|---|---|
 | [x] | T57 | Тексты без истории (R160 spec) и тег `spec` v0.18.34 — тело в [docs/plan/E11.md](docs/plan/E11.md) | Claude | — | — |
 | [x] | T58 | Документы без истории: `docs/architecture.md` без раздела 3.6, `docs/README.md`, README, CLAUDE.md, `.claude/rules/` — тело в [docs/plan/E11.md](docs/plan/E11.md) | Claude | — | T57 |
-| [ ] | T59 | Документы без истории: раздел 3.6 `docs/architecture.md` | Claude | — | T57 |
+| [x] | T59 | Документы без истории: раздел 3.6 `docs/architecture.md` — тело в [docs/plan/E11.md](docs/plan/E11.md) | Claude | — | T57 |
 | [ ] | T60 | Комментарии кода по R160 spec: `module`, `template`, `cmd/module-kit` | Claude | — | T57 |
 | [ ] | T61 | Комментарии кода по R160 spec: `moduleversion`, `moduleindex`, `modulepackage`, `observation`, `verdict`, `leak`, `openview`, `page`, `picture` | Claude | — | T57 |
 | [ ] | T62 | Комментарии кода по R160 spec: `internal/`, `.github/`, `justfile` | Claude | — | T57 |
@@ -62,18 +62,6 @@ A task starts with «Выполни задачу T01 из RUN.md» in a new sess
 **Не входит:** новый код библиотеки и CLI — формат тот же; записи журнала целиком — каждую переписывает задача, которая её касается (R160 spec, «Decisions»); `docs/sources.md`, `docs/measurements.md`, архивы `docs/plan/` — вне правила (R160 spec, «Outside the rule»); `.devcontainer/` — это файлы заготовки `spec` (R51), их комментарии приходят переходом на тег.
 
 ## Задачи эпика
-
-#### T59. Документы без истории: раздел 3.6 `docs/architecture.md`
-
-- **Цель:** раздел 3.6 `docs/architecture.md` — библиотека и CLI — описывает текущее устройство, без истории (R160 spec, «One home», «A done task»).
-- **Почему:** строка 7.27 COORDINATION.md spec, пункт «Документы» текста T206 spec; раздел — 60 КБ, одно ревью сам по себе; T57 выделила его по правилу 11 (R76 spec, R156 spec).
-- **Сделать:**
-  1. Раздел 3.6 и его подразделы — как пункт 1 T58: без «since T…», «until…», дат и пересказа решений; значение — файлом, где оно задано; решение — номером.
-  2. Свой предел `"architecture 3.6": 66` в [docs-budgets.json](docs-budgets.json) — по новому размеру с запасом 10–20% (measurements 1.9 spec) или убрать, если раздел уложился в предел блока `repository`.
-  3. Запись журнала, которую правка меняет, — как пункт 4 T58.
-- **Не делать:** остальные разделы — T58; комментарии кода — T60–T62.
-- **Как проверить:** `just -f spec/justfile docs-check-repo`; `/code-review high`. Больше одного ревью — разделить по правилу 11.
-- **Разделы:** R160 spec; RULES.md spec — The bar; R145 spec; текст T206 spec.
 
 #### T60. Комментарии кода по R160 spec: `module`, `template`, `cmd/module-kit`
 
