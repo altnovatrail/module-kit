@@ -29,7 +29,7 @@ func wellFormed(t *testing.T, report Report) {
 			b.Path != "" && !fs.ValidPath(b.Path) || b.Pointer != "" && !strings.HasPrefix(b.Pointer, "#") || b.Message == "" {
 			t.Errorf("a breach out of form: %#v", b)
 		}
-		// A breach of a schema names a keyword of section 5 at a value, with no rule and no line.
+		// A breach of a schema names a keyword of JSON Schema at a value, with no rule and no line.
 		if b.Keyword != "" && (b.Rule != "" || b.Line != 0 || !strings.HasPrefix(b.Pointer, "#") ||
 			!slices.Contains(schema.Keywords, b.Keyword)) {
 			t.Errorf("a breach of a schema out of form: %#v", b)

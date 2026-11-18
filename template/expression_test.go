@@ -2,7 +2,7 @@ package template
 
 import "testing"
 
-// typeOf reads the subset of section 23 and types it, and says why an expression is none of it.
+// typeOf reads the subset and types it, and says why an expression is none of it.
 func TestTypeOf(t *testing.T) {
 	names := []string{"a", "b", "ab_1"}
 	for _, c := range []struct {

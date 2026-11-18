@@ -16,7 +16,6 @@ import (
 	"github.com/altnovatrail/module-kit/internal/yaml"
 )
 
-// vectorOf reads a YAML file of spec.Format into its JSON value.
 func vectorOf(t testing.TB, name string) map[string]any {
 	t.Helper()
 	data, err := fs.ReadFile(spec.Format, name)
@@ -51,7 +50,6 @@ func buildPackages(t *testing.T, root string) []string {
 	return folders
 }
 
-// writeTemp writes data to a new file named name in a temporary folder and gives its path.
 func writeTemp(t *testing.T, name string, data []byte) string {
 	t.Helper()
 	file := filepath.Join(t.TempDir(), name)
@@ -85,7 +83,8 @@ func TestIndexVectors(t *testing.T) {
 				args = append(args, "--first")
 			}
 			if withdrawals, ok := vector["withdrawals"]; ok {
-				// JSON is YAML by the rules of section 4, with every key in quotes, as they ask of a version.
+				// JSON is YAML by the rules of the format, with every key in quotes, as they ask of
+				// a version.
 				data, err := canonical.Text(withdrawals)
 				if err != nil {
 					t.Fatal(err)

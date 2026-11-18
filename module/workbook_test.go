@@ -51,7 +51,7 @@ func exampleLine(pieces ...any) formatv0.ExampleLine {
 
 // A line of a worked example solves a line of a task when it has the same pieces in the same order,
 // its texts are the task's in their normal form, and each box holds what its check takes for the key;
-// otherwise it solves nothing (format/README.md, section 20).
+// otherwise it solves nothing (R52).
 func TestSolves(t *testing.T) {
 	item := taskValue(t, remainders).Items[0]
 	for _, c := range []struct {

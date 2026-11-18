@@ -20,7 +20,7 @@ import (
 
 // The package of each test vector of packages, built as files, holds inventory.json, server.json and
 // device.json byte for byte as the canonical texts of the vector, and under device/ LICENSE, NOTICE
-// and media/ byte for byte as the module has them, and nothing else (format/README.md, section 25).
+// and media/ byte for byte as the module has them, and nothing else.
 func TestBuildVectors(t *testing.T) {
 	entries, err := fs.ReadDir(spec.Format, "vectors/packages")
 	if err != nil {
@@ -90,7 +90,6 @@ func wantPackage(t *testing.T, root, dir string) (map[string][]byte, string) {
 	return files, digest
 }
 
-// filesUnder gives every file under root by its path with / between names.
 func filesUnder(t *testing.T, root string) map[string][]byte {
 	t.Helper()
 	files := map[string][]byte{}

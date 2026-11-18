@@ -13,11 +13,10 @@ import (
 	"github.com/altnovatrail/module-kit/modulepackage"
 )
 
-// build builds the package of the module whose folder is dir into the folder out, as files
-// (format/README.md, section 25): out must not exist yet, or be an empty folder. A module that the
-// format refuses has no package, and its report goes to stdout as check writes it. The files are
-// written in a folder of their own beside out and moved to out once all are written, so that a
-// failure leaves no part of a package behind.
+// build builds the package of the module whose folder is dir into the folder out, as files: out must
+// not exist yet, or be an empty folder. A module that the format refuses has no package, and its
+// report goes to stdout as check writes it. The files are written in a folder of their own beside
+// out and moved to out once all are written, so that a failure leaves no part of a package behind.
 func build(ctx context.Context, dir, out string, stdout, stderr io.Writer) int {
 	fsys, err := moduleFolder(dir)
 	if err != nil {
@@ -81,7 +80,6 @@ func writePackage(out string, files map[string][]byte) (err error) {
 	return os.Rename(built, out)
 }
 
-// writeFiles writes each file under root, by its path with / between names, making its folders.
 func writeFiles(root string, files map[string][]byte) error {
 	for name, data := range files {
 		if !fs.ValidPath(name) || strings.Contains(name, `\`) {

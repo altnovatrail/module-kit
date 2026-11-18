@@ -9,12 +9,12 @@ import (
 	"unicode/utf8"
 )
 
-// The layout of a module and the rules of its folder (format/README.md, section 10): which files a
-// module holds, where each stands and which part's schema checks it.
+// The layout of a module and the rules of its folder: which files a module holds, where each stands
+// and which part's schema checks it.
 
-// A row of the layout: a path as section 10 writes it, from the module's folder, and the term of the
-// part whose schema checks a file at it, or "" for a file that no schema checks. <path> at the end
-// of a path stands for one name or more, joined by /; <id> before the extension of the last name
+// A row of the layout: a path as the format's table writes it, from the module's folder, and the term
+// of the part whose schema checks a file at it, or "" for a file that no schema checks. <path> at the
+// end of a path stands for one name or more, joined by /; <id> before the extension of the last name
 // stands for one name of the form of a local ID.
 type row struct {
 	path string
@@ -42,8 +42,8 @@ const (
 	moduleFolder = "."
 )
 
-// layout is the table of section 10, row by row; a test holds it to the table. The eval set, eval/,
-// stands in the layout, though the package leaves it out (section 25).
+// layout is the format's table of the layout, row by row; a test holds it to the table. The eval
+// set, eval/, stands in the layout, though the package leaves it out.
 var layout = []row{
 	{manifestPath, partManifest},
 	{skillGraphPath, partSkillGraph},
@@ -66,7 +66,6 @@ const (
 // taskRow is the row of the layout of the files of tasks, by which a lesson names a task by its ID.
 var taskRow = layout[slices.IndexFunc(layout, func(r row) bool { return r.part == partTask })]
 
-// taskPath gives the path of the file of the task with the ID id, as the layout lays it out.
 func taskPath(id string) string {
 	return strings.Replace(taskRow.path, anyID, id, 1)
 }
@@ -113,7 +112,7 @@ func (f form) matches(name string) bool {
 }
 
 // The forms $defs/local_id and $defs/media_path of common.schema.json, by which <id> and module.media
-// read names (format/README.md, section 10); a test holds them to the schema.
+// read names; a test holds them to the schema.
 var (
 	localID = form{
 		pattern:   regexp.MustCompile(`^[a-z][a-z0-9]*(-[a-z0-9]+)*$`),
@@ -214,8 +213,7 @@ func (c *checker) place() error {
 
 // fileID checks module.file-ids on the value of a file at <id> that its schema accepts, so that the
 // id is a string of the form of a local ID: the rule says only what the schema cannot, that the id
-// is the file's name (format/README.md, section 7). A file that the schema refuses breaks it and
-// nothing more (R23).
+// is the file's name. A file that the schema refuses breaks it and nothing more (R23).
 func (c *checker) fileID(file, name string, value any) {
 	entry, _ := value.(map[string]any)
 	if id, ok := entry["id"].(string); ok && id != name {

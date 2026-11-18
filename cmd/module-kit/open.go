@@ -48,10 +48,9 @@ const (
 // version, its format version, the release that published it, the digest of its package, the open
 // view of its manifest and its tasks in the order of their IDs, each the open view and its digest
 // (R93 spec). A template gives an instance for each seed, in the order of the seeds, with the seed
-// beside it: the instance an attempt of that seed gets (format/README.md, section 23). Beside it go
-// modules/<ID>/<version>/ with the files of the device part, LICENSE, NOTICE and media/, byte for
-// byte as the chain of digests checked them. The command checks no rule of the format, so it exits
-// 0 or 2.
+// beside it: the instance an attempt of that seed gets. Beside it go modules/<ID>/<version>/ with the
+// files of the device part, LICENSE, NOTICE and media/, byte for byte as the chain of digests checked
+// them. The command checks no rule of the format, so it exits 0 or 2.
 func openViews(_ context.Context, args []string, stdout, stderr io.Writer) int {
 	f := newFlags("open")
 	indexFile := f.String("index", "", "")
@@ -237,7 +236,7 @@ func readIndex(what, file string) (formatv0.ModuleIndex, error) {
 }
 
 // seedList is --seed, given again and again: each a seed of the format, an unsigned 64-bit integer
-// in decimal digits with no leading zero (format/README.md, section 22), and each once.
+// in decimal digits with no leading zero, and each once.
 type seedList []uint64
 
 func (s *seedList) String() string {

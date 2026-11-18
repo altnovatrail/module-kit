@@ -1,8 +1,8 @@
-// Command module-kit is the authors' CLI of NovaTrail's module format (architecture 3.7 in spec;
-// architecture 3.6): check checks a module, and warns of a picture that is not opaque; build
-// builds its package as files; index builds the module index of a release of modules; diff
-// compares a new version of a module with the published ones; and open writes the open views of a
-// release of modules for the page of samples of canvas, all by the library of this module.
+// Command module-kit is the authors' CLI of NovaTrail's module format: check checks a module, and
+// warns of a picture that is not opaque; build builds its package as files; index builds the module
+// index of a release of modules; diff compares a new version of a module with the published ones;
+// and open writes the open views of a release of modules for the page of samples of canvas, all by
+// the library of this module.
 //
 // Every command exits with 0 when it did what was asked, 1 when the format refuses its input, with
 // the ID of each rule broken, and 2 when it could not do its work: a call it does not take, a file it
@@ -27,10 +27,11 @@ import (
 )
 
 // version is the release a build comes from: the release's own version, which release-files
-// sets at link time (R07), or dev until something says otherwise.
+// sets at link time (R07), or dev, which currentVersion replaces by the version of the module the
+// binary was built from, when there is one.
 var version = "dev"
 
-// The exit statuses, one meaning for every command (architecture 3.6).
+// The exit statuses, one meaning for every command.
 const (
 	statusAccepted = 0
 	statusRefused  = 1
@@ -56,7 +57,7 @@ func main() {
 
 // run carries out a command line with ctx, which a signal makes done, and returns its exit status.
 // --version tells the release, and the version of Unicode that the normalization of the check kinds
-// follows, which the format leaves to the release (format/README.md, section 15; R27).
+// follows, which the format leaves to the release (R27).
 func run(ctx context.Context, args []string, stdout, stderr io.Writer) int {
 	switch {
 	case len(args) == 1 && args[0] == "--version":
@@ -107,8 +108,6 @@ func check(ctx context.Context, dir string, stdout, stderr io.Writer) int {
 	return statusAccepted
 }
 
-// warningLines gives the lines of the warnings of the texts and then of the pictures, each with its
-// path from dir as the command line gave it.
 func warningLines(dir string, texts []module.Warning, pictures []picture.Warning) []string {
 	var lines []string
 	for _, warning := range texts {
@@ -122,13 +121,10 @@ func warningLines(dir string, texts []module.Warning, pictures []picture.Warning
 	return lines
 }
 
-// slashed gives the path of a file of the module from dir as the command line gave it, with /
-// between names.
 func slashed(dir, name string) string {
 	return filepath.ToSlash(filepath.Join(dir, filepath.FromSlash(name)))
 }
 
-// moduleFolder gives the folder dir as an fs.FS, and an error when it is no folder.
 func moduleFolder(dir string) (fs.FS, error) {
 	info, err := os.Stat(dir)
 	if err != nil {
@@ -140,9 +136,10 @@ func moduleFolder(dir string) (fs.FS, error) {
 	return os.DirFS(dir), nil
 }
 
-// writeReport writes the breaches of a report, each with its path from dir as the command line gave
-// it, then the lines of the warnings, and a last line that counts the breaches. A breach of the
-// module's folder itself has the path dir. Only check writes warnings: build and diff give none.
+// writeReport writes the report of a refused module, the same for check, build and diff: the
+// breaches, each with its path from dir as the command line gave it, then the lines of the
+// warnings, and a last line that counts the breaches. A breach of the module's folder itself has
+// the path dir. Only check writes warnings: build and diff give none.
 func writeReport(w io.Writer, dir string, report module.Report, warnings []string) {
 	for _, b := range report.Breaches {
 		b.Path = slashed(dir, b.Path)
@@ -158,7 +155,6 @@ func writeReport(w io.Writer, dir string, report module.Report, warnings []strin
 	fmt.Fprintf(w, "%s: the format %s refuses the module: %d %s\n", dir, module.FormatVersion, len(report.Breaches), noun)
 }
 
-// failed writes why a command could not do its work, and gives its status.
 func failed(stderr io.Writer, command string, err error) int {
 	fmt.Fprintf(stderr, "module-kit %s: %v\n", command, err)
 	return statusFailed

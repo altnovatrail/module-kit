@@ -43,7 +43,6 @@ func (o *optional) Set(value string) error {
 	return nil
 }
 
-// repeated is a flag that a command line may give again and again, as --published.
 type repeated []string
 
 func (r *repeated) String() string { return strings.Join(*r, ",") }
@@ -66,8 +65,8 @@ func oneOf(value *optional, none bool) error {
 }
 
 // readPackage reads the package as files in the folder dir by the chain of digests from the digest of
-// the bytes of its inventory.json, which is the digest of the package (format/README.md, section 25),
-// with the files of device/ or without them.
+// the bytes of its inventory.json, which is the digest of the package, with the files of device/ or
+// without them.
 func readPackage(dir string, withDevice bool) (*modulepackage.Package, error) {
 	fsys, err := moduleFolder(dir)
 	if err != nil {

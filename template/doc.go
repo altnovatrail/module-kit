@@ -1,7 +1,7 @@
 // Package template fills the templates of tasks: it counts the instances of a template, runs its
 // solver on them, builds each one with its numbers, and picks the instance of an attempt from the
-// attempt's seed (format/README.md, sections 22–24; R60 spec, R61 spec). api calls it for the instance
-// of an attempt, and the check of a module and the build of a package for every instance.
+// attempt's seed (R60 spec, R61 spec). api calls it for the instance of an attempt, and the check of a
+// module and the build of a package for every instance.
 //
 // Instances checks a template by the rules of templates that it breaks by itself — task.template-names,
 // task.template-expressions, task.placeholders, task.template-instances and task.template-solver —

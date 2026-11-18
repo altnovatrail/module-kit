@@ -14,8 +14,7 @@ import (
 	"github.com/altnovatrail/module-kit/moduleversion"
 )
 
-// diff compares a new version of a module with every published version of it (format/README.md,
-// section 27; architecture 3.5; R40):
+// diff compares a new version of a module with every published version of it (R40):
 //
 //	module-kit diff [--json] (--index <module-index.json> | --first) [--published <package folder>]... <module>
 //
@@ -109,7 +108,6 @@ type checkBreach struct {
 	Message string `json:"message"`
 }
 
-// breachesOf gives the breaches of a report, each with its path from dir as the command line gave it.
 func breachesOf(dir string, report module.Report) []checkBreach {
 	out := make([]checkBreach, len(report.Breaches))
 	for i, b := range report.Breaches {
@@ -118,7 +116,6 @@ func breachesOf(dir string, report module.Report) []checkBreach {
 	return out
 }
 
-// writeJSON writes v as indented JSON and a newline, and gives status.
 func writeJSON(stdout, stderr io.Writer, v any, status int) int {
 	data, err := json.MarshalIndent(v, "", "  ")
 	if err != nil {

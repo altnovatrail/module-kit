@@ -19,14 +19,12 @@ import (
 )
 
 // FormatVersion is the version of the module format that this library reads: the version of the
-// schemas that internal/schema holds, a copy of those of spec.Format, and of the test vectors
-// (format/README.md, section 2; R23). While the format is v0, it is the one version the library
-// reads.
+// schemas that internal/schema holds, a copy of those of spec.Format, and of the test vectors (R23).
+// While the format is v0, it is the one version the library reads (R22, R52).
 const FormatVersion = "0.4"
 
 // ReadsFormat says whether the library reads a module written in the format version v, as a
-// manifest names it in module_format_version: while the format is v0, only FormatVersion
-// (format/README.md, section 2).
+// manifest names it in module_format_version: while the format is v0, only FormatVersion.
 func ReadsFormat(v string) bool {
 	return v == FormatVersion
 }
@@ -46,8 +44,7 @@ func NewerFormat(v string) bool {
 	return newer.Compare(reader) > 0
 }
 
-// The rules the check holds, by the part a breach of each is reported in (format/README.md,
-// sections 10 and 11).
+// The rules of a module's folder and of its format version, as a breach names them in Rule.
 const (
 	RuleManifest      = "module.manifest"
 	RuleLayout        = "module.layout"
@@ -60,13 +57,12 @@ const (
 
 // A Breach is one reason a module is refused: a rule it breaks; or, when Rule is empty, a keyword of
 // the schema of its part that a file fails, which Keyword names; or, when both are empty, a file of a
-// part that is not YAML 1.2.2, which the format refuses without an ID (format/README.md, sections 4
-// and 8).
+// part that is not YAML 1.2.2, which the format refuses without an ID.
 type Breach struct {
 	Rule string
 	// The keyword of JSON Schema 2020-12 that fails, such as required or pattern, when the breach is
 	// of the schema; its place is then Pointer, where the schema holding the keyword applies, as an
-	// example of the format names it (format/README.md, section 8).
+	// example of the format names it (R23).
 	Keyword string
 	// The file or folder from the module's folder, with / between names, as the folder lists them;
 	// "." for the module's folder itself, as fs.FS names it, and empty for the file that CheckFile
@@ -77,7 +73,7 @@ type Breach struct {
 	// as a whole or of a value in it.
 	Line, Column int
 	// The value in the file that breaks the rule, as a JSON Pointer in URI fragment form, such as
-	// #/module_format_version (format/README.md, section 8); empty when the breach is of no value.
+	// #/module_format_version; empty when the breach is of no value.
 	Pointer string
 	Message string
 }
@@ -125,25 +121,24 @@ func (r Report) String() string {
 
 // Check reads the module whose folder is the root of fsys and checks it by the format version
 // FormatVersion: its layout, each file of a part by the YAML rules and against the schema of its
-// part, and the files that both accept by the rules of the parts (format/README.md, sections 4, 5
-// and 10–17). A manifest that names a version the library does not read gives a report of that
-// breach alone, since the rest of the module is written by rules the library does not know. The
-// error is for a folder or file that could not be read, and then there is no report.
+// part, and the files that both accept by the rules of the parts. A manifest that names a version
+// the library does not read gives a report of that breach alone, since the rest of the module is
+// written by rules the library does not know. The error is for a folder or file that could not be
+// read, and then there is no report.
 //
 // The solvers of the module's templates run with ctx, one on each CPU that the process may use at
 // once, runtime.GOMAXPROCS(0), and the report holds their breaches in the order of their places, as
-// it holds every other (architecture 3.4). Once ctx is done the check stops, and its error is that
-// of ctx.
+// it holds every other (R38). Once ctx is done the check stops, and its error is that of ctx.
 func Check(ctx context.Context, fsys fs.FS) (Report, error) {
 	report, _, err := CheckModule(ctx, fsys)
 	return report, err
 }
 
 // CheckModule is Check, and gives besides the numbers of the instances of each template of a module
-// that breaks no rule, by the local ID of its task, in the order of section 23 with the results of
-// its solver, as the canonical view holds them (format/README.md, section 25); none when the module
-// has no template or is refused. The build of a package takes them, so that a solver runs once for
-// the check and the package together.
+// that breaks no rule, by the local ID of its task, in the order of the template's counter with the
+// results of its solver, as the canonical view holds them; none when the module has no template or
+// is refused. The build of a package takes them, so that a solver runs once for the check and the
+// package together (R38).
 func CheckModule(ctx context.Context, fsys fs.FS) (Report, map[string][]formatv0.Numbers, error) {
 	c := checker{fsys: fsys, parts: map[string]any{}}
 	p, err := c.check(ctx)
@@ -161,11 +156,11 @@ func CheckModule(ctx context.Context, fsys fs.FS) (Report, map[string][]formatv0
 }
 
 // CheckFile checks a file of a part on its own, as an example of the part and a test vector of a
-// part's rule in a file are checked (format/README.md, sections 8 and 9): by the YAML rules and
-// against the schema of the part, and, when both accept it, by the rules within its part; a manifest
-// first by the format version it names, which, when the library does not read it, is the report's
-// only breach, as in Check. Its breaches have no path.
-// part is the term of a part of the layout, such as manifest or task; any other is an error.
+// part's rule in a file are checked: by the YAML rules and against the schema of the part, and,
+// when both accept it, by the rules within its part; a manifest first by the format version it
+// names, which, when the library does not read it, is the report's only breach, as in Check. Its
+// breaches have no path. part is the term of a part of the layout, such as manifest or task; any
+// other is an error.
 func CheckFile(part string, data []byte) (Report, error) {
 	if part == "" || !slices.ContainsFunc(layout, func(r row) bool { return r.part == part }) {
 		return Report{}, fmt.Errorf("%q is no part of the layout of a module", part)
@@ -192,14 +187,14 @@ func CheckFile(part string, data []byte) (Report, error) {
 type checker struct {
 	fsys     fs.FS
 	breaches []Breach
-	// The files of the module, by their paths from its folder, as the folder lists them (layout.go).
+	// The files of the module, by their paths from its folder, as the folder lists them.
 	files []string
 	// The value of each file of a part that the YAML rules and the schema of its part accept, by
 	// its path. A rule reads only a file that passed, and a rule between parts runs only when every
 	// file of a part passed (allParts), as format-check of spec has it: a file that its schema
 	// refuses breaks the schema and nothing more (R23).
 	parts map[string]any
-	// The leak check of each task that a rule of the leak check searches for, by its path (leaks.go).
+	// The leak check of each task that a rule of the leak check searches for, by its path.
 	searches map[string]*leak.Search
 }
 
@@ -232,9 +227,8 @@ func (c *checker) report() Report {
 	return Report{Breaches: c.breaches}
 }
 
-// check runs the rules of a whole module in the order of section 10, with the format version that
-// the manifest names before them, and gives the parts that the rules read: none when the manifest
-// stops the check.
+// check runs the rules of a whole module, the format version that the manifest names before all the
+// others (R22), and gives the parts that the rules read: none when the manifest stops the check.
 func (c *checker) check(ctx context.Context) (*parts, error) {
 	if err := c.list(); err != nil {
 		return nil, err
@@ -259,7 +253,7 @@ func (c *checker) check(ctx context.Context) (*parts, error) {
 
 // rules checks the rules of the parts on the files of a part that passed, read into their types
 // once, with the templates among them expanded with ctx: those within a part on each, and then, when
-// every file of a part passed, those between parts (rules.go). It gives the parts it read.
+// every file of a part passed, those between parts (R23). It gives the parts it read.
 func (c *checker) rules(ctx context.Context) (*parts, error) {
 	p := newParts(false)
 	for path, value := range c.parts {
@@ -295,9 +289,9 @@ func (c *checker) read(path string, data []byte) (any, bool) {
 	return value, true
 }
 
-// conform checks the value of a file of a part against the schema of its part, schemas/<part>.schema.json
-// of the version the library reads, and says whether the schema accepts it. Each keyword that fails
-// is a breach at its place in the value (format/README.md, section 8).
+// conform checks the value of a file of a part against the schema of its part,
+// schemas/<part>.schema.json of the version the library reads, and says whether the schema accepts
+// it. Each keyword that fails is a breach at its place in the value.
 func (c *checker) conform(path, part string, value any) bool {
 	errs := schema.Validate(part+".schema.json", value)
 	for _, e := range errs {
@@ -316,8 +310,7 @@ func (c *checker) part(path, part string, data []byte) {
 }
 
 // The field at the root of a manifest that names the format version, at the same place in every
-// version of the format, and the form of a version, MAJOR.MINOR, as module_format_version in
-// common.schema.json has it (format/README.md, section 2).
+// version of the format, and the form of a version, MAJOR.MINOR, as the schema of a manifest has it.
 const versionField = "module_format_version"
 
 var versionForm = regexp.MustCompile(`^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$`)

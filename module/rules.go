@@ -12,8 +12,8 @@ import (
 	"github.com/altnovatrail/module-kit/internal/schema"
 )
 
-// The rules of the parts that the check holds, by the part a breach of each is reported in
-// (format/README.md, sections 11, 12, 16 and 17).
+// The IDs of the rules of the manifest, the skill graph and the catalogs, named by the part a breach of
+// each is reported in (R25).
 const (
 	RuleManifestDependencies  = "manifest.dependencies"
 	RuleManifestBands         = "manifest.bands"
@@ -51,17 +51,15 @@ func typed[T any](value any) T {
 	return t
 }
 
-// at writes a place in a file as a JSON Pointer in URI fragment form, token by token.
 func at(tokens ...string) string {
 	return schema.Pointer(tokens)
 }
 
-// A module's parts that passed, read into their types once, for the rules within a part and those
-// between parts: a part the module does not have, or whose file did not pass, is nil, and the tasks
-// and the lessons stand by their paths, and media holds the paths of the files in media/, which a
-// picture names. A template's instances stand by its path too, counted once for every rule that
-// reads them, by expandAll once every part is added (templates.go). Of the file that CheckFile
-// checks, which has no path, file is true.
+// A module's parts that passed their schemas, read into their types once for every rule (R25): a part
+// the module does not have, or whose file did not pass, is nil; the tasks, the lessons and the
+// expansions of templates stand by their paths, the expansions set by expandAll once every part is
+// added; media holds the paths of the files in media/. file is true for the file of CheckFile, which
+// has no path.
 type parts struct {
 	file       bool
 	manifest   *formatv0.Manifest
@@ -77,14 +75,13 @@ type parts struct {
 	teachers map[formatv0.SharedTaxonomy][]string
 }
 
-// newParts gives parts with no part yet.
 func newParts(file bool) parts {
 	return parts{file: file, tasks: map[string]formatv0.Task{}, templates: map[string]*expansion{}, lessons: map[string]formatv0.Lesson{},
 		media: map[string]bool{}}
 }
 
-// add reads the value of a file of a part that passed into its type and puts it among the parts,
-// when a rule of this version reads the part.
+// add puts the value of a file that passed its schema among the parts; a part that no rule reads is
+// dropped.
 func (p *parts) add(path, part string, value any) {
 	switch part {
 	case partManifest:
@@ -105,7 +102,7 @@ func (p *parts) add(path, part string, value any) {
 	}
 }
 
-// pathOf gives the path of a breach in the file at path: none for the file that CheckFile checks.
+// pathOf gives the path of a breach in the file at path, or none for the file of CheckFile (R22).
 func (p parts) pathOf(path string) string {
 	if p.file {
 		return ""
@@ -113,11 +110,10 @@ func (p parts) pathOf(path string) string {
 	return path
 }
 
-// withinPart checks the rules within one part on the files of it that passed their schemas: Check
-// on each such file of the module, and CheckFile on its file, as an example of a part is checked
-// (format/README.md, section 8). A template is checked through its instances by the rules that read
-// the strings of a task, where its placeholders stand, and as it is written by those that read none
-// of them, which every instance breaks alike (format/README.md, section 23).
+// withinPart checks the rules within one part, in Check and in CheckFile alike, since an example of
+// a part is checked so (R25). A template is checked through its instances by the rules that read the
+// strings of a task, where its placeholders stand, and as written by those that read none of them,
+// which every instance breaks alike (R32).
 func (c *checker) withinPart(p parts) {
 	if p.manifest != nil {
 		c.bands(p.pathOf(manifestPath), *p.manifest)
@@ -173,10 +169,9 @@ func (c *checker) betweenParts(p parts) {
 	c.order(p.lessons, p.skillGraph)
 }
 
-// bands checks manifest.bands (format/README.md, section 11): when the manifest has bands, their
-// IDs differ; in a module that names grades, every band names grades, every grade of the audience
-// is in exactly one band, and no band names a grade the audience does not; in a module that names
-// none, no band names grades.
+// bands checks manifest.bands: when the manifest has bands, their IDs differ; in a module that names
+// grades, every band names grades, every grade of the audience is in exactly one band, and no band
+// names a grade the audience does not; in a module that names none, no band names grades.
 func (c *checker) bands(path string, m formatv0.Manifest) {
 	first := map[formatv0.BandID]int{}
 	for i, band := range m.Bands {
@@ -226,8 +221,8 @@ func (c *checker) bands(path string, m formatv0.Manifest) {
 	}
 }
 
-// dependencies checks manifest.dependencies (format/README.md, section 11): the manifest's
-// dependencies are exactly the anchor skills that the prerequisites of the module's skills name.
+// dependencies checks manifest.dependencies: the manifest's dependencies are exactly the anchor
+// skills that the prerequisites of the module's skills name.
 func (c *checker) dependencies(p parts) {
 	needed := map[string][]string{} // the skills that need each anchor skill
 	if p.skillGraph != nil {
@@ -260,13 +255,13 @@ func (c *checker) dependencies(p parts) {
 }
 
 // The check kinds that give a verdict: an item whose answer slots they check is an item with a
-// verdict (format/README.md, section 15).
+// verdict (R25).
 var verdictKinds = []formatv0.CheckKind{
 	formatv0.CheckKindNumber, formatv0.CheckKindFraction, formatv0.CheckKindChoice, formatv0.CheckKindPredicate,
 }
 
 // checks gives the check of each answer slot of an item, with its place in the task: an answer slot
-// of a handwriting sheet, and a box of a workbook's line (format/README.md, section 14).
+// of a handwriting sheet, and a box of a workbook's line.
 func checks(item formatv0.Item, i int) (found []formatv0.Check, places [][]string) {
 	slots, slotPlaces := slotsOf(item, i)
 	for n, slot := range slots {
@@ -277,7 +272,7 @@ func checks(item formatv0.Item, i int) (found []formatv0.Check, places [][]strin
 }
 
 // hasVerdict says whether a task has an item with a verdict: one with an answer slot that a kind
-// with a verdict checks, as format-check of spec reads it.
+// with a verdict checks, as format-check of spec reads it (R25).
 func hasVerdict(task formatv0.Task) bool {
 	for i, item := range task.Items {
 		found, _ := checks(item, i)
@@ -290,8 +285,8 @@ func hasVerdict(task formatv0.Task) bool {
 	return false
 }
 
-// rungTemplates checks manifest.rung-templates (format/README.md, section 11): a module with an
-// item with a verdict has rung templates.
+// rungTemplates checks manifest.rung-templates: a module with an item with a verdict has rung
+// templates.
 func (c *checker) rungTemplates(p parts) {
 	if len(p.manifest.RungTemplates) > 0 {
 		return
@@ -305,8 +300,7 @@ func (c *checker) rungTemplates(p parts) {
 	}
 }
 
-// trapSkills checks traps.known-skills (format/README.md, section 16): every skill of a trap is a
-// skill of the module's skill graph.
+// trapSkills checks traps.known-skills: every skill of a trap is a skill of the module's skill graph.
 func (c *checker) trapSkills(p parts) {
 	if p.traps == nil {
 		return
@@ -320,8 +314,8 @@ func (c *checker) trapSkills(p parts) {
 	}
 }
 
-// knownTraps checks task.known-traps (format/README.md, section 16): every trap that a task names,
-// in its traps and in the trap values of its checks, is a trap of the module's trap catalog.
+// knownTraps checks task.known-traps: every trap that a task names, in its traps and in the trap
+// values of its checks, is a trap of the module's trap catalog.
 func (c *checker) knownTraps(path string, task formatv0.Task, catalog *formatv0.Traps) {
 	check := func(trap formatv0.TrapID, place ...string) {
 		switch {
@@ -346,8 +340,8 @@ func (c *checker) knownTraps(path string, task formatv0.Task, catalog *formatv0.
 	}
 }
 
-// knownTechniques checks task.known-techniques (format/README.md, section 17): every technique that
-// a task names is a technique of the module's technique catalog.
+// knownTechniques checks task.known-techniques: every technique that a task names is a technique of
+// the module's technique catalog.
 func (c *checker) knownTechniques(path string, task formatv0.Task, catalog *formatv0.Techniques) {
 	for i, technique := range task.Techniques {
 		switch {

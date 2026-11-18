@@ -93,8 +93,8 @@ func TestNumbersSaid(t *testing.T) {
 }
 
 // No example of a manifest, a catalog of traps or a catalog of techniques holds a number in a text of
-// the whole module, as the format's text asks (format/README.md, section 20; the 2026-11-08
-// amendments to R57 spec): the examples of whole modules are held by TestCheckAccepts of the CLI.
+// the whole module, as the format's text asks (R57 spec): the examples of whole modules are held by
+// TestCheckAccepts of the CLI.
 func TestExamplesWarnOfNoNumber(t *testing.T) {
 	read := 0
 	for _, part := range []string{partManifest, partTraps, partTechniques} {
