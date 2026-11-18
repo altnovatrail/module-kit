@@ -57,17 +57,18 @@ How `module-kit` keeps what R143 spec and R145 spec saved, by the pattern of mea
 
 ### 2.1. The measurement of sessions
 
-`just -f spec/justfile tokens-report --since … --row` prints one row of the table below, for the epic's window, at its archive. The first row is epic E3, the first archived after RUN.md, Epics, named the measurement; E1 and E2 were archived before it.
+`just -f spec/justfile tokens-report --since … --row` prints one row of the table below, for the epic's window, at its archive. The first row is epic E3, the first archived after RUN.md, Epics, named the measurement; E1 and E2 were archived before it. The last column, the context of a main call among its session's first 80, `tokens-report` prints since T199 spec, and the rows before it have "—" there (the 2026-11-17 amendment to R145 spec; R68).
 
-| Project | Window, UTC | Sessions | Calls, main / subagents | Context of a call, k, main / subagents | Compactions | Cost at API prices |
-|---|---|---|---|---|---|---|
-| `-workspaces-module-kit` — epic E3: T45, T46, measured in T46 before its pull request | 2026-11-16T00:00 … 2026-11-16T03:26 | 2 | 134 / 47 | 120.7 / 60.1 | 0 | $9.15 |
-| `-workspaces-module-kit` — epic E4: T47, T50, T48, T49, measured in T51, since its archive had not | 2026-11-16T03:27 … 2026-11-16T22:13 | 6 | 427 / 77 | 124.1 / 54.6 | 0 | $24.51 |
-| `-workspaces-module-kit` — epic E5: T51, measured in T51 before its pull request | 2026-11-16T22:13 … 2026-11-16T22:25 | 1 | 60 / 26 | 101.0 / 59.0 | 0 | $3.85 |
-| `-workspaces-module-kit` — epic E6: T52, measured in T52 before its pull request; the window from the end of E5 | 2026-11-16T22:26 … 2026-11-17T00:19 | 2 | 40 / 0 | 103.4 / — | 0 | $2.57 |
-| `-workspaces-module-kit` — epic E7: T53, measured in T53 before its pull request; the window from the end of E6 | 2026-11-17T00:20 … 2026-11-17T05:27 | 2 | 50 / 12 | 122.7 / 49.7 | 0 | $3.31 |
-| `-workspaces-module-kit` — epic E8: T54, measured in T54 before its pull request; the window from the end of E7 | 2026-11-17T05:28 … 2026-11-17T15:02 | 2 | 48 / 0 | 89.5 / — | 0 | $2.18 |
-| `-workspaces-module-kit` — epic E9: T55, measured in T55 before its pull request; the window from the end of E8 | 2026-11-17T15:03 … 2026-11-17T19:27 | 3 | 83 / 20 | 100.3 / 51.9 | 0 | $4.40 |
+| Project | Window, UTC | Sessions | Calls, main / subagents | Context of a call, k, main / subagents | Compactions | Cost at API prices | Context of a main call among its session's first 80, k |
+|---|---|---|---|---|---|---|---|
+| `-workspaces-module-kit` — epic E3: T45, T46, measured in T46 before its pull request | 2026-11-16T00:00 … 2026-11-16T03:26 | 2 | 134 / 47 | 120.7 / 60.1 | 0 | $9.15 | — |
+| `-workspaces-module-kit` — epic E4: T47, T50, T48, T49, measured in T51, since its archive had not | 2026-11-16T03:27 … 2026-11-16T22:13 | 6 | 427 / 77 | 124.1 / 54.6 | 0 | $24.51 | — |
+| `-workspaces-module-kit` — epic E5: T51, measured in T51 before its pull request | 2026-11-16T22:13 … 2026-11-16T22:25 | 1 | 60 / 26 | 101.0 / 59.0 | 0 | $3.85 | — |
+| `-workspaces-module-kit` — epic E6: T52, measured in T52 before its pull request; the window from the end of E5 | 2026-11-16T22:26 … 2026-11-17T00:19 | 2 | 40 / 0 | 103.4 / — | 0 | $2.57 | — |
+| `-workspaces-module-kit` — epic E7: T53, measured in T53 before its pull request; the window from the end of E6 | 2026-11-17T00:20 … 2026-11-17T05:27 | 2 | 50 / 12 | 122.7 / 49.7 | 0 | $3.31 | — |
+| `-workspaces-module-kit` — epic E8: T54, measured in T54 before its pull request; the window from the end of E7 | 2026-11-17T05:28 … 2026-11-17T15:02 | 2 | 48 / 0 | 89.5 / — | 0 | $2.18 | — |
+| `-workspaces-module-kit` — epic E9: T55, measured in T55 before its pull request; the window from the end of E8 | 2026-11-17T15:03 … 2026-11-17T19:27 | 3 | 83 / 20 | 100.3 / 51.9 | 0 | $4.40 | — |
+| `-workspaces-module-kit` — epic E10: T56, measured in T56 before its pull request; the window from the end of E9 | 2026-11-17T19:28 … 2026-11-18T05:34 | 2 | 60 / 0 | 108.7 / — | 0 | $3.04 | 108.7 |
 
 ## 3. The speed of CI
 
