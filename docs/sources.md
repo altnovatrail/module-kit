@@ -199,6 +199,14 @@ For R64 — read 2026-11-17 for T52, from a clone of [altnovatrail/.github](http
 
 dependabot-core, `github_actions/lib/dependabot/github_actions/file_parser.rb` at its last commit, [95cd52e](https://github.com/dependabot/dependabot-core/blob/95cd52ed9f6776b284441d60ddbd8d128b8648ef/github_actions/lib/dependabot/github_actions/file_parser.rb) (2026-10-13), read 2026-11-17: `name = if path&.match?(%r{/\.github/workflows/.*\.ya?ml$})` — `"#{repo_name}#{path}"` — `elsif path && ref&.match?(/^[0-9a-f]{6,40}$/)` — `"#{repo_name}#{path}"`. So the action pinned by a SHA is the dependency `altnovatrail/.github/.github/actions/toolchain`, which the pattern `altnovatrail/.github/*` of the group `shared-workflows` matches, `.*` matching `/` too (sources 4.2 .github).
 
+### 3.16. The shared checks v0.1.33: the Go caches by a prefix
+
+For R68 — read 2026-11-18 for T56, from a clone of [altnovatrail/.github](https://github.com/altnovatrail/.github) in a temporary directory.
+
+`gh release view v0.1.33 -R altnovatrail/.github` — published 2026-11-18, 01:35 UTC, immutable, the notes: "Ask for issues and pull requests in English alone (T74)" and "Restore the Go caches by the prefix without go.sum (T75)", among six. `gh release verify v0.1.33 -R altnovatrail/.github` — "Resolved tag v0.1.33 to sha1:f1c7e9e6f8245fdbdbc23c4091f3c26350e3a44e" and "Release v0.1.33 verified!".
+
+`git diff --stat v0.1.32 v0.1.33 -- .github/workflows/` — `go.yml` alone; `release.yml`, `documents.yml`, `codeql.yml`, `secrets.yml`, `dco.yml` and `scorecard.yml` are unchanged. In `go.yml` and `.github/actions/toolchain/action.yml` the restore of the Go caches gains `restore-keys: go-${{ runner.os }}-${{ runner.arch }}-${{ inputs.check }}-${{ hashFiles('.devcontainer/Dockerfile') }}-`, and the step «Go caches», on `"$RESTORED" != "$KEY"`, runs `rm -rf -- "$cache/mod"` and prints «its modules are dropped, and its builds kept» before the block of `go mod verify`, which runs on an exact hit alone. The comment of `go.yml`: «An entry of another go.sum, restored by the prefix, loses its modules, which download in seconds, and keeps its builds, which go finds by what they were built from», and, of the builds of an exact hit too, «its folder no verify hashes: it is held, like GOCACHE, by main's scope». The lines of the action's header that mount the Go caches are as at v0.1.32 — `#   --env GOMODCACHE=/go-cache/mod --env GOCACHE=/go-cache/build --env GOLANGCI_LINT_CACHE=/go-cache/lint \` and `#   --volume "$PWD:/work" --volume "$RUNNER_TEMP/go-cache:/go-cache" --workdir /work \` —, and the diff of `go.yml` has no hunk in the step «Toolchain stages». `spec/tools/release/verify.mjs` of `spec` v0.18.27: `export const MINIMUM = Object.freeze({ tag: "v0.1.7", … })`, so `release-verify` takes a signature of the shared `release.yml` at v0.1.33 too.
+
 ## 4. Go libraries
 
 ### 4.1. JCS libraries for Go

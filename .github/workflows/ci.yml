@@ -150,10 +150,11 @@ jobs:
       # the release the shared workflows are pinned to, which Dependabot moves with them in the group
       # shared-workflows (R49 .github; R64 in docs/decisions.md): the file, image, path and key of
       # go.yml, so the entry of the image is the one its jobs fill and read, and the Go caches by a
-      # key of this job's own, the check binaries (R41 .github). What an exact hit gave, go mod verify
-      # checks first, and an entry of another go.sum, by the prefix, loses its modules and keeps its
-      # builds (T75 .github); only a push to main saves, the image at once and the Go caches by the
-      # second call at the end of the job, after the binaries are built and their reference written.
+      # key of this job's own, the check binaries (R41 .github). The modules of an exact hit go mod
+      # verify checks first; an entry of another go.sum, by the prefix, loses its modules, with nothing
+      # left to verify, and keeps its builds, which main's scope holds, as on a hit (T75 .github). Only
+      # a push to main saves, the image at once and the Go caches by the second call at the end of the
+      # job, after the binaries are built and their reference written.
       - name: Toolchain image and Go caches
         uses: altnovatrail/.github/.github/actions/toolchain@f1c7e9e6f8245fdbdbc23c4091f3c26350e3a44e # v0.1.33
         with:
