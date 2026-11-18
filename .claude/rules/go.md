@@ -9,7 +9,7 @@ paths:
 
 # The Go library and its CLI
 
-module-kit is one Go module, `github.com/altnovatrail/module-kit`, with `go 1.27.0` in `go.mod` as the floor for those who import it; the Go that builds and checks it is the `toolchain` stage's, with `GOTOOLCHAIN=local`, and it moves only with a move to a tag of spec (R04, R08, R54). Its packages, the CLI and how each is built are architecture 3; why — the decision log.
+module-kit is one Go module, `github.com/altnovatrail/module-kit`, with the `go` line of `go.mod` as the floor for those who import it; the Go that builds and checks it is the `toolchain` stage's, with `GOTOOLCHAIN=local`, and it moves only with a move to a tag of spec (R04, R08, R54). Its packages, the CLI and how each is built are architecture 3; why — the decision log.
 
 The shared `go.yml` of `.github` runs four recipes of the justfile, one job each, and a task that changes Go code, `go.mod` or `go.sum` ends with all four green here:
 
