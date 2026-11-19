@@ -829,21 +829,24 @@ func quoted(value *string) string {
 // runners passes a case of each kind: nil when module-kit gives what the case says, and an error
 // that says why not otherwise (R20).
 var runners = map[string]func(vector) error{
-	"examples/valid":   validExample,
-	"examples/invalid": invalidExample,
-	"examples/module":  moduleExample,
-	"rules":            rule,
-	"open-view":        openView,
-	"verdicts":         verdicts,
-	"leaks":            leaks,
-	"random":           randomDraws,
-	"templates":        templates,
-	"pages":            pages,
-	"tiers":            tiers,
-	"packages":         packages,
-	"indexes":          indexes,
-	"versions":         versions,
-	"observation/v1":   observations,
+	"examples/valid":    validExample,
+	"examples/invalid":  invalidExample,
+	"examples/module":   moduleExample,
+	"rules":             rule,
+	"open-view":         openView,
+	"verdicts":          verdicts,
+	"leaks":             leaks,
+	"random":            randomDraws,
+	"templates":         templates,
+	"pages":             pages,
+	"tiers":             tiers,
+	"packages":          packages,
+	"indexes":           indexes,
+	"versions":          versions,
+	"observation/v1":    observations,
+	"paper/v1/solver":   solverVectors,
+	"paper/v1/answers":  answerVectors,
+	"paper/v1/verdicts": verdictVectors,
 }
 
 // The parts of a module's layout, whose open views have vectors.
@@ -931,6 +934,8 @@ func classifyContracts(name string) (casePath, kind string, known bool) {
 	switch {
 	case len(parts) == 3 && parts[0] == "observation" && parts[1] == "v1" && strings.HasSuffix(name, ".json"):
 		return name, "observation/v1", true
+	case len(parts) == 3 && parts[0] == "paper" && parts[1] == "v1" && slices.Contains([]string{"answers.json", "solver.json", "verdicts.json"}, parts[2]):
+		return name, "paper/v1/" + strings.TrimSuffix(parts[2], ".json"), true
 	case len(parts) == 3 && parts[0] == "eval" && parts[1] == "v1":
 		// The rules the device and the runner share: canvas's CI and tutor's pass them, not
 		// module-kit's (R20).
@@ -1019,8 +1024,8 @@ func kindsWithoutCase(cases []vector) []string {
 	return missing
 }
 
-// Every example and test vector of spec.Format, and every vector of the observation in
-// contracts.Vectors, passes, and none is skipped, so a vector a new tag of spec brings comes with
+// Every example and test vector of spec.Format, and every vector of the observation and of the key
+// of a task from paper in contracts.Vectors, passes, and none is skipped, so a vector a new tag of spec brings comes with
 // its code. A file of a kind the test does not know fails it, and so does a kind left with no case
 // (R20; R42). The cases share nothing but the read-only file systems and tables of the test, so
 // they run in parallel, but for the verdicts of a predicate, which run one at a time and before the
