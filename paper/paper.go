@@ -263,14 +263,14 @@ func Breach(answer *paperv1.Answer) Rule {
 	return NoKind
 }
 
-// Key gives the key of an attempt: the solver's answer, when there is one, or else the answer of
-// AI with the provenance of AI, an answer only when it breaks no rule, so that a key with no answer
-// says the task has none.
-func Key(solved *paperv1.Number, ofAI *paperv1.Answer) *paperv1.Key {
+// Key gives the key of one task of an attempt, with no statement, which the caller sets: the
+// solver's answer, when there is one, or else the answer of AI with the provenance of AI, an answer
+// only when it breaks no rule, so that a key with no answer says the task has none.
+func Key(solved *paperv1.Number, ofAI *paperv1.Answer) *paperv1.TaskKey {
 	if solved != nil {
-		return &paperv1.Key{Provenance: paperv1.Provenance_PROVENANCE_SOLVER, Answer: &paperv1.Answer{Kind: &paperv1.Answer_Number{Number: solved}}}
+		return &paperv1.TaskKey{Provenance: paperv1.Provenance_PROVENANCE_SOLVER, Answer: &paperv1.Answer{Kind: &paperv1.Answer_Number{Number: solved}}}
 	}
-	key := &paperv1.Key{Provenance: paperv1.Provenance_PROVENANCE_AI}
+	key := &paperv1.TaskKey{Provenance: paperv1.Provenance_PROVENANCE_AI}
 	if ofAI != nil && Breach(ofAI) == "" {
 		key.Answer = ofAI
 	}

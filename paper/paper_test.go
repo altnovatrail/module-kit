@@ -26,7 +26,7 @@ func TestKey(t *testing.T) {
 		t.Errorf("AI's key is %v", k)
 	}
 	broken := &paperv1.Answer{Kind: &paperv1.Answer_Number{Number: &paperv1.Number{Value: "2,5"}}}
-	for _, k := range []*paperv1.Key{Key(nil, broken), Key(nil, nil), Key(nil, &paperv1.Answer{})} {
+	for _, k := range []*paperv1.TaskKey{Key(nil, broken), Key(nil, nil), Key(nil, &paperv1.Answer{})} {
 		if k.GetProvenance() != paperv1.Provenance_PROVENANCE_AI || k.GetAnswer() != nil {
 			t.Errorf("an answer that breaks a rule, or none, gives the key %v", k)
 		}
