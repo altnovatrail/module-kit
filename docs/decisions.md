@@ -2533,13 +2533,13 @@ Decided by the author on 2026-11-05, in the planning of T28, by the recommendati
 
 ## The Go caches by a prefix and the template's comments
 
-**R68. CI calls the shared checks of `.github` at a release whose Go caches, on a miss of the exact key, come by its prefix without the hash of `go.sum`, their modules dropped and their builds kept, in every `uses:` of `.github/workflows/` and in the composite action `toolchain` (T75 .github; sources 3.16): `go mod verify` runs on an exact hit alone, and the builds of an entry by the prefix are held by the scope of `main`, as those of a hit. A move to a tag of `spec` takes `.devcontainer/` from the template but for a change of the template's comments alone, which waits for the next change of `.devcontainer/` beyond comments (R51, R54); the one such comment is Д23 of [run/DEBT.md](../run/DEBT.md).** Row 2.7 of `COORDINATION.md` spec, by the task text the orchestrator gave (R156 spec).
+**R68. CI calls the shared checks of `.github` at a release whose Go caches, on a miss of the exact key, come by its prefix without the hash of `go.sum`, their modules dropped and their builds kept, in every `uses:` of `.github/workflows/` and in the composite action `toolchain` (T75 .github; sources 3.16): `go mod verify` runs on an exact hit alone, and the builds of an entry by the prefix are held by the scope of `main`, as those of a hit. A move to a tag of `spec` takes `.devcontainer/` from the template but for a change of the template's comments alone, which waits for the next change of `.devcontainer/` beyond comments and comes with it (R51, R54).** Row 2.7 of `COORDINATION.md` spec, by the task text the orchestrator gave (R156 spec).
 
 — *Why:* every move to a tag of `spec` changes `go.sum` here, and with the exact key alone the Go caches were cold after each. A change of the Dockerfile changes the key of the image of `toolchain` and of every Go cache and asks for a rebuild of the container, which a comment does not repay.
 
 — *Rejected:* the template's comment of the Dockerfile taken with the move — a rebuild of the container and cold caches for a comment.
 
-— *Where:* `.github/workflows/ci.yml`, the step «Toolchain image and Go caches»; [architecture.md](architecture.md), section 3.1; `.claude/rules/ci.md`; Д23 of [run/DEBT.md](../run/DEBT.md).
+— *Where:* `.github/workflows/ci.yml`, the step «Toolchain image and Go caches»; [architecture.md](architecture.md), section 3.1; `.claude/rules/ci.md`.
 
 ## The key of a task from paper
 

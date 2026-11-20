@@ -70,6 +70,7 @@ How `module-kit` keeps what R143 spec and R145 spec saved, by the pattern of mea
 | `-workspaces-module-kit` — epic E9: T55, measured in T55 before its pull request; the window from the end of E8 | 2026-11-17T15:03 … 2026-11-17T19:27 | 3 | 83 / 20 | 100.3 / 51.9 | 0 | $4.40 | — |
 | `-workspaces-module-kit` — epic E10: T56, measured in T56 before its pull request; the window from the end of E9 | 2026-11-17T19:28 … 2026-11-18T05:34 | 2 | 60 / 0 | 108.7 / — | 0 | $3.04 | 108.7 |
 | `-workspaces-module-kit` — epic E11: T57–T62, measured in T62 before its review; the window from the end of E10 | 2026-11-18T05:35 … 2026-11-18T13:07 | 7 | 300 / 564 | 91.2 / 65.1 | 0 | $36.56 | 91.2 |
+| `-workspaces-module-kit` — epic E12: T63, measured in T63 before its pull request; the window from the end of E11 | 2026-11-18T13:08 … 2026-11-20T21:15 | 2 | 54 / 22 | 96.8 / 90.8 | 0 | $3.95 | 96.8 |
 
 ## 3. The speed of CI
 
