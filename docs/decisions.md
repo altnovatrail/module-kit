@@ -4,7 +4,7 @@
 >
 > **Rule:** do not re-propose what was rejected without new facts. If a decision has to change, ask the author and rewrite its entry in its place, and every entry the change touches: an entry is its text in force — what was decided, why, what was rejected and where it is described —, git keeps the old text, and the commit says why. An entry that still has dated amendments is rewritten whole, its amendments folded in, when a task touches it (R160 spec).
 >
-> The repository was set up 2026-10-19 from the template of `spec` v0.1.0 (R21 spec). How it comes to differ from the template — tools in the devcontainer, rules in RUN.md — is recorded here as a decision, as R46 canvas-api recorded how it differed from its model; a move to a tag of `spec` is its commit, not an entry (R160 spec). Next number — R69.
+> The repository was set up 2026-10-19 from the template of `spec` v0.1.0 (R21 spec). How it comes to differ from the template — tools in the devcontainer, rules in RUN.md — is recorded here as a decision, as R46 canvas-api recorded how it differed from its model; a move to a tag of `spec` is its commit, not an entry (R160 spec). Next number — R70.
 >
 > Here entries are cited as `R03`, in other repositories as `R03 module-kit`. The decisions of `spec` are cited as "R18 spec", MathTrail's decisions as "R37 canvas-api", and in a list as "canvas-api: R37, R38". Each log has its own numbers.
 >
@@ -2540,3 +2540,30 @@ Decided by the author on 2026-11-05, in the planning of T28, by the recommendati
 — *Rejected:* the template's comment of the Dockerfile taken with the move — a rebuild of the container and cold caches for a comment.
 
 — *Where:* `.github/workflows/ci.yml`, the step «Toolchain image and Go caches»; [architecture.md](architecture.md), section 3.1; `.claude/rules/ci.md`; Д23 of [run/DEBT.md](../run/DEBT.md).
+
+## The key of a task from paper
+
+**R69. The key of a task from paper is a new package `paper`: the solver of a formula, with a parser of its own and exact rationals of `math/big`; the rules of an answer of AI; the key with its provenance; and the task's one item and the values read brought to the key, by which the package `observation` joins two readings and gives the verdict, as on a task of a module. It passes the vectors `paper/v1/` of `contracts.Vectors`.**
+
+Decided while T229 spec was carried out, by its plan, which the author approved on 2026-11-19 (R162 spec; [contracts text](../spec/contracts/README.md), section 16).
+
+- **`Solve(formula)`** — `*paperv1.Number`, its value and the letter of an equation's unknown, or the `Reason` it is not taken. The reasons are those of the contracts text, the first that applies: the grammar, then the letters — two unknowns, an unknown in an expression, an equation with none —, then the operations as they are evaluated, each part before its operation and the left before the right — not linear, a division by zero, a part of more than 100 digits, the two sides of an equation brought together too —, then no root and every root, and last an answer longer than 16 characters. Each part is linear, a·x + b, its coefficients `*big.Rat`; the answer is an integer or p/q in lowest terms.
+- **`Breach(answer)`** — the first rule an answer of AI breaks, or none: no kind, a value not in the notation of `number`, units empty or the same after the steps of units, an unknown not one letter, the count and length of options, options the same as a choice normalizes them, a key that is no option.
+- **`Key(solved, ofAI)`** — one task's key, a `TaskKey` whose statement `api` sets (T235 spec): the solver's answer with `PROVENANCE_SOLVER` when there is one, or else AI's with `PROVENANCE_AI` when it breaks no rule, and with neither no answer and no provenance, as `key.proto` has it: a key with no answer says the task has none, its item unchecked at `api`, and `CAUSE_NO_KEY` when no task has one.
+- **`Items(answer)`** — one item with one answer slot bound `anywhere`, its check `number` with the key and units, or `choice` with the options, the key and `notation: options`, and no trap values: what `observation.Validate`, `Join` and `Verdicts` take as they take a module's. An answer of no kind, a task with no key, gives no item: no check can be written of it, and its item is unchecked at the caller.
+- **`Brought(answer, o)` and `BroughtValue`** — a copy of an observation whose values are brought to the key: a letter and `=` before the value are dropped when the letter, after steps 1 to 4, is the key's unknown, and the brackets round a label of a choice — `(C)`, `[C]`, `C)`. Any other value stays as it was read.
+- **The vectors** — `internal/vectors/paper_test.go`: three kinds, `paper/v1/solver`, `paper/v1/answers` and `paper/v1/verdicts`, one per file, so that a file gone is a kind without a case. Each is read strictly; a value of the verdicts goes into the one answer slot, `null` as `UNREADABLE_BLANK`, through `Brought`, `Validate` and `Verdicts`. **Tests** of `paper` itself: `TestKey`, `TestItemsOfNoKey`, `TestBreachOrder`, `TestSolveBounds`, `TestJoinOfBroughtValues`, `TestBroughtCopies`, `TestParse`, and fuzz tests, the formula and the value read being foreign input: `FuzzSolve` — an answer or a reason, never both, and an answer is one `Breach` takes — and `FuzzBroughtValue`.
+
+— *Why:*
+- exact rationals: `1/3+1/7` is `10/21`, and a key a float rounds would give a correct answer "not yet" (R04 spec). The bound of 100 digits on the way keeps `(9^10)^10` from growing without end;
+- a parser of its own, not the Starlark sandbox: the grammar is narrow, ASCII, and the solver must tell a linear equation from one that is not, which an evaluator of Starlark does not say; it needs no clock;
+- the verdict through `observation`: the readers of a task from paper read as those of a module, and the join, the reasons of "unreadable" and the verdict are one code. Bringing the values first makes `x = 7` and `7` one value, so two readers who wrote them differently join;
+- the item is built from the key, not kept: `api` keeps `paperv1.Key` on the attempt, and the verdict repeats from it and the observation.
+
+— *Rejected:*
+- `float64` — loses exactness;
+- the solver in Starlark — its sandbox brings a clock and limits that a formula of 200 bytes does not need, and no answer of linearity;
+- a check kind of its own for paper — `number` and `choice` already compare, and a kind is a new version of the format (R44 spec);
+- bringing the values in `verdict` — that is the normalization of the [format text](../spec/format/README.md), section 15, and the letter of the unknown and the brackets of a label are rules of the [contracts text](../spec/contracts/README.md), section 16, for a task from paper alone.
+
+— *Where:* [architecture.md](architecture.md), sections 1 and 3.6; the package `paper/`.

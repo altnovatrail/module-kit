@@ -52,6 +52,9 @@ func TestInventoryNamesEachCase(t *testing.T) {
 	)
 	contracts := files(
 		"observation/v1/boxes.json",
+		"paper/v1/answers.json",
+		"paper/v1/solver.json",
+		"paper/v1/verdicts.json",
 		"eval/v1/groups.json",
 	)
 	cases, err := inventory(format, contracts)
@@ -60,6 +63,9 @@ func TestInventoryNamesEachCase(t *testing.T) {
 	}
 	want := map[string]string{
 		"contracts/vectors/observation/v1/boxes.json":             "observation/v1",
+		"contracts/vectors/paper/v1/answers.json":                 "paper/v1/answers",
+		"contracts/vectors/paper/v1/solver.json":                  "paper/v1/solver",
+		"contracts/vectors/paper/v1/verdicts.json":                "paper/v1/verdicts",
 		"format/examples/module/valid/smallest":                   "examples/module",
 		"format/examples/task/invalid/missing-title.yaml":         "examples/invalid",
 		"format/examples/task/valid/smallest.yaml":                "examples/valid",

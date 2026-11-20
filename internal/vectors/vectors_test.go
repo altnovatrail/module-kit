@@ -828,7 +828,7 @@ func quoted(value *string) string {
 
 // runners passes a case of each kind: nil when module-kit gives what the case says, and an error
 // that says why not otherwise (R20).
-var runners = map[string]func(vector) error{
+var runners = withPaper(map[string]func(vector) error{
 	"examples/valid":   validExample,
 	"examples/invalid": invalidExample,
 	"examples/module":  moduleExample,
@@ -844,7 +844,17 @@ var runners = map[string]func(vector) error{
 	"indexes":          indexes,
 	"versions":         versions,
 	"observation/v1":   observations,
+})
+
+// withPaper adds to runners each file of paper/v1/, a kind of its own.
+func withPaper(runners map[string]func(vector) error) map[string]func(vector) error {
+	for name, run := range paperRunners {
+		runners[paperKind(name)] = run
+	}
+	return runners
 }
+
+func paperKind(name string) string { return "paper/v1/" + name }
 
 // The parts of a module's layout, whose open views have vectors.
 var layoutParts = []string{"lesson", "manifest", "skill-graph", "solving-steps", "task", "techniques", "traps"}
@@ -931,6 +941,8 @@ func classifyContracts(name string) (casePath, kind string, known bool) {
 	switch {
 	case len(parts) == 3 && parts[0] == "observation" && parts[1] == "v1" && strings.HasSuffix(name, ".json"):
 		return name, "observation/v1", true
+	case len(parts) == 3 && parts[0] == "paper" && parts[1] == "v1" && strings.HasSuffix(parts[2], ".json") && paperRunners[strings.TrimSuffix(parts[2], ".json")] != nil:
+		return name, paperKind(strings.TrimSuffix(parts[2], ".json")), true
 	case len(parts) == 3 && parts[0] == "eval" && parts[1] == "v1":
 		// The rules the device and the runner share: canvas's CI and tutor's pass them, not
 		// module-kit's (R20).
@@ -1019,8 +1031,8 @@ func kindsWithoutCase(cases []vector) []string {
 	return missing
 }
 
-// Every example and test vector of spec.Format, and every vector of the observation in
-// contracts.Vectors, passes, and none is skipped, so a vector a new tag of spec brings comes with
+// Every example and test vector of spec.Format, and every vector of the observation and of the key
+// of a task from paper in contracts.Vectors, passes, and none is skipped, so a vector a new tag of spec brings comes with
 // its code. A file of a kind the test does not know fails it, and so does a kind left with no case
 // (R20; R42). The cases share nothing but the read-only file systems and tables of the test, so
 // they run in parallel, but for the verdicts of a predicate, which run one at a time and before the
