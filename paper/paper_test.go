@@ -14,8 +14,8 @@ import (
 	"github.com/altnovatrail/module-kit/verdict"
 )
 
-// The key is the solver's when it gives an answer, and otherwise AI's, an answer only when it
-// breaks no rule.
+// The key is the solver's when it gives an answer, and otherwise AI's when it breaks no rule; with
+// neither, it has no answer and no provenance.
 func TestKey(t *testing.T) {
 	solved, _ := Solve("37+48")
 	if k := Key(solved, nil); k.GetProvenance() != paperv1.Provenance_PROVENANCE_SOLVER || k.GetAnswer().GetNumber().GetValue() != "85" {
@@ -27,9 +27,45 @@ func TestKey(t *testing.T) {
 	}
 	broken := &paperv1.Answer{Kind: &paperv1.Answer_Number{Number: &paperv1.Number{Value: "2,5"}}}
 	for _, k := range []*paperv1.TaskKey{Key(nil, broken), Key(nil, nil), Key(nil, &paperv1.Answer{})} {
-		if k.GetProvenance() != paperv1.Provenance_PROVENANCE_AI || k.GetAnswer() != nil {
+		if k.GetProvenance() != paperv1.Provenance_PROVENANCE_UNSPECIFIED || k.GetAnswer() != nil {
 			t.Errorf("an answer that breaks a rule, or none, gives the key %v", k)
 		}
+	}
+}
+
+// A task with no key gives no item: no check is written of it, and the caller gives it unchecked.
+func TestItemsOfNoKey(t *testing.T) {
+	for _, answer := range []*paperv1.Answer{nil, {}, Key(nil, nil).GetAnswer()} {
+		if items := Items(answer); items != nil {
+			t.Errorf("an answer of no kind gives the items %v", items)
+		}
+	}
+}
+
+// Every unit is read for an empty one before two are compared, as the rules come in order.
+func TestBreachOrder(t *testing.T) {
+	for units, want := range map[string]Rule{"cm,cm,": UnitsEmpty, ",cm,cm": UnitsEmpty, "cm,CM": UnitsSame, "cm,m": ""} {
+		answer := &paperv1.Answer{Kind: &paperv1.Answer_Number{Number: &paperv1.Number{Value: "12", Units: strings.Split(units, ",")}}}
+		if got := Breach(answer); got != want {
+			t.Errorf("the units %q break %q, not %q", units, got, want)
+		}
+	}
+}
+
+// The sides of an equation brought together are bounded as any part on the way, and spaces at
+// either end of a formula are between no tokens and change nothing.
+func TestSolveBounds(t *testing.T) {
+	// c is of 100 digits, below 10^100, and 2c, the coefficient of x once the sides are brought
+	// together, is of 101.
+	c := "(999999999999999^6*9999999999)"
+	if n, reason := Solve(c + "*x-" + c + "=" + c + "-" + c + "*x"); reason != TooLarge {
+		t.Errorf("an equation whose sides brought together are too large gives %v %q", n, reason)
+	}
+	if n, reason := Solve(c + "*x-" + c + "=0"); reason != "" || n.GetValue() != "1" {
+		t.Errorf("an equation of c alone gives %v %q", n, reason)
+	}
+	if n, reason := Solve(" 1+1 "); reason != "" || n.GetValue() != "2" {
+		t.Errorf("%q gives %v %q", " 1+1 ", n, reason)
 	}
 }
 

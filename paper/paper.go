@@ -68,7 +68,7 @@ func constant(b *big.Rat) linear { return linear{new(big.Rat), b} }
 // bounded refuses a part whose numerator or denominator has more than 100 digits.
 func bounded(p linear) (linear, Reason) {
 	for _, r := range []*big.Rat{p.a, p.b} {
-		if new(big.Int).Abs(r.Num()).Cmp(limit) >= 0 || r.Denom().Cmp(limit) >= 0 {
+		if r.Num().CmpAbs(limit) >= 0 || r.Denom().Cmp(limit) >= 0 {
 			return linear{}, TooLarge
 		}
 	}
@@ -119,8 +119,12 @@ func root(t *tree) (*big.Rat, Reason) {
 	if reason != "" {
 		return nil, reason
 	}
-	a := new(big.Rat).Sub(left.a, right.a)
-	b := new(big.Rat).Sub(right.b, left.b)
+	// The sides brought together are a step on the way too, bounded as any.
+	side, reason := bounded(linear{new(big.Rat).Sub(left.a, right.a), new(big.Rat).Sub(right.b, left.b)})
+	if reason != "" {
+		return nil, reason
+	}
+	a, b := side.a, side.b
 	if a.Sign() == 0 {
 		if b.Sign() == 0 {
 			return nil, EveryRoot
@@ -221,16 +225,19 @@ func Breach(answer *paperv1.Answer) Rule {
 		if _, ok := normal.Notation(n.GetValue(), formatv0.CheckKindNumber); !ok {
 			return Value
 		}
+		// Every unit is read for an empty one before any two are compared: the rules' order.
 		forms := make([]string, 0, len(n.GetUnits()))
 		for _, unit := range n.GetUnits() {
 			form := normal.Unit(unit)
 			if form == "" {
 				return UnitsEmpty
 			}
-			if slices.Contains(forms, form) {
+			forms = append(forms, form)
+		}
+		for i, form := range forms {
+			if slices.Contains(forms[:i], form) {
 				return UnitsSame
 			}
-			forms = append(forms, form)
 		}
 		if u := n.GetUnknown(); u != "" && (len(u) != 1 || u[0] < 'a' || u[0] > 'z') {
 			return Unknown
@@ -264,25 +271,29 @@ func Breach(answer *paperv1.Answer) Rule {
 }
 
 // Key gives the key of one task of an attempt, with no statement, which the caller sets: the
-// solver's answer, when there is one, or else the answer of AI with the provenance of AI, an answer
-// only when it breaks no rule, so that a key with no answer says the task has none.
+// solver's answer with the provenance of the solver, when there is one, or else the answer of AI
+// with the provenance of AI when it breaks no rule. With neither the key has no answer and no
+// provenance, which says the task has none.
 func Key(solved *paperv1.Number, ofAI *paperv1.Answer) *paperv1.TaskKey {
 	if solved != nil {
 		return &paperv1.TaskKey{Provenance: paperv1.Provenance_PROVENANCE_SOLVER, Answer: &paperv1.Answer{Kind: &paperv1.Answer_Number{Number: solved}}}
 	}
-	key := &paperv1.TaskKey{Provenance: paperv1.Provenance_PROVENANCE_AI}
 	if ofAI != nil && Breach(ofAI) == "" {
-		key.Answer = ofAI
+		return &paperv1.TaskKey{Provenance: paperv1.Provenance_PROVENANCE_AI, Answer: ofAI}
 	}
-	return key
+	return &paperv1.TaskKey{}
 }
 
 // Items gives the task's one item by the answer of its key: one answer slot bound anywhere, with
 // the check kind number or choice written by hand, and no trap values. With them, the package
 // observation joins and judges the readings of the work as on a task of a module, once Brought has
 // brought their values to the key.
+//
+// An answer of no kind, nil too, is a task with no key, and gives no item: no check can be written
+// of it, and the package observation judges none. Its item is unchecked, which the caller gives it
+// without the package observation.
 func Items(answer *paperv1.Answer) []formatv0.Item {
-	check := formatv0.Check{}
+	var check formatv0.Check
 	if n := answer.GetNumber(); n != nil {
 		value := n.GetValue()
 		check = formatv0.Check{Kind: formatv0.CheckKindNumber, Key: &value}
@@ -296,6 +307,8 @@ func Items(answer *paperv1.Answer) []formatv0.Item {
 		for _, option := range c.GetOptions() {
 			check.Options = append(check.Options, formatv0.Text(option))
 		}
+	} else {
+		return nil
 	}
 	return []formatv0.Item{{AnswerSlots: []formatv0.AnswerSlot{{Binding: formatv0.AnswerSlotBindingAnywhere, Check: check}}}}
 }
