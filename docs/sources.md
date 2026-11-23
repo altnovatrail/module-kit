@@ -277,6 +277,14 @@ The sources of `go.starlark.net` `v0.0.0-20261021141710-4f4267fb140d`:
 
 Read 2026-11-05: `https://proxy.golang.org/golang.org/x/image/@latest` is `v0.47.0` of 2026-10-09; the license of golang/image by the GitHub API is BSD-3-Clause. Its `go.mod` requires `golang.org/x/sys v0.49.0` and `golang.org/x/text v0.43.0`. `webp/decode.go`: the decoder reads the chunks `ALPH` and `VP8L`, and an animated WebP — the bit `animationBit` of `VP8X` — it rejects with `errInvalidFormat = errors.New("webp: invalid format")`.
 
+### 4.11. go-yaml v4.0.0: an anchor whose name ends with a colon
+
+Read 2026-11-06:
+- `internal/libyaml/scanner.go` of go-yaml v4.0.0, `isAnchorChar` and `scanAnchor`: the scanner takes the ASCII characters ns-anchor-char into the name of an anchor, and cuts the trailing colons off "to preserve mapping separators immediately after aliases (issue #109)";
+- yaml/go-yaml#109, "Anchor map key with no space before colon works in v3; breaks in v4": closed on 2025-11-15 as not planned;
+- go-yaml v4.0.0 on `&a: key: &a value`: "mapping values are not allowed in this context", 1:8;
+- YAML 1.2.2, 6.9.2 "Node Anchors", [yaml.org/spec/1.2.2](https://yaml.org/spec/1.2.2/), read again 2026-11-23: `[91] ns-anchor-char ::= ns-char - c-flow-indicator` and `[92] ns-anchor-name ::= ns-anchor-char+`, so `:` is a character of an anchor's name, and the name of `&a:` is `a:`.
+
 ## 5. Standards and specifications
 
 ### 5.1. Semantic Versioning 2.0.0

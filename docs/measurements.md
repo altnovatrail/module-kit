@@ -94,6 +94,7 @@ How `module-kit` keeps the savings of a session's tokens, by the pattern of meas
 | `-workspaces-module-kit` — epic E10, measured before its pull request; the window from the end of E9 | 2026-11-17T19:28 … 2026-11-18T05:34 | 2 | 60 / 0 | 108.7 / — | 0 | $3.04 | 108.7 |
 | `-workspaces-module-kit` — epic E11, measured before its review; the window from the end of E10 | 2026-11-18T05:35 … 2026-11-18T13:07 | 7 | 300 / 564 | 91.2 / 65.1 | 0 | $36.56 | 91.2 |
 | `-workspaces-module-kit` — epic E12, measured before its pull request; the window from the end of E11 | 2026-11-18T13:08 … 2026-11-20T21:15 | 2 | 54 / 22 | 96.8 / 90.8 | 0 | $3.95 | 96.8 |
+| `-workspaces-module-kit` — epic E13, measured before its pull request; the window from the end of E12 | 2026-11-20T21:16 … 2026-11-23T18:33 | 11 | 574 / 118 | 120.5 / 45.0 | 0 | $41.27 | 118.7 |
 
 ## 3. The speed of CI
 

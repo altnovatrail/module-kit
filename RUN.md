@@ -44,35 +44,6 @@ A task starts with «Выполни задачу T01 из RUN.md» in a new sess
 - **A done epic** goes to `docs/plan/<epic>.md` (R59 canvas-api): bodies and gist sentences are there already (rule 9); move its description and table of tasks verbatim; questions and debt stay in `run/`; until the next epic, table 1 reads «Current epic — none» and names the last done epic. Measure the epic's sessions — `just -f spec/justfile tokens-report --since <first day of the epic> --row` — as a row of [docs/measurements.md](docs/measurements.md), after measurements 1.9 spec; a new analysis by the threshold of R145 spec.
 - Never read an archive whole: find a task by heading — `grep -n '^#### T03\.' RUN.md docs/plan/*.md`; from another repository — «T03 module-kit». Task numbers are global, never reused, and taken free at the moment of writing; a task's number and a dated line stand only here, in `run/` and in `docs/plan/`; outside them a text cites no decision and no section, and only a claim about the outside world cites its record — `sources 1.1`, spec's `sources 2.3 spec` (R171 spec).
 
-## Table 1. Current epic — E13. Переходы на `spec` v0.19.11 и v0.19.12, ссылки по R171 spec
+## Table 1. Current epic — none
 
-| Статус | ID | Задача | Кто | План | Зависит от |
-|---|---|---|---|---|---|
-| [x] | T64 | Переход на тег `spec` v0.19.11 — тело в [docs/plan/E13.md](docs/plan/E13.md) | Claude | — | — |
-| [x] | T65 | Ссылки по R171 spec, часть 1: план, CLAUDE.md, `.claude/rules/`, комментарии кода — тело в [docs/plan/E13.md](docs/plan/E13.md) | Claude | да | T64 |
-| [x] | T72 | Переход на тег `spec` v0.19.12 — тело в [docs/plan/E13.md](docs/plan/E13.md) | Claude | — | T65 |
-| [x] | T73 | Ссылки по строгому правилу R171 spec: проход по первой части — тело в [docs/plan/E13.md](docs/plan/E13.md) | Claude | — | T72 |
-| [x] | T66 | Ссылки по R171 spec, часть 2: `docs/` без журнала решений — тело в [docs/plan/E13.md](docs/plan/E13.md) | Claude | — | T65 |
-| [x] | T67 | Ссылки по R171 spec, часть 3: журнал решений — вводная, R01–R08 — тело в [docs/plan/E13.md](docs/plan/E13.md) | Claude | — | T65 |
-| [x] | T68 | Ссылки по R171 spec, часть 4: журнал решений — R09–R20 — тело в [docs/plan/E13.md](docs/plan/E13.md) | Claude | — | T65 |
-| [x] | T69 | Ссылки по R171 spec, часть 5: журнал решений — R21–R29 — тело в [docs/plan/E13.md](docs/plan/E13.md) | Claude | — | T65 |
-| [x] | T70 | Ссылки по R171 spec, часть 6: журнал решений — R30–R43 — тело в [docs/plan/E13.md](docs/plan/E13.md) | Claude | — | T65 |
-| [ ] | T71 | Ссылки по R171 spec, часть 7: журнал решений — R44–R69, ключ `"citations": true` | Claude | — | T66–T70 |
-
-## Epic E13. Переходы на `spec` v0.19.11 и v0.19.12, ссылки по R171 spec
-
-**Почему эпик такой.** Прогон «Сделай эпик E22» оркестратором `spec` (R156 spec): его волна 0 переводит репозиторий на последний тег `spec`, v0.19.11, затем строка 7.39 COORDINATION.md spec — ссылки по R171 spec, по тексту T259 spec. Задачи — пачка на ветке `e22-module-kit` с одним pull request (R159 spec); их тексты дал оркестратор (правило 6 COORDINATION.md spec). Текущего эпика не было, а задача не из эпика — первая задача следующего (R56): T64 начала эпик E13, как T63 начала E12 (R57). Второй прогон эпика E22 — пачка на ветке `e22-module-kit-2`: его волна 0, T72, переводит репозиторий на v0.19.12, где R171 spec строже — вне плана и архивов ни номера решения, ни раздела, ни документа, только запись `sources` или `measurements` о внешнем мире, — и части T66–T71 идут по R171 spec в этой редакции; T73 проходит по ней то, что правила первая часть, T65.
-
-**Не входит:** новый код библиотеки и CLI — формат тот же, 0.4.
-
-Части T66–T71 — задача 7.39 COORDINATION.md spec, разбитая по шагу 9 её текста: он и общие шаги — в теле T65, [docs/plan/E13.md](docs/plan/E13.md). Каждая часть берёт механические места командой `docs-check-repo` с `"citations": true` во временной копии `docs-budgets.json`, которую не коммитит, — до T71, которая включает ключ, — а остальное — `grep -nE` по шаблону measurements 1.18 spec; каждую ссылку — по шагам 4–8 тела T65; в отчёте — ссылок было и стало, по видам, командой measurements 1.18 spec. Число мест в скобках — по проверке с ключом на v0.19.11; на v0.19.12 та же проверка находит 3 259 мест: `docs/decisions.md` — 2 336, `docs/architecture.md` — 643, `docs/sources.md` — 107, `docs/measurements.md` — 60, `docs/README.md` — 8, CLAUDE.md — 25, `.claude/rules/` — 26, остальное — 54 в коде, justfile, `.github/` и копиях файлов формата.
-
-#### T71. Ссылки по R171 spec, часть 7: журнал решений — R44–R69, ключ `"citations": true`
-
-- **Цель:** записи R44–R69, разделы `##` от «The devcontainer image on arm64» до конца журнала, — по R171 spec, их датированные поправки свёрнуты в действующий текст; `docs-budgets.json` — с `"citations": true`, как `spec/repo-template/files/docs-budgets.json`, и `docs-check-repo` с ним — зелёный.
-- **Сделать:**
-  1. Механические места (239) и остальные ссылки, свёртка поправок и противоречия — по шагам 2–3 T67.
-  2. `docs-budgets.json` — ключ `"citations": true`; места, которые проверка с ним найдёт после T66–T70, — по шагам 4–8 тела T65.
-  3. Строка Д24 закрыта, когда в журнале не осталось датированных поправок: удалить её.
-- **Как проверить:** `docs-check-repo` с ключом — зелёный; `/code-review high`, один круг; в описании pull request — таблица «поправка → место в новом тексте»; в отчёте — ссылок было до T65 и стало после T71, по видам, командой measurements 1.18 spec.
-- **Разделы:** R171 spec, R160 spec; `spec/repo-template/files/docs-budgets.json`; тело T65; Д24.
+Last done epic: E13, [docs/plan/E13.md](docs/plan/E13.md). Next — the author picks it from [run/EPICS.md](run/EPICS.md), empty now, and splits it into tasks (Epics, «Next epic»).
