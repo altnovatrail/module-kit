@@ -6,7 +6,7 @@
 
 ## 1. Code and libraries
 
-The measurements that the decisions on the Starlark sandbox, the YAML reader and the embedding of the format rest on.
+The measurements that the decisions on the Starlark sandbox, the YAML reader, the embedding of the format and the open view rest on.
 
 ### 1.1. The measurement of the sandbox
 
@@ -42,6 +42,15 @@ The results as the decision on Starlark recorded them, copied here:
 
 2026-11-04, the same machine, with the sandbox of `module-kit` on 4f4267fb140d: a turn with `sorted(range(1000))` costs 20 steps, and `[n for n in range(100000) if sorted(range(1000)) == None]` reaches the limit of 1,000,000 at its 50,000th turn, after 932 ms, rather than fitting in it in 588 ms as above.
 
+The same day, the same sandbox, a probe in the session's folder, with `value` = 49:
+
+| Expression | Steps | Time | With `-race` |
+|---|---|---|---|
+| `value in [n * n for n in range(99997)]` | 999,990, the result `True` | 13–15 ms | not measured |
+| `value in [n * n for n in range(99998)]` | a stop at 1,000,000; without a limit — exactly 1,000,000 | 12–13 ms | not measured |
+| `[n for n in range(1 << 62) if False] == []` | a stop at 1,000,000, 10 steps per turn | 3.6 ms | 21 ms |
+| `[n for n in range(100000) if sorted(range(1000)) == None] == []` | a stop at 1,000,000, 20 steps per turn: at the 50,000th turn | 932 ms | 8.6 s |
+
 ### 1.2. Probes of YAML readers
 
 2026-11-04, in the session's folder, over 2302 YAML files of `spec.Format` v0.9.2 outside `vectors/rules/yaml.*`:
@@ -52,6 +61,10 @@ The results as the decision on Starlark recorded them, copied here:
 ### 1.3. The size of `spec.Format`
 
 `find spec/format -type f -printf '%s\n'` at v0.9.2, 2026-11-04: `format/` — 5,682,239 bytes in 2821 files, of them `vectors/versions/` — 4,072,532, and `schemas/` — 111,654 in 20; `admission/` — 66,210. `spec.go` at the same tag — `//go:embed all:format all:admission` into one `embed.FS`, from which `fs.Sub` gives `Format` and `Admission`.
+
+### 1.4. The cost of the open view of a task
+
+2026-11-04, `go test -bench`, AMD Ryzen AI 9 365: the open view of a task through `openview.Task`, together with the check against the schema of a task, — 0.30 ms for the task `zones-and-picture` of the vector of the open view, and 0.13 ms for the task `gaps-ladder-1` of the example `with-lessons` of `spec.Format` v0.9.2.
 
 ## 2. Claude Code sessions
 
