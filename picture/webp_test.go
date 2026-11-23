@@ -5,7 +5,7 @@ import (
 	"image/color"
 )
 
-// The WebP files of the tests are built here, after RFC 9649, "WebP Image Format" (November 2024),
+// The WebP files of the tests are built here, after RFC 9649, "WebP Image Format" (sources 5.9),
 // rather than kept as files whose making no one could repeat: a lossless image of one colour, alone
 // (the simple file format) or in an extended file with VP8X, and an
 // extended file that says it is animated, whose frames the decoder of golang.org/x/image does not

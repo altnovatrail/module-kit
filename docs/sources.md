@@ -3,8 +3,6 @@
 > The external facts the repository's documents under `docs/` rest on: a provider's terms, a price, a law, a standard, a library's documentation. Here are their records — the address, the version or date of the page, the date it was read and a quote in the source's language — and [architecture.md](architecture.md) and the decision log hold the claim and a citation of its one record by its number, `sources 1.1`, not a chain. A record's heading names its topic and date, not a task.
 >
 > A record is a subsection "N.M" of a topic: one source, or one reading of several sources for one decision. A record's number never changes: a new one goes at the end of its topic, a new topic at the end of the file. A source read again is an item with its date in the same record, and the earlier text is not edited. A new version of a source — a release, a tag, a commit — is a record of its own, so that two versions of Go, of the shared release or of go-yaml stand side by side. The model is `spec/docs/sources.md`. The results of measurements are not here but in [measurements.md](measurements.md).
->
-> The records once stood as items of the last section of [architecture.md](architecture.md), and a pointer remains there for the archives of `docs/plan/`, which cite them there and are not rewritten.
 
 ## 1. MathTrail standalone
 
@@ -271,7 +269,7 @@ The sources of `google.golang.org/protobuf` v1.36.12 from the module cache, read
 
 The sources of `go.starlark.net` `v0.0.0-20261021141710-4f4267fb140d`:
 - `doc/spec.md`, "Freezing a value", read 2026-11-05: "Immediately after execution of a Starlark module, all values in its top-level environment are frozen"; `starlark.ExecFileOptions` freezes them, `Program.Init` does not;
-- `starlark/interp.go`, read 2026-11-23: `checkSteps` — "increments the thread's step counter and reports whether the thread has exceeded its step limit or been cancelled", by `stepCost = 10 // empirical average number of instructions per back-edge or call`; it is called "on entry" of a Starlark function, after each call returns ("Check whether callee cancelled the thread"), and on each backward jump ("On back edge, check cancellation and step count").
+- `starlark/interp.go`, read 2026-11-23: `checkSteps` — "increments the thread's step counter and reports whether the thread has exceeded its step limit or been cancelled"; it is called "on entry" of a Starlark function, after each call returns ("Check whether callee cancelled the thread"), and on each backward jump ("On back edge, check cancellation and step count").
 
 ### 4.10. `golang.org/x/image` v0.47.0
 
@@ -282,8 +280,7 @@ Read 2026-11-05: `https://proxy.golang.org/golang.org/x/image/@latest` is `v0.47
 Read 2026-11-06:
 - `internal/libyaml/scanner.go` of go-yaml v4.0.0, `isAnchorChar` and `scanAnchor`: the scanner takes the ASCII characters ns-anchor-char into the name of an anchor, and cuts the trailing colons off "to preserve mapping separators immediately after aliases (issue #109)";
 - yaml/go-yaml#109, "Anchor map key with no space before colon works in v3; breaks in v4": closed on 2025-11-15 as not planned;
-- go-yaml v4.0.0 on `&a: key: &a value`: "mapping values are not allowed in this context", 1:8;
-- YAML 1.2.2, 6.9.2 "Node Anchors", [yaml.org/spec/1.2.2](https://yaml.org/spec/1.2.2/), read again 2026-11-23: `[91] ns-anchor-char ::= ns-char - c-flow-indicator` and `[92] ns-anchor-name ::= ns-anchor-char+`, so `:` is a character of an anchor's name, and the name of `&a:` is `a:`.
+- go-yaml v4.0.0 on `&a: key: &a value`: "mapping values are not allowed in this context", 1:8; by YAML 1.2.2 the name of that anchor is `a:` (sources 5.4).
 
 ## 5. Standards and specifications
 
@@ -318,7 +315,8 @@ Read 2026-11-02:
 - 6.3: `s-flow-line-prefix(n) ::= s-indent(n) s-separate-in-line?`;
 - 7.4.2: "the ":" indicator must appear at most 1024 Unicode characters beyond the start of the key";
 - 8.1.1.1: "It is an error for any of the leading empty lines to contain more spaces than the first non-empty line";
-- 8.2.2: implicit keys "are limited to a single line and must not span more than 1024 Unicode characters".
+- 8.2.2: implicit keys "are limited to a single line and must not span more than 1024 Unicode characters";
+- read again 2026-11-23, 6.9.2 "Node Anchors": `[91] ns-anchor-char ::= ns-char - c-flow-indicator` and `[92] ns-anchor-name ::= ns-anchor-char+`, so `:` is a character of an anchor's name, and the name of `&a:` is `a:`.
 
 ### 5.5. The YAML test suite
 
@@ -341,6 +339,9 @@ Read 2026-11-04:
 Read 2026-11-05:
 - [Language Guide (proto 3)](https://protobuf.dev/programming-guides/proto3/), the table "Scalar Value Types", `string`: "A string must always contain UTF-8 encoded or 7-bit ASCII text, and cannot be longer than 2³²";
 - [ProtoJSON Format](https://protobuf.dev/programming-guides/json/), the row `enum`: "The name of the enum value as specified in proto is used. Parsers accept both enum names and integer values".
+### 5.9. RFC 9649, WebP
+
+[RFC 9649](https://www.rfc-editor.org/rfc/rfc9649.html), "WebP Image Format", November 2024, read 2026-11-23: of the lossless bitstream, "bits of each byte are read in least-significant-bit-first order"; of the flag Animation of the chunk VP8X, "Set if this is an animated image. Data in 'ANIM' and 'ANMF' Chunks should be used to control the animation."
 
 ## 6. The second implementation of `spec`
 
