@@ -73,8 +73,7 @@ func expressionsOfTheFormat(f *testing.F) (expressions, texts []string) {
 // begins with a space or nests past the depth of its parser, and evaluates on any two ints to a value
 // of the type that typeOf gives, or fails only by dividing by zero. So the grammar and the types of
 // the subset are those of Starlark, which gives an expression its meaning, and the two ways
-// go.starlark.net parses less are all. The corpus is every expression of a template in
-// spec.Format.
+// go.starlark.net parses less are all. The corpus is every expression of a template in spec.Format.
 func FuzzTypeOf(f *testing.F) {
 	expressions, _ := expressionsOfTheFormat(f)
 	for _, e := range expressions {

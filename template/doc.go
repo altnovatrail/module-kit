@@ -12,6 +12,6 @@
 // the template (R33). Instance puts the numbers of an instance in the place of the placeholders, in a
 // single pass, with no expression and no Starlark, as api does with the numbers that the package
 // carries; the open view of an instance is openview.Task of it. AttemptInstance picks the instance of
-// an attempt by its number, from the place of randomness of the attempt's seed that the format gives a
-// template, through internal/random.
+// an attempt by its number, from the place of randomness of the attempt's seed that the format
+// gives a template, through internal/random.
 package template

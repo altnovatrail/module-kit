@@ -72,8 +72,8 @@ func beforeTheFirst(reason string) Breach {
 // solve runs the solver of a template on its instances: the program once, on one thread within
 // solverLimits, and then solve on every instance in their order, on the same thread, each with a
 // frozen dict of the numbers that Inputs names, inserted in their order. The top level and every call
-// count their steps together, and one clock runs for them all: the budget is the template's, not each
-// instance's.
+// count their steps together, and one clock runs for them all: the budget is the template's, not
+// each instance's.
 //
 // It gives the numbers of every instance with the results that solve returns among them; or the
 // breach of task.template-solver where the solver first fails — before the first instance, or on an

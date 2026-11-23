@@ -38,8 +38,7 @@ func readVector(fsys fs.FS, name, schemaFile string, into any) (any, error) {
 }
 
 // readOpenView reads open-view.yaml of a vector of the open view, which has no schema of its own:
-// by the YAML rules, then strictly into its type of formatv0/open. It gives the JSON value
-// too.
+// by the YAML rules, then strictly into its type of formatv0/open. It gives the JSON value too.
 func readOpenView(fsys fs.FS, name string, into any) (any, error) {
 	data, err := fs.ReadFile(fsys, name)
 	if err != nil {

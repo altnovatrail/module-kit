@@ -943,8 +943,7 @@ func classifyContracts(name string) (casePath, kind string, known bool) {
 	case len(parts) == 3 && parts[0] == "paper" && parts[1] == "v1" && strings.HasSuffix(parts[2], ".json") && paperRunners[strings.TrimSuffix(parts[2], ".json")] != nil:
 		return name, paperKind(strings.TrimSuffix(parts[2], ".json")), true
 	case len(parts) == 3 && parts[0] == "eval" && parts[1] == "v1":
-		// The rules the device and the runner share: canvas's CI and tutor's pass them, not
-		// module-kit's.
+		// The rules the device and the runner share: canvas's CI and tutor's pass them, not module-kit's.
 		return "", "", true
 	}
 	return "", "", false

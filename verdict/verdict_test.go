@@ -518,8 +518,7 @@ func TestNormalForm(t *testing.T) {
 	}
 }
 
-// The version that a release names is that of the tables of NFKC and of the package unicode
-// alike.
+// The version that a release names is that of the tables of NFKC and of the package unicode alike.
 func TestUnicodeVersion(t *testing.T) {
 	for name, version := range map[string]string{"UnicodeVersion": UnicodeVersion, "norm.Version": norm.Version, "unicode.Version": unicode.Version} {
 		if version != "17.0.0" {

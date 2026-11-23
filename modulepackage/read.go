@@ -42,8 +42,7 @@ func Read(fsys fs.FS, digest formatv0.Digest) (*Package, error) {
 // package, but without the files of device/: its inventory, its canonical view and the listing of its
 // device part, which names each of those files by its digest and size. So the comparison of the
 // versions of a module reads a published package, whose device part it compares by its listing.
-// Files then holds InventoryFile, ServerFile and DeviceFile alone. Its errors are those of
-// Read.
+// Files then holds InventoryFile, ServerFile and DeviceFile alone. Its errors are those of Read.
 func ReadParts(fsys fs.FS, digest formatv0.Digest) (*Package, error) {
 	return read(fsys, digest, false)
 }
