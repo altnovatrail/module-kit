@@ -87,7 +87,7 @@ The Go blog, ["Evolving the Go Standard Library with math/rand/v2"](https://go.d
 
 ### 3.1. Tools
 
-The Go module proxy, `https://proxy.golang.org/<module>/@latest`, read 2026-10-21: `golang.org/x/vuln` — v1.9.0 (2026-10-11), `github.com/google/go-licenses/v2` — v2.0.1 (2025-09-08). The licenses — the GitHub API, `repos/<owner>/<repository>/license`, 2026-10-21: golang/vuln — BSD-3-Clause, google/go-licenses — Apache-2.0.
+The Go module proxy, `https://proxy.golang.org/<module>/@latest`, read 2026-10-21: `golang.org/x/vuln` — v1.9.0 (2026-10-11), `github.com/google/go-licenses/v2` — v2.0.1 (2025-09-08). The licenses — the GitHub API, `repos/<owner>/<repository>/license`, 2026-10-21: golang/vuln — BSD-3-Clause, google/go-licenses — Apache-2.0, golangci/golangci-lint — GPL-3.0.
 
 ### 3.2. `go-licenses check`
 
