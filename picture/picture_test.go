@@ -124,6 +124,6 @@ func TestCheckTooLarge(t *testing.T) {
 		}
 	}
 	if MaxPixels != 1<<25 {
-		t.Errorf("MaxPixels is %d, and R39 says 1<<25", MaxPixels)
+		t.Errorf("MaxPixels is %d, and module-kit decodes 1<<25 at most", MaxPixels)
 	}
 }

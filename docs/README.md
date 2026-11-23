@@ -1,8 +1,8 @@
 # module-kit's documents
 
-What is under `docs/` and beside it, and what README.md leaves out: how a release comes out and what it holds, and how a change comes in. README.md holds only what the component is and its place in NovaTrail (R67).
+What is under `docs/` and beside it, and what README.md leaves out: how a release comes out and what it holds, and how a change comes in. README.md holds only what the component is and its place in NovaTrail.
 
-- [architecture.md](architecture.md) — the component: what it does and does not do, its data and links (section 1), what is still to decide (section 2), and how it is built (section 3).
+- [architecture.md](architecture.md) — the component: what it does and does not do, its data and links, what is still to decide, and how it is built.
 - [decisions.md](decisions.md) — the decision log, `R01`…: what was decided, why, and what was rejected.
 - [sources.md](sources.md) — the records of external facts, each with its source, its date and its quote.
 - [measurements.md](measurements.md) — the results of measurements: the sandbox, the sessions of Claude Code, the speed of CI.
@@ -13,9 +13,9 @@ The working rules, for people and coding agents alike, are in [CLAUDE.md](../CLA
 
 ## Releases
 
-A release comes out by itself once the checks pass on `main`: the next patch of the current line, tagged `vX.Y.Z` with the release, and nobody tags by hand. The releases of the line 0.1 are steps of the code's first epic, and nobody takes them; from v0.2.0 on, each release is one others take (R16, R42), and a new version of the module format starts a new line (R52). Releases are immutable, so a tag stays on its commit and no file changes once it is out.
+A release comes out by itself once the checks pass on `main`: the next patch of the current line, tagged `vX.Y.Z` with the release, and nobody tags by hand. The releases of the line 0.1 are steps of the code's first epic, and nobody takes them; from v0.2.0 on, each release is one others take, and a new version of the module format starts a new line. Releases are immutable, so a tag stays on its commit and no file changes once it is out.
 
-- **The CLI** is one binary for each of linux, darwin and windows, on amd64 and arm64, `module-kit_<tag>_<os>_<arch>`, `.exe` on windows, beside the licenses of the modules it is built from and `SHA256SUMS`. Each file is signed with cosign by NovaTrail's shared release workflow, its bundle `<file>.sigstore.json` beside it. Take a binary at an exact tag with its bundle, `gh release download <tag> -R altnovatrail/module-kit -p 'module-kit_<tag>_<os>_<arch>*'`, and check it before its first run with spec's `just -f spec/justfile release-verify module-kit <tag> <file>`, which checks the signature against Sigstore's trust root and everything its certificate names (R77 spec). `module-kit` with no arguments prints how to call each command, and `module-kit --version` its release.
+- **The CLI** is one binary for each of linux, darwin and windows, on amd64 and arm64, `module-kit_<tag>_<os>_<arch>`, `.exe` on windows, beside the licenses of the modules it is built from and `SHA256SUMS`. Each file is signed with cosign by NovaTrail's shared release workflow, its bundle `<file>.sigstore.json` beside it. Take a binary at an exact tag with its bundle, `gh release download <tag> -R altnovatrail/module-kit -p 'module-kit_<tag>_<os>_<arch>*'`, and check it before its first run with spec's `just -f spec/justfile release-verify module-kit <tag> <file>`, which checks the signature against Sigstore's trust root and everything its certificate names. `module-kit` with no arguments prints how to call each command, and `module-kit --version` its release.
 - **The library** is the Go module `github.com/altnovatrail/module-kit`, at the tag of a release: `go get github.com/altnovatrail/module-kit@<tag>`. Its packages are documented by their doc comments: [pkg.go.dev](https://pkg.go.dev/github.com/altnovatrail/module-kit).
 
 ## Contributing

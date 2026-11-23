@@ -1,6 +1,6 @@
 // Package openview builds the open view of a part of a module and of an instance of a template —
 // what the learner's app receives: the part without its closed fields — from the marks x-open in
-// the schemas of the format, and the digest of the open view of a task and of an instance (R24).
+// the schemas of the format, and the digest of the open view of a task and of an instance.
 // api, tutor's eval runner and the CLI's open call it.
 //
 // Manifest, SkillGraph, Traps, Techniques, SolvingSteps, Lesson and Task take a part as the type of

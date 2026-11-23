@@ -1,7 +1,7 @@
 // Package picture reads the pictures of a module for what the format asks of them but does not
 // refuse: a picture SHOULD have an opaque background, and module-kit warns of one with a pixel that
 // is not fully opaque. A warning is no rule: it has no ID and no test vectors, and
-// refuses nothing (R39).
+// refuses nothing.
 //
 // Warnings reads every PNG and WebP file under media/ of a module's folder, decodes it — PNG by
 // image/png, WebP by golang.org/x/image/webp — and gives a Warning for each picture with a pixel

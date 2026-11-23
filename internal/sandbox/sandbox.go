@@ -34,7 +34,7 @@ func builtin(name string) bool { return slices.Contains(builtins, name) }
 
 // Limits are what one evaluation may take. Steps is the format's: the evaluation stops when the
 // count of steps on its thread, as go.starlark.net at the format's version counts them, reaches it.
-// Clock is module-kit's: the wall time after which it stops the evaluation (R11). Zero is no limit.
+// Clock is module-kit's: the wall time after which it stops the evaluation. Zero is no limit.
 type Limits struct {
 	Steps uint64
 	Clock time.Duration

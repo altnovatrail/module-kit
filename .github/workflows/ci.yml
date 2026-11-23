@@ -1,6 +1,6 @@
 # NovaTrail's shared checks, pinned to a release of .github by SHA with its version
 # beside it; Dependabot moves both, and with them the composite action of .github that "Binaries /
-# build" takes its image and Go caches by (R64). The repository's own jobs go beside them.
+# build" takes its image and Go caches by. The repository's own jobs go beside them.
 name: CI
 
 on:
@@ -43,7 +43,7 @@ jobs:
     uses: altnovatrail/.github/.github/workflows/go.yml@f1c7e9e6f8245fdbdbc23c4091f3c26350e3a44e # v0.1.33
 
   # The six binaries of a release, each run on a runner of its own system: what the binary of
-  # linux/amd64 builds is the reference that every other runner's must equal, byte for byte (R41).
+  # linux/amd64 builds is the reference that every other runner's must equal, byte for byte.
   binaries-build:
     name: Binaries / build
     runs-on: ubuntu-24.04
@@ -55,7 +55,7 @@ jobs:
 
       # Every reference to .github at one SHA, so the action is go.yml's of the same release; the
       # mount of the Go caches by the lines of the action's header; the awk of «The stage of the
-      # release» as go.yml's (R62). References at more than one SHA, or a move of .github that
+      # release» as go.yml's. References at more than one SHA, or a move of .github that
       # changes the mount or the awk, fail here, and the pull request takes it by hand.
       - name: As in the pinned .github
         env:
@@ -77,7 +77,7 @@ jobs:
           failed=0
           shas=$(grep -oh 'altnovatrail/\.github/[^@ ]*@[0-9a-f]\{40\}' .github/workflows/*.yml | cut -d@ -f2 | sort -u)
           if [ "$(printf '%s\n' "$shas" | grep -c .)" != 1 ]; then
-              echo "::error::The references to altnovatrail/.github in .github/workflows/ are not at one SHA: $(echo $shas). Move them to one release (R58, R64)."
+              echo "::error::The references to altnovatrail/.github in .github/workflows/ are not at one SHA: $(echo $shas). Move them to one release."
               exit 1
           fi
           sha=$shas
@@ -94,13 +94,13 @@ jobs:
           done < "$RUNNER_TEMP/shared-mount"
           if [ "$mounted" = false ]; then
               cat "$RUNNER_TEMP/shared-mount"
-              echo "::error::«Release files and samples» of the job Binaries / build does not mount the Go caches by the lines above of the header of the action toolchain at ${sha}: take them from there (R64)."
+              echo "::error::«Release files and samples» of the job Binaries / build does not mount the Go caches by the lines above of the header of the action toolchain at ${sha}: take them from there."
               failed=1
           fi
           step "$RUNNER_TEMP/go.yml" toolchain "Toolchain stages" | program > "$RUNNER_TEMP/shared-awk"
           step .github/workflows/ci.yml binaries-build "The stage of the release" | program > "$RUNNER_TEMP/own-awk"
           if [ ! -s "$RUNNER_TEMP/shared-awk" ] || ! diff "$RUNNER_TEMP/shared-awk" "$RUNNER_TEMP/own-awk"; then
-              echo "::error::The awk of «The stage of the release» of the job Binaries / build is not that of «Toolchain stages» of the job toolchain of the shared go.yml at ${sha}: copy it from there (R62)."
+              echo "::error::The awk of «The stage of the release» of the job Binaries / build is not that of «Toolchain stages» of the job toolchain of the shared go.yml at ${sha}: copy it from there."
               failed=1
           fi
           exit "$failed"
@@ -125,12 +125,12 @@ jobs:
           ' .devcontainer/Dockerfile || status=$?
           case $status in
               0)
-                  echo "::error::The stage toolchain of .devcontainer/Dockerfile holds more than toolchain-core, in which release.yml builds the release's files: build «Release files and samples» in toolchain-core (R47 .github, R62)."
+                  echo "::error::The stage toolchain of .devcontainer/Dockerfile holds more than toolchain-core, in which release.yml builds the release's files: build «Release files and samples» in toolchain-core."
                   exit 1
                   ;;
               1) echo "The release's files: toolchain holds what toolchain-core does, and this job builds in it." ;;
               *)
-                  echo "::error::awk gave ${status} on .devcontainer/Dockerfile, which the step could not read for its stages (R62)."
+                  echo "::error::awk gave ${status} on .devcontainer/Dockerfile, which the step could not read for its stages."
                   exit 1
                   ;;
           esac
@@ -138,7 +138,7 @@ jobs:
       # The image of toolchain by go.yml's file, image, path and key, so its entry is the one go.yml's
       # jobs fill and read, and the Go caches by a key of this job's own.
       # An entry of another go.sum, by the prefix, keeps its builds and drops its modules, which
-      # go mod verify checks on an exact hit alone (R68). Only a push to main saves: the image at once,
+      # go mod verify checks on an exact hit alone. Only a push to main saves: the image at once,
       # the Go caches by the second call, once the binaries and their reference are built.
       - name: Toolchain image and Go caches
         uses: altnovatrail/.github/.github/actions/toolchain@f1c7e9e6f8245fdbdbc23c4091f3c26350e3a44e # v0.1.33

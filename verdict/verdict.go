@@ -143,7 +143,7 @@ func OfItem(ctx context.Context, item formatv0.Item, values []*string) (ItemVerd
 // normalizes them, and the key is read as it is written, in the kind's notation. A predicate on a
 // value in its notation runs in the sandbox of Starlark, with the limits of a predicate and ctx:
 // True is correct and False not_yet, and an error, a result that is not a bool, the limit
-// of steps, module-kit's clock and a panic of the interpreter are unchecked (R28).
+// of steps, module-kit's clock and a panic of the interpreter are unchecked.
 //
 // An error gives no verdict: ctx is done before the verdict, or stops a predicate as it runs — a
 // predicate that its limit of steps, the clock or a panic stopped first, or that ended, gives its

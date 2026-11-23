@@ -37,7 +37,7 @@ const headLength = 14
 // mp3Frame says whether a file begins with the header of an MPEG audio frame of layer III: FF, a
 // byte whose highest three bits are set and whose bits 2 and 1 are 01, and a byte whose highest four
 // bits are not all set and whose bits 3 and 2 are not both set. The header is four bytes, and
-// WHATWG's "match an mp3 header" refuses fewer (6.2.3, step 1; read 2026-11-04), as spec's
+// WHATWG's "match an mp3 header" refuses fewer (sources 5.6), as spec's
 // format-check does.
 func mp3Frame(head []byte) bool {
 	return len(head) >= 4 && head[0] == 0xff && head[1]&0xe0 == 0xe0 && head[1]&0x06 == 0x02 &&

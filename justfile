@@ -6,7 +6,7 @@
 
 # The tools only the checks need, at exact versions. Each is a Go program run straight from its
 # module, so nothing is installed for it: the Go module proxy serves that version and the checksum
-# database vouches for it. Dependabot does not see them, so they are raised by hand (R04).
+# database vouches for it. Dependabot does not see them, so they are raised by hand.
 GOVULNCHECK := "golang.org/x/vuln/cmd/govulncheck@v1.9.0"
 GO_LICENSES := "github.com/google/go-licenses/v2@v2.0.1"
 
@@ -19,7 +19,7 @@ build:
     go build -o bin/module-kit ./cmd/module-kit
 
 # What .github's shared release.yml runs to build a release, in the toolchain-core stage of the
-# commit it releases, from that commit's tree with no git in it, and then signs every file (R07).
+# commit it releases, from that commit's tree with no git in it, and then signs every file.
 # dist/ is made afresh and holds plain files alone: the CLI for each
 # platform below, built without cgo and named module-kit_<version>_<os>_<arch>, the licenses a
 # binary has to come with, and SHA256SUMS over the rest.
@@ -73,7 +73,7 @@ release-files version:
     fi
     # Apache-2.0 asks a copy of itself to go with the work, and Go's BSD license asks a binary
     # that holds its standard library to reproduce its notice; so do the licenses of the modules
-    # the binaries are built from, which release-licenses names (R38).
+    # the binaries are built from, which release-licenses names.
     cp LICENSE dist/LICENSE
     cp "$(go env GOROOT)/LICENSE" dist/LICENSE-go
     just release-licenses dist
@@ -122,12 +122,12 @@ release-licenses folder:
         echo "${built:-none}" >&2
         echo "and the justfile names these, whose licenses go with a release:" >&2
         echo "$named" >&2
-        echo "Name each module the CLI is built from in THIRD_PARTY, with its license (R38)." >&2
+        echo "Name each module the CLI is built from in THIRD_PARTY, with its license." >&2
         exit 1
     fi
     for module in {{ SAME_LICENSE }}; do
         if ! cmp -s LICENSE "$(go list -m -f '{{{{.Dir}}' "$module")/LICENSE"; then
-            echo "release-licenses: the LICENSE of ${module} is no longer this repository's own; name it in THIRD_PARTY (R38)." >&2
+            echo "release-licenses: the LICENSE of ${module} is no longer this repository's own; name it in THIRD_PARTY." >&2
             exit 1
         fi
     done
@@ -158,7 +158,7 @@ ci-lint:
     go vet ./...
     # gopls comes into the devcontainer image from its lock file, .devcontainer/gopls/, the go kind's
     # of spec's repo-template, and the image's build stops when the gopls it built does not name
-    # GOPLS_VERSION (R19). CI never builds that stage, so the two are held to each
+    # GOPLS_VERSION. CI never builds that stage, so the two are held to each
     # other here: a pull request that raises one alone, as a security update of Dependabot may, fails
     # here.
     lock="$(sed -n 's/^[[:space:]]*\(require[[:space:]]\{1,\}\)\{0,1\}golang\.org\/x\/tools\/gopls[[:space:]]\{1,\}v\([^[:space:]]\{1,\}\).*$/\2/p' \
@@ -166,7 +166,7 @@ ci-lint:
     arg="$(sed -n 's/^ARG GOPLS_VERSION=\(.*\)$/\1/p' .devcontainer/Dockerfile)"
     if [ -z "$lock" ] || [ "$arg" != "$lock" ]; then
         echo "ci-lint: .devcontainer/gopls/go.mod names gopls ${lock:-at no version} and" \
-            ".devcontainer/Dockerfile has GOPLS_VERSION ${arg:-unset}; raise them together, as spec's template has them (R51)" >&2
+            ".devcontainer/Dockerfile has GOPLS_VERSION ${arg:-unset}; raise them together, as spec's template has them" >&2
         exit 1
     fi
     # A module that the CLI comes to be built from, without its license in a release, fails here,
@@ -194,12 +194,11 @@ ci-lint:
         echo "ci-lint: the submodule spec/ is at ${submodule:-no commit}, while go.mod requires" \
             "github.com/altnovatrail/spec ${spec_version}, from ${spec_origin:-a commit the Go module proxy does not give}," \
             "and github.com/altnovatrail/spec/contracts ${contracts_version}, from" \
-            "${contracts_origin:-a commit the Go module proxy does not give}; move them to one tag together" \
-            "(R64 spec; R20)" >&2
+            "${contracts_origin:-a commit the Go module proxy does not give}; move them to one tag together" >&2
         exit 1
     fi
 
-# What ci-test runs after the rest (R60): the packages whose tests take Starlark to the clock of a
+# What ci-test runs after the rest: the packages whose tests take Starlark to the clock of a
 # second of sandbox.Predicate — a predicate to its million steps, 32 evaluations at once —, and the
 # cases of TestVectors that take a predicate there. Each element of a -run pattern is one element
 # of a test's name, and a case's name is its path in spec. A package whose tests come to do so
@@ -237,7 +236,7 @@ ci-test:
     go test "${flags[@]}" -run '{{ PREDICATE_CASES }}' -v -coverprofile="$later/predicate.out" \
         ./internal/vectors | tee "$later/predicate.log"
     if ! grep -q -- '--- PASS: TestVectors/' "$later/predicate.log"; then
-        echo "ci-test: PREDICATE_CASES ran no case of TestVectors (R60)" >&2
+        echo "ci-test: PREDICATE_CASES ran no case of TestVectors" >&2
         exit 1
     fi
     for profile in "$later/clock.out" "$later/predicate.out"; do

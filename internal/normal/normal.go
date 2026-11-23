@@ -10,7 +10,7 @@ import (
 )
 
 // NFKC is golang.org/x/text/unicode/norm, which follows the Stream-Safe Text Process of UAX #15 too:
-// after 30 non-starters in a row it puts U+034F in, and spec's second implementation does not (R27).
+// after 30 non-starters in a row it puts U+034F in, and spec's second implementation does not.
 
 // UnicodeVersion is the version of Unicode of the tables of NFKC that the package is built with.
 const UnicodeVersion = norm.Version

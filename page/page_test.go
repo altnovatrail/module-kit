@@ -32,7 +32,7 @@ func TestMeasures(t *testing.T) {
 	got := format().measures
 	want := measures{space: 8, numbers: 40, indent: 56, column: 440, second: 520, across: 864, lowest: 1360}
 	if got != want {
-		t.Errorf("the measures are %+v, and section 14 gives %+v", got, want)
+		t.Errorf("the measures are %+v, and the format text gives %+v", got, want)
 	}
 	if n := Numbers(); n.BoxWidth != 100 || n.Size != 30 {
 		t.Errorf("the numbers are %+v", n)

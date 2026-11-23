@@ -5,13 +5,13 @@ import (
 	"image/color"
 )
 
-// The WebP files of the tests are built here, after RFC 9649, "WebP Image Format" (November 2024),
+// The WebP files of the tests are built here, after RFC 9649, "WebP Image Format" (sources 5.9),
 // rather than kept as files whose making no one could repeat: a lossless image of one colour, alone
-// (section 2.5, the simple file format) or in an extended file with VP8X (section 2.7), and an
+// (the simple file format) or in an extended file with VP8X, and an
 // extended file that says it is animated, whose frames the decoder of golang.org/x/image does not
 // read.
 
-// bits writes a VP8L bitstream, least significant bit first (RFC 9649, section 3.3).
+// bits writes a VP8L bitstream, least significant bit first, as RFC 9649 packs it.
 type bits struct {
 	out   []byte
 	acc   uint64
@@ -36,9 +36,9 @@ func (b *bits) bytes() []byte {
 	return b.out
 }
 
-// vp8l gives the VP8L bitstream of a width × height image whose every pixel is c: the header
-// (section 3.2), no transform (section 4), no colour cache and no meta prefix codes (section 5.2),
-// and five simple prefix codes of one symbol each, so that every pixel takes no bits (section 6.2.1).
+// vp8l gives the VP8L bitstream of a width × height image whose every pixel is c: the header,
+// no transform, no colour cache and no meta prefix codes, and five simple prefix codes of one
+// symbol each, so that every pixel takes no bits.
 func vp8l(width, height int, c color.NRGBA) []byte {
 	var b bits
 	b.write(0x2f, 8)
@@ -62,7 +62,7 @@ func vp8l(width, height int, c color.NRGBA) []byte {
 	return b.bytes()
 }
 
-// chunk gives a RIFF chunk: its FourCC, its size and its data, padded to an even size (section 2.3).
+// chunk gives a RIFF chunk: its FourCC, its size and its data, padded to an even size.
 func chunk(fourCC string, data []byte) []byte {
 	out := append([]byte(fourCC), binary.LittleEndian.AppendUint32(nil, uint32(len(data)))...)
 	out = append(out, data...)
@@ -72,7 +72,7 @@ func chunk(fourCC string, data []byte) []byte {
 	return out
 }
 
-// riff gives a WebP file of its chunks (section 2.4).
+// riff gives a WebP file of its chunks.
 func riff(chunks ...[]byte) []byte {
 	var body []byte
 	for _, c := range chunks {
@@ -83,8 +83,7 @@ func riff(chunks ...[]byte) []byte {
 	return append(out, body...)
 }
 
-// vp8x gives the VP8X chunk of an extended file, with the flags given, of a width × height canvas
-// (section 2.7).
+// vp8x gives the VP8X chunk of an extended file, with the flags given, of a width × height canvas.
 func vp8x(flags byte, width, height int) []byte {
 	data := []byte{flags, 0, 0, 0}
 	w, h := uint32(width-1), uint32(height-1)
@@ -92,7 +91,7 @@ func vp8x(flags byte, width, height int) []byte {
 	return chunk("VP8X", data)
 }
 
-// The flags of VP8X (section 2.7).
+// The flags of VP8X.
 const (
 	animationFlag = 1 << 1
 	alphaFlag     = 1 << 4
@@ -109,7 +108,7 @@ func extendedWebP(width, height int, c color.NRGBA) []byte {
 }
 
 // animatedWebP gives an extended WebP file that says it is animated: an ANIM chunk and one ANMF
-// frame of a lossless image (section 2.7.1.1).
+// frame of a lossless image.
 func animatedWebP(width, height int) []byte {
 	anim := chunk("ANIM", []byte{0xff, 0xff, 0xff, 0xff, 0, 0})
 	frame := []byte{0, 0, 0, 0, 0, 0}
