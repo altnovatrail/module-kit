@@ -207,6 +207,12 @@ Read 2026-11-18, from a clone of [altnovatrail/.github](https://github.com/altno
 
 `git diff --stat v0.1.32 v0.1.33 -- .github/workflows/` — `go.yml` alone; `release.yml`, `documents.yml`, `codeql.yml`, `secrets.yml`, `dco.yml` and `scorecard.yml` are unchanged. In `go.yml` and `.github/actions/toolchain/action.yml` the restore of the Go caches gains `restore-keys: go-${{ runner.os }}-${{ runner.arch }}-${{ inputs.check }}-${{ hashFiles('.devcontainer/Dockerfile') }}-`, and the step «Go caches», on `"$RESTORED" != "$KEY"`, runs `rm -rf -- "$cache/mod"` and prints «its modules are dropped, and its builds kept» before the block of `go mod verify`, which runs on an exact hit alone. The comment of `go.yml`: «An entry of another go.sum, restored by the prefix, loses its modules, which download in seconds, and keeps its builds, which go finds by what they were built from», and, of the builds of an exact hit too, «its folder no verify hashes: it is held, like GOCACHE, by main's scope». The lines of the action's header that mount the Go caches are as at v0.1.32 — `#   --env GOMODCACHE=/go-cache/mod --env GOCACHE=/go-cache/build --env GOLANGCI_LINT_CACHE=/go-cache/lint \` and `#   --volume "$PWD:/work" --volume "$RUNNER_TEMP/go-cache:/go-cache" --workdir /work \` —, and the diff of `go.yml` has no hunk in the step «Toolchain stages». `spec/tools/release/verify.mjs` of `spec` v0.18.27: `export const MINIMUM = Object.freeze({ tag: "v0.1.7", … })`, so `release-verify` takes a signature of the shared `release.yml` at v0.1.33 too.
 
+### 3.17. GitHub-hosted runners for the binaries
+
+Read 2026-11-05:
+- GitHub Docs, "GitHub-hosted runners reference", the table of standard runners for public repositories, `data/reusables/actions/supported-github-runners.md` in `github/docs`: the labels `ubuntu-24.04`, `ubuntu-24.04-arm`, `macos-15-intel`, `macos-15`, `windows-2025` and `windows-11-arm`, `macos-15` on M1;
+- GitHub Docs, "GitHub Actions billing": "Standard GitHub-hosted runners in public repositories" are among what "remains free".
+
 ## 4. Go libraries
 
 ### 4.1. JCS libraries for Go
@@ -260,6 +266,16 @@ The sources of `google.golang.org/protobuf` v1.36.12 from the module cache, read
 - `internal/filedesc/desc.go`, `EnforceUTF8`: "If this method does not exist, the default is to enforce valid UTF-8";
 - `encoding/protojson/decode.go`, `unmarshalEnum`: a JSON number becomes `protoreflect.EnumNumber(n)` if it fits in 32 bits, without a lookup in the enum. So `protojson.Unmarshal` reads a vector's cause `1000`;
 - the license — the module's `LICENSE`, BSD-3-Clause, as go-licenses v2.0.1 names it (`ci-licenses`).
+
+### 4.9. go.starlark.net: freezing and the count of steps
+
+The sources of `go.starlark.net` `v0.0.0-20261021141710-4f4267fb140d`:
+- `doc/spec.md`, "Freezing a value", read 2026-11-05: "Immediately after execution of a Starlark module, all values in its top-level environment are frozen"; `starlark.ExecFileOptions` freezes them, `Program.Init` does not;
+- `starlark/interp.go`, read 2026-11-23: `checkSteps` — "increments the thread's step counter and reports whether the thread has exceeded its step limit or been cancelled", by `stepCost = 10 // empirical average number of instructions per back-edge or call`; it is called "on entry" of a Starlark function, after each call returns ("Check whether callee cancelled the thread"), and on each backward jump ("On back edge, check cancellation and step count").
+
+### 4.10. `golang.org/x/image` v0.47.0
+
+Read 2026-11-05: `https://proxy.golang.org/golang.org/x/image/@latest` is `v0.47.0` of 2026-10-09; the license of golang/image by the GitHub API is BSD-3-Clause. Its `go.mod` requires `golang.org/x/sys v0.49.0` and `golang.org/x/text v0.43.0`. `webp/decode.go`: the decoder reads the chunks `ALPH` and `VP8L`, and an animated WebP — the bit `animationBit` of `VP8X` — it rejects with `errInvalidFormat = errors.New("webp: invalid format")`.
 
 ## 5. Standards and specifications
 

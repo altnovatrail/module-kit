@@ -66,6 +66,14 @@ The same day, the same sandbox, a probe in the session's folder, with `value` = 
 
 2026-11-04, `go test -bench`, AMD Ryzen AI 9 365: the open view of a task through `openview.Task`, together with the check against the schema of a task, — 0.30 ms for the task `zones-and-picture` of the vector of the open view, and 0.13 ms for the task `gaps-ladder-1` of the example `with-lessons` of `spec.Format` v0.9.2.
 
+### 1.5. The cost of a template of 10,000 instances
+
+2026-11-05, `go test`, AMD Ryzen AI 9 365: `module.CheckFile` checks a template of 10,000 instances — the example `missing-factor` with domains from 1 to 100 — in 1.5 s: the schema of the instances takes 0.6 s, the substitution and the round trips of JSON 0.5 s, and the count of the expressions in the sandbox less than 0.1 s. The template `heads-and-legs` of 81 combinations is counted in 2 ms.
+
+### 1.6. The solver at the budget
+
+2026-11-05, Go 1.27.3, AMD Ryzen AI 9 365, `go test`: a solver at the budget — the loop `for turn in range(n): pass` — takes 0.10–0.16 s per 100,000,000 steps, and the template `number-thought-of` of 35 instances 7–11 ms. Under `-race`, each package separately, with the solver in the code against `main` without it: `module` — 13.5 s against 9.2 s, `internal/vectors` — 9.1 s against 3.2 s; `FuzzCheck` with the vectors of `task.template-solver` in its corpus ran 10 s, and without them 4.3 s against 3.6 s. The whole `ci-test` took 23 s.
+
 ## 2. Claude Code sessions
 
 How `module-kit` keeps the savings of a session's tokens, by the pattern of measurements 1.9 spec: budgets of size in `docs-check` on every pull request, by the block `repository` of `spec/tools/docs-check/budgets.json` and [docs-budgets.json](../docs-budgets.json), and a measurement of the sessions at each epic's archive.
