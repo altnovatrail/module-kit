@@ -52,7 +52,7 @@ A task starts with «Выполни задачу T01 из RUN.md» in a new sess
 | [x] | T65 | Ссылки по R171 spec, часть 1: план, CLAUDE.md, `.claude/rules/`, комментарии кода — тело в [docs/plan/E13.md](docs/plan/E13.md) | Claude | да | T64 |
 | [x] | T72 | Переход на тег `spec` v0.19.12 — тело в [docs/plan/E13.md](docs/plan/E13.md) | Claude | — | T65 |
 | [x] | T73 | Ссылки по строгому правилу R171 spec: проход по первой части — тело в [docs/plan/E13.md](docs/plan/E13.md) | Claude | — | T72 |
-| [ ] | T66 | Ссылки по R171 spec, часть 2: `docs/` без журнала решений | Claude | — | T65 |
+| [x] | T66 | Ссылки по R171 spec, часть 2: `docs/` без журнала решений — тело в [docs/plan/E13.md](docs/plan/E13.md) | Claude | — | T65 |
 | [ ] | T67 | Ссылки по R171 spec, часть 3: журнал решений — вводная, R01–R08 | Claude | — | T65 |
 | [ ] | T68 | Ссылки по R171 spec, часть 4: журнал решений — R09–R20 | Claude | — | T65 |
 | [ ] | T69 | Ссылки по R171 spec, часть 5: журнал решений — R21–R29 | Claude | — | T65 |
@@ -66,16 +66,6 @@ A task starts with «Выполни задачу T01 из RUN.md» in a new sess
 **Не входит:** новый код библиотеки и CLI — формат тот же, 0.4.
 
 Части T66–T71 — задача 7.39 COORDINATION.md spec, разбитая по шагу 9 её текста: он и общие шаги — в теле T65, [docs/plan/E13.md](docs/plan/E13.md). Каждая часть берёт механические места командой `docs-check-repo` с `"citations": true` во временной копии `docs-budgets.json`, которую не коммитит, — до T71, которая включает ключ, — а остальное — `grep -nE` по шаблону measurements 1.18 spec; каждую ссылку — по шагам 4–8 тела T65; в отчёте — ссылок было и стало, по видам, командой measurements 1.18 spec. Число мест в скобках — по проверке с ключом на v0.19.11; на v0.19.12 та же проверка находит 3 259 мест: `docs/decisions.md` — 2 336, `docs/architecture.md` — 643, `docs/sources.md` — 107, `docs/measurements.md` — 60, `docs/README.md` — 8, CLAUDE.md — 25, `.claude/rules/` — 26, остальное — 54 в коде, justfile, `.github/` и копиях файлов формата.
-
-#### T66. Ссылки по R171 spec, часть 2: `docs/` без журнала решений
-
-- **Цель:** в `docs/architecture.md`, `docs/sources.md`, `docs/measurements.md` и `docs/README.md` ссылка стоит, только если читатель пойдёт по ней, чтобы действовать (R171 spec).
-- **Сделать:**
-  1. Механические места (architecture — 33, sources — 27, measurements — 41) и остальные ссылки этих файлов — по шагам 4–8 тела T65.
-  2. Запись `sources` и `measurements` держит свою дату и теряет номер задачи, в заголовке тоже (R171 spec); `docs/architecture.md` цитирует запись, а не задачу.
-  3. Вводная `docs/sources.md` — по `spec/repo-template/files/docs/sources.md`, с тем, что держит этот файл сверх заготовки, без номеров задач.
-- **Как проверить:** `docs-check-repo` — зелёный; с ключом во временной копии — ни одного места в этих файлах; `/code-review high`, один круг.
-- **Разделы:** R171 spec; RULES.md spec — The bar и Citations; тело T65.
 
 #### T67. Ссылки по R171 spec, часть 3: журнал решений — вводная, R01–R08
 
