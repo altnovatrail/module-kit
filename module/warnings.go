@@ -87,5 +87,5 @@ func numbersSaid(numbers []string) string {
 		held = "the numbers " + strings.Join(once[:len(once)-1], ", ") + " and " + once[len(once)-1]
 	}
 	return fmt.Sprintf("the text holds %s: a text of the whole module is searched for the keys of every task that can show it, "+
-		"so it SHOULD hold no number (format/README.md, section 20)", held)
+		"so it SHOULD hold no number, by the leak rules of format/README.md", held)
 }

@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://altnovatrail.github.io/spec/format/0.4/page-vector.schema.json",
   "title": "Page vector",
-  "description": "A test vector of the workbook's page (sections 9 and 14 of the format text): the lines of a task's items, as the open view holds them, and either the page that the layout makes of them or the item at whose row it has no room. An implementation lays the page out by format/page.yaml and gets exactly these.",
+  "description": "A test vector of the workbook's page: the lines of a task's items, as the open view holds them, and either the page that the layout makes of them or the item at whose row it has no room. An implementation lays the page out by format/page.yaml and gets exactly these.",
   "type": "object",
   "properties": {
     "items": {

@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://altnovatrail.github.io/spec/format/0.4/page.schema.json",
   "title": "Page",
-  "description": "The numbers and the table of widths of a workbook's page, format/page.yaml (section 14 of the format text): canvas lays every page out by them, and task.workbook-page holds every task on a workbook to them. Units are those of the page, and a width of a character is in whole hundredths of the type size.",
+  "description": "The numbers and the table of widths of a workbook's page, format/page.yaml: canvas lays every page out by them, and task.workbook-page holds every task on a workbook to them. Units are those of the page, and a width of a character is in whole hundredths of the type size.",
   "type": "object",
   "properties": {
     "sheet": {

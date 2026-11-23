@@ -124,7 +124,7 @@ func Check(name string, data []byte) (message string, warn bool) {
 	}
 	if x, y, a, ok := firstTransparent(m); ok {
 		return fmt.Sprintf("the pixel at x = %d, y = %d has alpha %d of 65535, not fully opaque: a picture SHOULD have an opaque, light background, "+
-			"or it may vanish on a dark sheet and in forced colours (format/README.md, section 14)", x, y, a), true
+			"or it may vanish on a dark sheet and in forced colours, as format/README.md says of a picture", x, y, a), true
 	}
 	return "", false
 }
