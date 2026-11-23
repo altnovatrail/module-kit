@@ -40,6 +40,8 @@ The results as the decision on Starlark recorded them, copied here:
 
   On the latest version a predicate that calls `sorted(range(1000))` on each of 100,000 turns fits in 1,000,000 steps in 588 ms. A solver of the same kind reaches 93,898,910 steps in 60 s, and the clock stops it. `str` of a list 100,000 deep takes 1.6 s on one step, and of one 1,000,000 deep more than 120 s, and the process does not crash, but the clock does not interrupt it either.
 
+2026-11-04, the same machine, with the sandbox of `module-kit` on 4f4267fb140d: a turn with `sorted(range(1000))` costs 20 steps, and `[n for n in range(100000) if sorted(range(1000)) == None]` reaches the limit of 1,000,000 at its 50,000th turn, after 932 ms, rather than fitting in it in 588 ms as above.
+
 ### 1.2. Probes of YAML readers
 
 2026-11-04, in the session's folder, over 2302 YAML files of `spec.Format` v0.9.2 outside `vectors/rules/yaml.*`:
