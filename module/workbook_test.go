@@ -126,7 +126,7 @@ func TestPageLimits(t *testing.T) {
 		t.Fatal(err)
 	}
 	if len(report.Breaches) != 1 || report.Breaches[0].Rule != RuleTaskWorkbookPage || report.Breaches[0].Pointer != "#/items/20" ||
-		!strings.Contains(report.Breaches[0].Message, "the row of item 21 has no room") {
+		!strings.Contains(report.Breaches[0].Message, "the row of item 21 has no room on the page of a workbook, which lays the lines out as format/README.md says,") {
 		t.Errorf("100 items give %v", report)
 	}
 
