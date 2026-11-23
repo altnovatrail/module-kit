@@ -26,7 +26,7 @@ var (
 	digestForm        = regexp.MustCompile(`^sha256:[0-9a-f]{64}$`)
 )
 
-// readPublished reads a published package as files by the chain of digests from its digest (R37):
+// readPublished reads a published package as files by the chain of digests from its digest:
 // inventory.json by the digest, and then, by the format version that the inventory names at the
 // place every version keeps, a package of the version module-kit reads by modulepackage.ReadParts,
 // and one of an earlier version by its places alone, server.json by the digest and the size that the

@@ -14,7 +14,7 @@ import (
 // one: a number written with neither a fraction nor an exponent as an int64, when it fits one, and
 // any other number as a float64, which Text then refuses. A text with anything after its value is
 // no JSON text, and neither is one that is not UTF-8, which encoding/json would read with U+FFFD in
-// the place of each bad byte, nor one with a number past the range of a double (R34, R35).
+// the place of each bad byte, nor one with a number past the range of a double.
 func Parse(data []byte) (any, error) {
 	if !utf8.Valid(data) {
 		return nil, errors.New("not UTF-8")

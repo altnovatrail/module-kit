@@ -14,7 +14,7 @@ import (
 	"github.com/altnovatrail/module-kit/verdict"
 )
 
-// The rules of a task that the check of an answer slot sees itself (R27, R28).
+// The rules of a task that the check of an answer slot sees itself.
 const (
 	RuleTaskChoiceKey           = "task.choice-key"
 	RuleTaskChoiceOptions       = "task.choice-options"
@@ -53,7 +53,7 @@ type slotBreach struct {
 // checkRules checks the rules of a task that the check of each answer slot sees itself:
 // task.choice-key, task.choice-options, task.fraction-key, task.trap-values and
 // task.predicate-expression. It reads a task that is no template: a template is checked through its
-// instances, each a task of its own (R32). The key or a trap value of a number or a fraction that
+// instances, each a task of its own. The key or a trap value of a number or a fraction that
 // holds a placeholder outside a template breaks task.placeholders, since no instance puts a number
 // in its place, and nothing more of its check is read; and so does the picture path of a part of its
 // statement or its solution that holds a brace.

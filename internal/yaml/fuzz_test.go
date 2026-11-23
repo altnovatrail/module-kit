@@ -129,7 +129,7 @@ const longestKey = implicitKeyLimit - 4
 // writeJSON writes a value as a JSON text that the reader reads back to it, and says whether it
 // could. A double keeps a point or an exponent, so that it is read as a double again, and every
 // character that YAML does not print, or prints only in quotes, is escaped: json.Marshal does
-// neither (R21).
+// neither.
 func writeJSON(b *strings.Builder, value any) bool {
 	switch v := value.(type) {
 	case nil:

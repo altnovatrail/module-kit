@@ -31,7 +31,7 @@ const (
 )
 
 // openViews writes the open views of a release of modules, for the build of the page of samples of
-// canvas (R25 spec; R15; R43):
+// canvas:
 //
 //	module-kit open --index <module-index.json> --latest <module-index.json>
 //	    --seed N [--seed N]... --out <folder> <package folder>...
@@ -46,8 +46,8 @@ const (
 //
 // Into out, which does not exist yet or is empty, goes open-views.json: of each module its ID, its
 // version, its format version, the release that published it, the digest of its package, the open
-// view of its manifest and its tasks in the order of their IDs, each the open view and its digest
-// (R93 spec). A template gives an instance for each seed, in the order of the seeds, with the seed
+// view of its manifest and its tasks in the order of their IDs, each the open view and its digest.
+// A template gives an instance for each seed, in the order of the seeds, with the seed
 // beside it: the instance an attempt of that seed gets. Beside it go modules/<ID>/<version>/ with the
 // files of the device part, LICENSE, NOTICE and media/, byte for byte as the chain of digests checked
 // them. The command checks no rule of the format, so it exits 0 or 2.

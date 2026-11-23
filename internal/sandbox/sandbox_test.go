@@ -29,7 +29,7 @@ func formatText(t *testing.T) string {
 }
 
 // The dialect is the format's: its options, and as the built-in names the 33 that the format lists,
-// in its order, which are those of starlark.Universe at the version that go.mod pins (R88 spec).
+// in its order, which are those of starlark.Universe at the version that go.mod pins.
 func TestDialect(t *testing.T) {
 	want := syntax.FileOptions{Set: true, While: true, TopLevelControl: true, GlobalReassign: true}
 	if got := *options(); got != want {
@@ -51,7 +51,7 @@ func TestDialect(t *testing.T) {
 	}
 }
 
-// go.mod pins go.starlark.net at the version that the format names (R88 spec).
+// go.mod pins go.starlark.net at the version that the format names.
 func TestVersionIsTheFormats(t *testing.T) {
 	named := regexp.MustCompile("go\\.starlark\\.net at the version `([^`]+)`").FindStringSubmatch(formatText(t))
 	if named == nil {

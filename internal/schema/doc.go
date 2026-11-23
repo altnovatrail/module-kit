@@ -5,6 +5,6 @@
 // schemas of the version it runs; a test holds the copy to spec.Format byte for byte (R23).
 //
 // The validator collects no annotations, so Open walks the schemas itself and asks the validator
-// only whether a subschema passes (R24). Decode reads a JSON value into a type of formatv0, and
+// only whether a subschema passes. Decode reads a JSON value into a type of formatv0, and
 // ValueOf gives the JSON value of one back.
 package schema

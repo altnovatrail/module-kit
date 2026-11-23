@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Checks the image of the devcontainer that the job Devcontainer of devcontainer.yml built, on the
-# runner's own architecture (R44): the image is of the architecture given, and each tool in it
+# runner's own architecture: the image is of the architecture given, and each tool in it
 # answers with the version that its ARG in the Dockerfile pins. The build itself has checked each
 # archive against its sha256 and gopls against its lock file; this holds that what came out is what
 # the Dockerfile names.

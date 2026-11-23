@@ -18,7 +18,7 @@ import (
 //   - a byte order mark outside a string in quotes and outside the places of the stream pass.
 //
 // go-yaml has read the text already, so the pass need not read its syntax again, only find where a
-// string in quotes or a flow collection ends; the test suite holds it to YAML 1.2.2 (R21).
+// string in quotes or a flow collection ends; the test suite holds it to YAML 1.2.2.
 
 // A span is a string in quotes in src, from its opening quote to its closing one, at places from 0.
 type span struct {

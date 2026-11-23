@@ -321,7 +321,7 @@ func TestPredicateStops(t *testing.T) {
 		}
 	})
 	// Within the limits of a predicate: 40 000 sorts of a range of 1000 take 800 000 steps, 20 a turn,
-	// and some 750 ms, so that ctx stops them first (R28).
+	// and some 750 ms, so that ctx stops them first.
 	t.Run("ctx through OfItem", func(t *testing.T) {
 		ctx, cancel := context.WithCancel(context.Background())
 		time.AfterFunc(20*time.Millisecond, cancel)
@@ -519,7 +519,7 @@ func TestNormalForm(t *testing.T) {
 }
 
 // The version that a release names is that of the tables of NFKC and of the package unicode
-// alike (R27).
+// alike.
 func TestUnicodeVersion(t *testing.T) {
 	for name, version := range map[string]string{"UnicodeVersion": UnicodeVersion, "norm.Version": norm.Version, "unicode.Version": unicode.Version} {
 		if version != "17.0.0" {

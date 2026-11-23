@@ -20,7 +20,7 @@ import (
 
 // The copy of the schemas is schemas/ of spec.Format: the same files, byte for byte, of the version
 // that spec.Format holds. A move to a new tag of spec that changes a schema fails it until the copy
-// follows (R20).
+// follows.
 func TestSchemasAreSpecs(t *testing.T) {
 	version, err := fs.ReadFile(spec.Format, "VERSION")
 	if err != nil {

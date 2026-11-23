@@ -18,9 +18,9 @@ var ErrLatest = errors.New("not an index of a release at or after the release's"
 // WithLatest gives the index of a release with the withdrawals that the index of the newest release
 // marks: each entry of release as it is, but withdrawn whenever latest withdraws it, by latest's
 // reason. Only the newest index knows of every withdrawal so far, and a version that it withdraws
-// is no version to show, whatever the release that published it says (R63 spec). Newest of the
+// is no version to show, whatever the release that published it says. Newest of the
 // index it gives is then the version that the page of samples of canvas takes of a module, as the
-// CLI's open does (R15; R43).
+// CLI's open does.
 //
 // Every later index keeps every entry as it was, and a withdrawal with its reason
 // (module-index.entries-kept, module-index.known-withdrawals). So an entry of release that latest

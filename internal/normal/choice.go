@@ -8,7 +8,7 @@ import (
 )
 
 // ChoiceOf gives what a choice of the check compares: Choice of the text, and, with notation: word,
-// every ., !, ? and space at its end dropped as well, so that Kim. is kim and ? is blank (R52). A
+// every ., !, ? and space at its end dropped as well, so that Kim. is kim and ? is blank. A
 // choice by tapping has no notation, and is a choice of options.
 func ChoiceOf(c formatv0.Check, text string) string {
 	form := Choice(text)
@@ -39,7 +39,7 @@ func Word(text string) bool {
 	return text != ""
 }
 
-// Search gives the normal form in which the leak check searches a text: step 1, then Choice (R30).
+// Search gives the normal form in which the leak check searches a text: step 1, then Choice.
 // The check of a module compares by it the text pieces of a line of a worked example with those of
 // a task's line.
 func Search(text string) string {

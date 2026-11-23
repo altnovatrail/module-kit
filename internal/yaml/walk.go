@@ -10,7 +10,7 @@ import (
 )
 
 // The pass over go-yaml's tree for the rules about nodes, which builds the value as it goes, as
-// the Walker of spec's tools/format-check/yaml.mjs does (R21). go-yaml resolves a plain scalar by
+// the Walker of spec's tools/format-check/yaml.mjs does. go-yaml resolves a plain scalar by
 // its own schema, so the pass reads its text by the rules yaml.* instead. It never follows an
 // alias.
 

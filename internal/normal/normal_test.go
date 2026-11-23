@@ -42,7 +42,7 @@ func TestSteps(t *testing.T) {
 }
 
 // NFKC here follows the Stream-Safe Text Process of UAX #15 too: after 30 non-starters in a row it
-// puts U+034F in, which spec's second implementation does not (R27).
+// puts U+034F in, which spec's second implementation does not.
 func TestNFKCIsStreamSafe(t *testing.T) {
 	if got := Text("a" + strings.Repeat("\u0301", 31)); !strings.ContainsRune(got, '\u034F') {
 		t.Errorf("31 combining marks normalize to %+q, with no U+034F", got)

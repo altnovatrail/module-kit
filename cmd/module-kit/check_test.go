@@ -36,7 +36,7 @@ func TestCheckAccepts(t *testing.T) {
 // Each test vector of a rule that is a module's folder is refused with status 1: each line of the
 // report names its place from the folder given and the ID of the rule, but a warning, which names
 // its place and refuses nothing — a key of task.no-leaks in a text of the whole module is a number
-// there too (R50) —, and the last counts them.
+// there too —, and the last counts them.
 func TestCheckRefuses(t *testing.T) {
 	rules, err := fs.ReadDir(spec.Format, "vectors/rules")
 	if err != nil {

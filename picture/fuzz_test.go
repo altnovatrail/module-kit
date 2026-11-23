@@ -12,7 +12,7 @@ import (
 // Check reads a picture that anyone may write, so no file may make it panic, and none may make it
 // decode more than maxPixels, which the fuzz test lowers so that a short input can reach it. Its
 // warning agrees with the decoder: a file that decodes to a picture within the limit is warned of as
-// transparent exactly when a pixel is (R33 spec; R39).
+// transparent exactly when a pixel is.
 func FuzzCheck(f *testing.F) {
 	f.Add(".png", pngOf(f, filled(3, 2, white, 1, 1, clear)))
 	f.Add(".png", pngOf(f, paletted(true)))

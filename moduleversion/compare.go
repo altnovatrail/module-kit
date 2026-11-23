@@ -13,7 +13,7 @@ import (
 )
 
 // A Published is a published version of a module: its package as files, without device/, and the
-// digest of the package by which the module index of the newest release names it (R36). A withdrawn
+// digest of the package by which the module index of the newest release names it. A withdrawn
 // version is a published one too.
 type Published struct {
 	Digest formatv0.Digest
@@ -29,8 +29,8 @@ type Published struct {
 // Part, and Raised the part that the step to the new version raises, None when it is not the next
 // version after the newest one by one of its parts. Breaches are the rules module-version.* that the
 // new version breaks, in the order the rules are checked: above, step, and then those that read the
-// places every version keeps; a comparison with a breach refuses the new version, and diff exits 1
-// (R37, R40). A first version, with no published one, may be any, and nothing is compared.
+// places every version keeps; a comparison with a breach refuses the new version, and diff exits 1.
+// A first version, with no published one, may be any, and nothing is compared.
 type Comparison struct {
 	Module    formatv0.ModuleID `json:"module"`
 	Version   string            `json:"version"`
@@ -84,8 +84,8 @@ func (c *Comparison) String() string {
 	return strings.Join(lines, "\n")
 }
 
-// Compare compares a new version of a module, its package next, with its published versions
-// (R36, R37). It reads each published package by the chain of digests from its digest — a package
+// Compare compares a new version of a module, its package next, with its published versions.
+// It reads each published package by the chain of digests from its digest — a package
 // of the version of the format that module-kit reads by modulepackage.ReadParts, one of an earlier
 // version by the places that every version keeps — and takes the newest by Semantic Versioning,
 // withdrawn or not. When the new version is that version and its package has that digest, the

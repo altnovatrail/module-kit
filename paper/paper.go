@@ -76,7 +76,7 @@ func bounded(p linear) (linear, Reason) {
 }
 
 // Solve gives the answer of the solver on a formula, a Number with its value and the letter of an
-// equation's unknown, or the reason it does not take it (R162 spec).
+// equation's unknown, or the reason it does not take it.
 func Solve(formula string) (*paperv1.Number, Reason) {
 	t, ok := parse(formula)
 	if !ok {
@@ -218,7 +218,7 @@ func raised(n *node) (linear, Reason) {
 }
 
 // Breach gives the first rule of an answer of AI that it breaks, or "" when it is an answer, which
-// a key may hold (R69).
+// a key may hold.
 func Breach(answer *paperv1.Answer) Rule {
 	if n := answer.GetNumber(); n != nil {
 		// The notation of the check kind number, which judges the reading by the key.
@@ -321,7 +321,7 @@ var (
 )
 
 // BroughtValue gives a value read brought to the key: x = 4 as 4 when the key's unknown is x, and
-// (C) as C of a choice; any other value as it is (R69).
+// (C) as C of a choice; any other value as it is.
 func BroughtValue(answer *paperv1.Answer, value string) string {
 	if n := answer.GetNumber(); n != nil && n.GetUnknown() != "" {
 		text := normal.Text(normal.Scripts(value))

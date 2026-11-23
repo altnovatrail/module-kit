@@ -51,8 +51,7 @@ func TestPartsAreTheFormats(t *testing.T) {
 	}
 }
 
-// The next versions and their parts are those of the steps of a version, X.Y.Z, 0.y.z and 0.0.z each
-// (R13).
+// The next versions and their parts are those of the steps of a version, X.Y.Z, 0.y.z and 0.0.z each.
 func TestSteps(t *testing.T) {
 	for from, want := range map[string]string{
 		"1.2.3":  "1.2.4 patch, 1.3.0 minor, 2.0.0 major",

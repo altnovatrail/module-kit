@@ -14,7 +14,7 @@ import (
 
 // differences adds the row of the table that no other row names: anything else that differs in the
 // canonical view or in the listing of the device part, but the version in the manifest, is a patch
-// at each place where the two differ (R36). The instances of a template compare as a whole, since
+// at each place where the two differ. The instances of a template compare as a whole, since
 // their places carry no meaning. A difference is not given at or within the place of a change that
 // another row gives, nor in skill_tiers when the skill graph differs, nor in the instances of a
 // template when its task differs: they follow those, and give no part of their own.

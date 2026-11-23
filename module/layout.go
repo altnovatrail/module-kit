@@ -213,7 +213,7 @@ func (c *checker) place() error {
 
 // fileID checks module.file-ids on the value of a file at <id> that its schema accepts, so that the
 // id is a string of the form of a local ID: the rule says only what the schema cannot, that the id
-// is the file's name. A file that the schema refuses breaks it and nothing more (R23).
+// is the file's name. A file that the schema refuses breaks it and nothing more.
 func (c *checker) fileID(file, name string, value any) {
 	entry, _ := value.(map[string]any)
 	if id, ok := entry["id"].(string); ok && id != name {

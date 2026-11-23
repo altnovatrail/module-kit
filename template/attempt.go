@@ -9,7 +9,7 @@ import (
 )
 
 // MaxInstances is the most instances a template has: the sizes of its domains multiply to at most
-// 10 000 (R60 spec).
+// 10 000.
 const MaxInstances = 10000
 
 // ErrDomain is what AttemptInstance gives on an argument outside its domain: a count outside 1 to
@@ -26,9 +26,9 @@ const (
 
 // AttemptInstance gives the number of the instance that an attempt on a template gets, from 0:
 // below(count) of the place of randomness of the attempt's seed whose names are template, the ID of
-// the task and instance, where count is how many instances the template has, from 1 to MaxInstances
-// (R31, R60 spec). Nothing else draws from that place, so the same package and the same seed give the
-// same instance (R03 spec). The instances are numbered in the order of the odometer, as the package
+// the task and instance, where count is how many instances the template has, from 1 to MaxInstances.
+// Nothing else draws from that place, so the same package and the same seed give the
+// same instance. The instances are numbered in the order of the odometer, as the package
 // carries their numbers.
 //
 // api draws the seed from a cryptographic source when the attempt begins and passes it here as a

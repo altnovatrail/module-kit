@@ -11,7 +11,7 @@ import (
 	"github.com/altnovatrail/module-kit/page"
 )
 
-// The IDs of the rules of a workbook's page and of a worked example on a workbook (R52).
+// The IDs of the rules of a workbook's page and of a worked example on a workbook.
 const (
 	RuleTaskWorkbookPage   = "task.workbook-page"
 	RuleLessonExampleFills = "lesson.example-fills"

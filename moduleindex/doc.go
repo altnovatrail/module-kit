@@ -1,8 +1,8 @@
 // Package moduleindex builds the module index of a release from the previous index, the release's
 // packages, its tag and its withdrawals, refusing by the rules module-index.*; reads an index of
 // any version of the format by the places every version keeps; and picks the version of a module
-// for a new attempt: the newest by semver that is not withdrawn and lies in the format's window
-// (R63 spec; R35). The CLI's index and open call it, and api.
+// for a new attempt: the newest by semver that is not withdrawn and lies in the format's window.
+// The CLI's index and open call it, and api.
 //
 // Build takes a Release — the previous index as its file, or First, the packages that package
 // modulepackage built or read, the tag and the withdrawals — and gives module-index.json, the
@@ -11,6 +11,6 @@
 // of whatever format version, and takes a version as withdrawn whatever its reason. Newest picks
 // the version of a new attempt, skipping an entry whose format version module-kit does not read.
 // WithLatest marks in the index of a release the withdrawals that the index of the newest release
-// knows, for the CLI's open (R15; R43). Versions are ordered by internal/semver. It checks no
-// signature: spec's release-verify does, where a file enters NovaTrail (R77 spec).
+// knows, for the CLI's open. Versions are ordered by internal/semver. It checks no
+// signature: spec's release-verify does, where a file enters NovaTrail.
 package moduleindex

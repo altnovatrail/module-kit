@@ -29,7 +29,7 @@ const (
 )
 
 // Read reads a module index of any version of the format by the places that every version keeps,
-// and not by the schema of its own version, which refuses what a later version adds (R35):
+// and not by the schema of its own version, which refuses what a later version adds:
 // module_format_version and modules at its root, and module_format_version, package_digest,
 // release, teaches and withdrawn in an entry. A member at another place, which a later version
 // may add, is not read. Those members keep their forms in every version too, so one that is not in
@@ -38,9 +38,9 @@ const (
 // among them.
 //
 // Read gives every entry, of whatever format version, so that the comparison of versions sees
-// every published version of a module (R13). A pick of a version, Newest, skips an entry whose
+// every published version of a module. A pick of a version, Newest, skips an entry whose
 // format version module-kit does not read, rather than refuse the index. Read checks no signature:
-// the index was checked where it entered NovaTrail (R77 spec). Nor does it hold the text to the
+// the index was checked where it entered NovaTrail. Nor does it hold the text to the
 // canonical text, which a later version may change; a name that stands twice in one object, which
 // no build writes, counts by its last member.
 func Read(data []byte) (formatv0.ModuleIndex, error) {
@@ -113,7 +113,7 @@ func members(object map[string]any, places []string) map[string]any {
 
 // Newest gives the version of the module id that a new attempt takes: the newest by Semantic
 // Versioning of the versions that the index names, of those not withdrawn, whatever the reason, and
-// whose format version module-kit reads, ReadsFormat of package module (R63 spec; R35). ok is
+// whose format version module-kit reads, ReadsFormat of package module. ok is
 // false when the index names no such version. The same version is the one by which a module counts
 // as teaching the anchor skills of its entry. A version not in the form X.Y.Z, which no index that
 // Read or Build gives names, is skipped too.

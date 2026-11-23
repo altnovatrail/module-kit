@@ -36,7 +36,7 @@ type Package struct {
 }
 
 // A Refusal is why Build builds no package: the module breaks the format, and the report of its
-// check names every breach (R34).
+// check names every breach.
 type Refusal struct {
 	Report module.Report
 }
@@ -46,11 +46,11 @@ func (r *Refusal) Error() string {
 }
 
 // Build builds the package of the module whose folder is the root of fsys, by the format version
-// its manifest names (R62 spec). It checks the module first, and a module that breaks the format
-// gives a *Refusal with the report of its check (R34). The solver of each template runs once, in
+// its manifest names. It checks the module first, and a module that breaks the format
+// gives a *Refusal with the report of its check. The solver of each template runs once, in
 // the check, with ctx and one on each CPU, as module.Check runs them, and an error of ctx comes
 // back as it is. Any other error is a file that could not be read, or a fault of module-kit: of a
-// module that passed its check, the canonical text refuses nothing (R09).
+// module that passed its check, the canonical text refuses nothing.
 //
 // The package depends on the files of the module and on the format version alone: its files and
 // folders whose names begin with ".", the eval set, eval/, and the comments of its files of parts
@@ -114,7 +114,7 @@ func assemble(view, listing map[string]any, files0 map[string][]byte) (*Package,
 
 // moduleFiles lists the files of a module that passed its check, by their paths from its folder, in
 // the order of the folder: every file but those whose name or folder begins with "." and those of
-// the eval set, which stay out of the package (R62 spec).
+// the eval set, which stay out of the package.
 func moduleFiles(fsys fs.FS) ([]string, error) {
 	var files []string
 	err := fs.WalkDir(fsys, ".", func(name string, entry fs.DirEntry, err error) error {
@@ -138,7 +138,7 @@ func descriptorValue(d formatv0.Descriptor) map[string]any {
 	return map[string]any{"digest": string(d.Digest), "size": d.Size}
 }
 
-// decode reads a JSON value that its schema accepts into its type of formatv0, strictly (R72 spec).
+// decode reads a JSON value that its schema accepts into its type of formatv0, strictly.
 // The schema accepted it, so the type reads it, and a value that it does not is a fault of
 // module-kit.
 func decode[T any](value any) T {

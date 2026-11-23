@@ -219,7 +219,7 @@ func partFiles(t testing.TB) map[string][2]string {
 // invalid example breaks its schema alone. That a case breaks its rule, and an invalid example the
 // keyword it names, the test of vectors checks. Each module and each file is a subtest of its own,
 // named by its path in spec.Format, and they run in parallel: they share nothing but spec.Format,
-// which is read-only (R59).
+// which is read-only.
 func TestChecksTheFormat(t *testing.T) {
 	// beside says whether a breach is other than the one its case may have: of its rule, or, for an
 	// invalid example, of its schema.

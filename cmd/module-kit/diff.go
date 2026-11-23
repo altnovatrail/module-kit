@@ -14,7 +14,7 @@ import (
 	"github.com/altnovatrail/module-kit/moduleversion"
 )
 
-// diff compares a new version of a module with every published version of it (R40):
+// diff compares a new version of a module with every published version of it:
 //
 //	module-kit diff [--json] (--index <module-index.json> | --first) [--published <package folder>]... <module>
 //

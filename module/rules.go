@@ -13,7 +13,7 @@ import (
 )
 
 // The IDs of the rules of the manifest, the skill graph and the catalogs, named by the part a breach of
-// each is reported in (R25).
+// each is reported in.
 const (
 	RuleManifestDependencies  = "manifest.dependencies"
 	RuleManifestBands         = "manifest.bands"
@@ -41,7 +41,7 @@ var partRules = []string{
 }
 
 // typed reads the value of a file of a part that passed its schema into the type of formatv0 that
-// holds the part, strictly (R72 spec). The schema accepted the value, so the type reads it, and a
+// holds the part, strictly. The schema accepted the value, so the type reads it, and a
 // value that it does not is a fault of module-kit.
 func typed[T any](value any) T {
 	t, err := schema.Decode[T](value)
@@ -55,7 +55,7 @@ func at(tokens ...string) string {
 	return schema.Pointer(tokens)
 }
 
-// A module's parts that passed their schemas, read into their types once for every rule (R25): a part
+// A module's parts that passed their schemas, read into their types once for every rule: a part
 // the module does not have, or whose file did not pass, is nil; the tasks, the lessons and the
 // expansions of templates stand by their paths, the expansions set by expandAll once every part is
 // added; media holds the paths of the files in media/. file is true for the file of CheckFile, which
@@ -102,7 +102,7 @@ func (p *parts) add(path, part string, value any) {
 	}
 }
 
-// pathOf gives the path of a breach in the file at path, or none for the file of CheckFile (R22).
+// pathOf gives the path of a breach in the file at path, or none for the file of CheckFile.
 func (p parts) pathOf(path string) string {
 	if p.file {
 		return ""
@@ -111,9 +111,9 @@ func (p parts) pathOf(path string) string {
 }
 
 // withinPart checks the rules within one part, in Check and in CheckFile alike, since an example of
-// a part is checked so (R25). A template is checked through its instances by the rules that read the
+// a part is checked so. A template is checked through its instances by the rules that read the
 // strings of a task, where its placeholders stand, and as written by those that read none of them,
-// which every instance breaks alike (R32).
+// which every instance breaks alike.
 func (c *checker) withinPart(p parts) {
 	if p.manifest != nil {
 		c.bands(p.pathOf(manifestPath), *p.manifest)
@@ -140,8 +140,8 @@ func (c *checker) withinPart(p parts) {
 }
 
 // betweenParts checks the rules between parts. They run only when every file of a part passed, as
-// format-check of spec has it, so that a file that its schema refuses breaks that and nothing more
-// (R23); the manifest is then among them.
+// format-check of spec has it, so that a file that its schema refuses breaks that and nothing more;
+// the manifest is then among them.
 func (c *checker) betweenParts(p parts) {
 	c.dependencies(p)
 	c.rungTemplates(p)
@@ -255,7 +255,7 @@ func (c *checker) dependencies(p parts) {
 }
 
 // The check kinds that give a verdict: an item whose answer slots they check is an item with a
-// verdict (R25).
+// verdict.
 var verdictKinds = []formatv0.CheckKind{
 	formatv0.CheckKindNumber, formatv0.CheckKindFraction, formatv0.CheckKindChoice, formatv0.CheckKindPredicate,
 }
@@ -272,7 +272,7 @@ func checks(item formatv0.Item, i int) (found []formatv0.Check, places [][]strin
 }
 
 // hasVerdict says whether a task has an item with a verdict: one with an answer slot that a kind
-// with a verdict checks, as format-check of spec reads it (R25).
+// with a verdict checks, as format-check of spec reads it.
 func hasVerdict(task formatv0.Task) bool {
 	for i, item := range task.Items {
 		found, _ := checks(item, i)

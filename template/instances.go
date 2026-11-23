@@ -53,10 +53,10 @@ const limit = 1<<53 - 1
 // domain, or too many combinations, or the first combination on which an expression fails or a
 // derived number lies past ±(2^53 − 1), where the count stops, or none that gives an instance; and
 // only when it has instances, that of its solver on the first instance where it fails, or before the
-// first (R32, R33). A task that is no template gives neither.
+// first. A task that is no template gives neither.
 //
 // The count looks at ctx before each combination, and the solver runs with it, on the caller's
-// goroutine; how many templates the caller counts at once is its own to say (R11). The error is that
+// goroutine; how many templates the caller counts at once is its own to say. The error is that
 // of ctx when ctx is done before the count ends, and is no breach: there are then neither numbers nor
 // breaches. Instances may be called from many goroutines at once, each on a template of its own or the
 // same.
@@ -122,7 +122,7 @@ func namesBreaches(t formatv0.Template) []Breach {
 // expression of the subset that names only parameters, and the constraint a bool expression of it
 // that names only parameters and derived numbers. The subset is of Starlark and runs in the dialect
 // of the format: an expression of it begins with a token and nests at most 64 levels, so that
-// go.starlark.net at its version parses every one (R32, R102 spec).
+// go.starlark.net at its version parses every one.
 // An expression of the subset that go.starlark.net still does not parse is a breach rather than a
 // panic of compiled: the check goes on, and the subset and the dialect are held to each other twice.
 func expressionBreaches(t formatv0.Template, parameters, derived []formatv0.TemplateName) []Breach {
@@ -161,7 +161,7 @@ func plain(names []formatv0.TemplateName) []string {
 // task outside its template, every brace is doubled or part of a placeholder that names a parameter,
 // a derived number or a result of the solver, and a placeholder of a result stands only in a key or
 // a trap value of a check of a number or a fraction, in the text of the solution or in a leak phrase,
-// and in no picture path (R61 spec). A breach for each string that breaks it, at the string.
+// and in no picture path. A breach for each string that breaks it, at the string.
 func placeholderBreaches(task formatv0.Task) []Breach {
 	t := *task.Template
 	known := func(name formatv0.TemplateName) bool {
@@ -321,7 +321,7 @@ func compiled(t formatv0.Template, parameters, derived []formatv0.TemplateName) 
 // breach of task.template-instances when an expression fails on it or a derived number lies past
 // ±(2^53 − 1). An expression of the subset calls no function and holds no loop, so its steps are
 // bounded by its length, and it runs with no limit of steps, no clock and no context: count looks at
-// the caller's before each combination (R32).
+// the caller's before each combination.
 func (e expressions) on(parameters []formatv0.TemplateName, values []int64) (formatv0.Numbers, bool, *Breach) {
 	numbers := formatv0.Numbers{}
 	args := make(starlark.Tuple, len(values), len(values)+len(e.derived))
@@ -391,7 +391,7 @@ func Shown(t formatv0.Template, numbers formatv0.Numbers) string {
 // every placeholder replaced by its number, in decimal digits with - before a negative one, and every
 // doubled brace by one, in a single pass, without its template, and with the template's id. It
 // evaluates no expression and runs no Starlark: api puts in the numbers that the package carries,
-// picked by AttemptInstance, and the open view of the instance is openview.Task of it (R32).
+// picked by AttemptInstance, and the open view of the instance is openview.Task of it.
 //
 // The error is for a task that is no template, a string of it that breaks task.placeholders, and a
 // placeholder whose number numbers does not give. The instance is not checked against the schema of

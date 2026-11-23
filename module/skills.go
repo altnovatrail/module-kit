@@ -11,7 +11,7 @@ import (
 )
 
 // isAnchor says whether a prerequisite names an anchor skill of the shared taxonomy, core.<name>,
-// rather than a skill of the module by its local ID, which has no dot (R25).
+// rather than a skill of the module by its local ID, which has no dot.
 func isAnchor(id string) bool {
 	return strings.HasPrefix(id, "core.")
 }

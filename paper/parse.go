@@ -84,7 +84,7 @@ func tokens(formula string) ([]token, bool) {
 
 func isDigit(c byte) bool { return c >= '0' && c <= '9' }
 
-// parser reads tokens by the grammar of a formula (R69).
+// parser reads tokens by the grammar of a formula.
 type parser struct {
 	tokens []token
 	at     int

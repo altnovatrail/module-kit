@@ -21,7 +21,7 @@ var files embed.FS
 // An Error is one keyword that fails, at the place where the schema holding it applies, as an
 // example of the format names it: the object for required, unevaluatedProperties and the other
 // keywords of an object, the array for those of an array, and the value for type, pattern and the
-// other keywords of a value (R23).
+// other keywords of a value.
 type Error struct {
 	Keyword string
 	// The place in the value, token by token from its root: the name of a member, or the index of
@@ -163,7 +163,7 @@ func (s *set) schema(location string) *jsonschema.Schema {
 
 // Decode reads a JSON value, as the reader of YAML gives it, into a Go type strictly: a field that
 // the type does not know is an error. A reader of the format checks a value against its schema
-// first, and only then reads it by its type of formatv0 (R72 spec).
+// first, and only then reads it by its type of formatv0.
 func Decode[T any](value any) (T, error) {
 	var t T
 	data, err := json.Marshal(value)

@@ -16,7 +16,7 @@ import (
 // An anchor or an alias whose name ends in a colon go-yaml refuses for a reason that names none,
 // and the file breaks yaml.no-anchors (R46).
 // The messages matched are go-yaml's at the version go.mod requires: TestRead fails on a version
-// that words one otherwise (R21). Any other error is the file's not being YAML, at go-yaml's place.
+// that words one otherwise. Any other error is the file's not being YAML, at go-yaml's place.
 func (r *reader) parseError(err error) {
 	var loadError *goyaml.LoadError
 	if !errors.As(err, &loadError) {
@@ -59,7 +59,7 @@ func (r *reader) parseError(err error) {
 // colonAnchor finds the first anchor or alias, at or before the place go-yaml refused, whose name
 // as YAML 1.2.2 reads it ends in a colon, as &a: and *a: do: go-yaml leaves the last colons of a
 // name out on purpose, to read *a: b as an alias that is a key (yaml/go-yaml#109, closed as not
-// planned), and refuses the file further on (R46). Only an & or a * that starts a node counts, not
+// planned), and refuses the file further on. Only an & or a * that starts a node counts, not
 // one in a comment. go-yaml has refused the file already, so a place taken wrongly changes only
 // which reason the refusal gives. line -1 is no place: then every line is looked at.
 func (s *source) colonAnchor(line, column int) (int, int, bool) {

@@ -6,7 +6,7 @@ import (
 	"github.com/altnovatrail/spec/types/formatv0"
 )
 
-// A time compares by its hours and its minutes, each as a number, and never by their sum (R52).
+// A time compares by its hours and its minutes, each as a number, and never by their sum.
 func TestTimeNotation(t *testing.T) {
 	for _, c := range []struct {
 		value, want string

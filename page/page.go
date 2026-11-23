@@ -61,7 +61,7 @@ func mustLoad(data []byte) *table {
 }
 
 // load reads a file of page.yaml as the format has a reader do it: by the YAML rules, against its
-// schema, page.schema.json, and only then into its type of formatv0, strictly (R72 spec); and gives
+// schema, page.schema.json, and only then into its type of formatv0, strictly; and gives
 // its table.
 func load(data []byte) (*table, error) {
 	value, err := yaml.Read(data)

@@ -16,7 +16,7 @@ import (
 // view, the manifest's languages, the IDs of its bands in order, the keys of the skills of its skill
 // graph and its retired skills with what replaced each, and the keys of its tasks, its lessons, its
 // traps and its techniques. The rules module-version.* but above and step read these alone, so they
-// hold through a move to another version of the format (R37).
+// hold through a move to another version of the format.
 type places struct {
 	formatVersion string
 	id            formatv0.ModuleID
@@ -40,8 +40,8 @@ var idPlaces = map[string][]string{
 	"techniques": {"techniques", "techniques"},
 }
 
-// placesOf reads the places of an inventory and a canonical view, as JSON values, by the places alone
-// (R37). A package that does not hold one where the format keeps it is modulepackage.ErrNotCanonical:
+// placesOf reads the places of an inventory and a canonical view, as JSON values, by the places alone.
+// A package that does not hold one where the format keeps it is modulepackage.ErrNotCanonical:
 // no version of the format builds it.
 func placesOf(inventory, view any) (places, error) {
 	missing := func(what string) (places, error) {

@@ -8,7 +8,7 @@ import (
 
 // ", \ and five control characters are written by their short escapes, every other one up to U+001F
 // as \u00 and two lowercase hexadecimal digits, and the rest as it is, /, <, >, &, U+007F, U+2028,
-// U+2029, a letter outside the Basic Multilingual Plane and a combining accent among them (R09).
+// U+2029, a letter outside the Basic Multilingual Plane and a combining accent among them.
 func TestEscapes(t *testing.T) {
 	for _, c := range []struct {
 		in, want string
@@ -94,8 +94,7 @@ func TestText(t *testing.T) {
 	}
 }
 
-// Text stops with an *Error at the first value the canonical text cannot hold, naming its place
-// (R09).
+// Text stops with an *Error at the first value the canonical text cannot hold, naming its place.
 func TestRefusals(t *testing.T) {
 	for _, c := range []struct {
 		name    string

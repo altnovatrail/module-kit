@@ -37,7 +37,7 @@ const (
 )
 
 // The reasons that a reading gives, to which the package observation maps the reasons of the
-// observation (R29).
+// observation.
 const (
 	Illegible           Reason = "illegible"             // something is written, and it cannot be read
 	Ambiguous           Reason = "ambiguous"             // it can be read more than one way, or two readers read it differently
@@ -48,7 +48,7 @@ const (
 // UnicodeVersion is the version of Unicode that the normalization follows: that of the tables of
 // NFKC the library is built with, which its tests hold equal to those of the standard library's
 // package unicode. The format leaves the version to the reader's release, and this is where a
-// release of module-kit names it (R27).
+// release of module-kit names it.
 const UnicodeVersion = normal.UnicodeVersion
 
 // ErrNoVerdict is what the check of a rubric gives: a rubric gives feedback by its criteria, and the
@@ -141,8 +141,8 @@ func OfItem(ctx context.Context, item formatv0.Item, values []*string) (ItemVerd
 // OfSlot gives the verdict of an answer slot on the value read in it: the value as it is written, or
 // nil when nothing was read. The value and the trap values are normalized as the check kind
 // normalizes them, and the key is read as it is written, in the kind's notation. A predicate on a
-// value in its notation runs in the sandbox of Starlark, with the limits of a predicate and ctx
-// (R11): True is correct and False not_yet, and an error, a result that is not a bool, the limit
+// value in its notation runs in the sandbox of Starlark, with the limits of a predicate and ctx:
+// True is correct and False not_yet, and an error, a result that is not a bool, the limit
 // of steps, module-kit's clock and a panic of the interpreter are unchecked (R28).
 //
 // An error gives no verdict: ctx is done before the verdict, or stops a predicate as it runs — a
@@ -192,7 +192,7 @@ func Same(slot AnswerSlot, a, b string) bool {
 // kind takes what is left; for a time, steps 1 to 5 with the spaces at either end dropped, in the
 // notation when it is a time read. An empty form is blank, and in no notation. A rubric normalizes
 // nothing: the form is the value as it is, in no notation, and so is a value that is not UTF-8.
-// The joining of two readings compares the values out of the notation by it (R29).
+// The joining of two readings compares the values out of the notation by it.
 func NormalForm(slot AnswerSlot, value string) (form string, inNotation bool) {
 	if !utf8.ValidString(value) {
 		return value, false
@@ -248,7 +248,7 @@ func (s AnswerSlot) verdict(ctx context.Context, value *string) (SlotVerdict, er
 }
 
 // predicateVerdict: an error, a result that is not a bool, the limit of steps, the clock and a panic
-// are unchecked, and only ctx done is an error, with no verdict (R28).
+// are unchecked, and only ctx done is an error, with no verdict.
 func (s AnswerSlot) predicateVerdict(ctx context.Context, limits sandbox.Limits, value *string) (SlotVerdict, error) {
 	c := s.Check
 	if c.Predicate == nil {

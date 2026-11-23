@@ -252,7 +252,7 @@ func TestExampleRunners(t *testing.T) {
 }
 
 // A valid example of the module index is refused when its root names another format version than
-// format/VERSION, or when an entry lists teaches out of order, which its schema cannot say (R35).
+// format/VERSION, or when an entry lists teaches out of order, which its schema cannot say.
 func TestIndexForm(t *testing.T) {
 	const entry = `{module_format_version: "0.4", package_digest: "sha256:fcbe6e68430776b0506c93ab51b155f8e7f92e2b3ecbe03e34e2afb91b4d4d08", release: v0.1.0`
 	for _, c := range []struct{ data, refused string }{

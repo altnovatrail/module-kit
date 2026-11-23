@@ -9,7 +9,7 @@ import (
 )
 
 // On every value that the format admits, Text writes what jsontext's Canonicalize writes, RFC 8785
-// in the standard library of Go (R09). The input is read as a small program that builds a value,
+// in the standard library of Go. The input is read as a small program that builds a value,
 // so that every input is a value of the format. Canonicalize is the reference here alone: under
 // GOEXPERIMENT=nojsonv2 this file is not built, and the other tests run without it.
 func FuzzText(f *testing.F) {

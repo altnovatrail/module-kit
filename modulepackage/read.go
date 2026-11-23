@@ -23,12 +23,12 @@ var (
 )
 
 // Read reads a package as files, the folder at the root of fsys, by the chain of digests from the
-// digest of the package that a checked index gives (R62 spec; R34): inventory.json by that digest,
+// digest of the package that a checked index gives: inventory.json by that digest,
 // then server.json and device.json by the digests and sizes the inventory gives, then each file of
 // device/ by those the listing gives. A file is read only once the one before it in the chain has
 // named it, and each is held to its schema and to its canonical text, so a package that Read
 // accepts is the one Build built. Read checks no signature: the index was checked where it entered
-// NovaTrail (R77 spec). A file of the folder that the chain does not name is no part of the
+// NovaTrail. A file of the folder that the chain does not name is no part of the
 // package, and Read does not read it.
 //
 // It reads a package of the format version that module-kit reads, FormatVersion of package
@@ -41,8 +41,8 @@ func Read(fsys fs.FS, digest formatv0.Digest) (*Package, error) {
 // ReadParts reads a package as files as Read does, by the chain of digests from the digest of the
 // package, but without the files of device/: its inventory, its canonical view and the listing of its
 // device part, which names each of those files by its digest and size. So the comparison of the
-// versions of a module reads a published package, whose device part it compares by its listing
-// (R36). Files then holds InventoryFile, ServerFile and DeviceFile alone. Its errors are those of
+// versions of a module reads a published package, whose device part it compares by its listing.
+// Files then holds InventoryFile, ServerFile and DeviceFile alone. Its errors are those of
 // Read.
 func ReadParts(fsys fs.FS, digest formatv0.Digest) (*Package, error) {
 	return read(fsys, digest, false)
