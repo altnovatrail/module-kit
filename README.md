@@ -25,4 +25,4 @@ A component of [NovaTrail](https://github.com/altnovatrail/spec), a universal op
 - the CI of `modules` checks and builds the modules with its CLI, and the CI of `canvas` builds the samples page with it;
 - module-registry and module-pipeline will build on it later, while `sim` reads module packages through spec's types without it.
 
-Its card is section 3.7 of spec's [architecture](https://github.com/altnovatrail/spec/blob/main/docs/architecture.md); the detail is under [docs/](docs/README.md): what the component does and how it is built, its decisions, its releases and how a change comes in.
+Its card is in spec's [architecture](https://github.com/altnovatrail/spec/blob/main/docs/architecture.md); the detail is under [docs/](docs/README.md): what the component does and how it is built, its decisions, its releases and how a change comes in.

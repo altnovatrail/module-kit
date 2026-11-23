@@ -12,5 +12,5 @@
 // Breach of the Comparison: above against every published version, step against the newest, and the
 // others by the places that every version keeps, so that they hold through a move of the format
 // too; a published package of an earlier version of the format is read by those places alone, and
-// the part of a move is major while the format is v0 (R37).
+// the part of a move is major while the format is v0.
 package moduleversion

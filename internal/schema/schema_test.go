@@ -63,14 +63,14 @@ func TestKeywordsAreTheFormats(t *testing.T) {
 	start := strings.Index(text, "- A schema uses only these keywords:")
 	end := strings.Index(text, "The other keywords of 2020-12 stay out of the format")
 	if start < 0 || end < start {
-		t.Fatal("format/README.md, section 5, lists no keywords where the test reads them")
+		t.Fatal("format/README.md lists no keywords where the test reads them")
 	}
 	var listed []string
 	for _, m := range regexp.MustCompile("`([^`]+)`").FindAllStringSubmatch(text[start:end], -1) {
 		listed = append(listed, m[1])
 	}
 	if !slices.Equal(listed, Keywords) {
-		t.Errorf("section 5 lists\n%v\nand Keywords is\n%v", listed, Keywords)
+		t.Errorf("the format text lists\n%v\nand Keywords is\n%v", listed, Keywords)
 	}
 }
 

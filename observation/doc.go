@@ -1,7 +1,7 @@
 // Package observation holds what module-kit does with an observation, novatrail.observation.v1:
 // which one is valid, how the observations of two readers join into one, answer slot by answer
 // slot, which verdict the observation gives with the options tapped beside it, and how the
-// submission of an essay ends (R29). The verdict of each value is the package verdict's,
+// submission of an essay ends. The verdict of each value is the package verdict's,
 // by the check kinds of the module format. The observation's type is spec's, of the module
 // github.com/altnovatrail/spec/contracts, so this package brings in the protobuf runtime, and
 // verdict and the check of a module do not.

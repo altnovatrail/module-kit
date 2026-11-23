@@ -14,7 +14,7 @@ import (
 // which the stream pass made a comment, has none left. Where YAML 1.2.2 refuses the text too — an
 // anchor with no name, a tag outside its grammar, a handle no %TAG gave — the file is not YAML.
 // An anchor or an alias whose name ends in a colon go-yaml refuses for a reason that names none,
-// and the file breaks yaml.no-anchors (R46).
+// and the file breaks yaml.no-anchors.
 // The messages matched are go-yaml's at the version go.mod requires: TestRead fails on a version
 // that words one otherwise. Any other error is the file's not being YAML, at go-yaml's place.
 func (r *reader) parseError(err error) {

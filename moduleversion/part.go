@@ -7,7 +7,7 @@ import (
 )
 
 // A Part is a part of a version of a module, as the comparison finds it and a step to the next
-// version raises it, from the lowest (R13): None, when nothing but the version changes; Patch, the
+// version raises it, from the lowest: None, when nothing but the version changes; Patch, the
 // same entries, checks and path in other words or pictures; Minor, everything there stays and means
 // the same, and the module gives more or leads otherwise; and Major, something of what a learner had
 // is gone or means something else. It is written by its word, as the test vectors of versions write

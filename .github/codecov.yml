@@ -1,5 +1,5 @@
 # What Codecov does with the coverage of the tests, which the coverage job of .github's shared
-# go.yml or typescript.yml uploads (R48 spec): the report ci-test writes, a
+# go.yml or typescript.yml uploads: the report ci-test writes, a
 # Go profile in coverage/go.out or lcov in coverage/lcov.info. A Go profile names a file by its
 # import path, which Codecov cuts down to the path in the repository by a default rule of its own.
 

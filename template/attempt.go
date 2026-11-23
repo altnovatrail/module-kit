@@ -18,7 +18,7 @@ const MaxInstances = 10000
 var ErrDomain = random.ErrDomain
 
 // The names of the place of randomness of a template, around the ID of its task: its first name
-// says what the place is of (R31).
+// says what the place is of.
 const (
 	placeOfTemplate = "template"
 	placeOfInstance = "instance"

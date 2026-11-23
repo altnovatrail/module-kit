@@ -1,7 +1,7 @@
 // Package modulepackage builds the package of a checked module — its canonical view, the listing
 // of its device part and its inventory, with their digests — and reads a package as files by the
 // chain of digests from the digest an index gives: inventory, then parts, then files.
-// It checks no signature: spec's release-verify does, where a file enters NovaTrail (R77 spec). The
+// It checks no signature: spec's release-verify does, where a file enters NovaTrail. The
 // CLI's build, api, tutor's eval runner and module-registry call it.
 //
 // Build checks a module by package module and builds its package — the canonical view, with the
