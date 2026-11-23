@@ -1,4 +1,4 @@
-# NovaTrail's shared release (R18 .github), pinned to a release of .github by SHA with its version
+# NovaTrail's shared release, pinned to a release of .github by SHA with its version
 # beside it. RELEASE_LINE is the line the releases are numbered in; paths, what they are built from.
 name: Release
 

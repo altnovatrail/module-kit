@@ -21,7 +21,7 @@ import (
 
 // readVector reads a file of a vector as the format has a reader do it: by the YAML rules, then
 // against its schema, and only then into its type of formatv0, strictly, refusing a field that the
-// type does not know (R23). It gives the JSON value too.
+// type does not know. It gives the JSON value too.
 func readVector(fsys fs.FS, name, schemaFile string, into any) (any, error) {
 	data, err := fs.ReadFile(fsys, name)
 	if err != nil {
@@ -38,8 +38,7 @@ func readVector(fsys fs.FS, name, schemaFile string, into any) (any, error) {
 }
 
 // readOpenView reads open-view.yaml of a vector of the open view, which has no schema of its own:
-// by the YAML rules, then strictly into its type of formatv0/open (R24). It gives the JSON value
-// too.
+// by the YAML rules, then strictly into its type of formatv0/open. It gives the JSON value too.
 func readOpenView(fsys fs.FS, name string, into any) (any, error) {
 	data, err := fs.ReadFile(fsys, name)
 	if err != nil {
@@ -88,7 +87,7 @@ var vectorFiles = map[string]vectorFile{
 	"vectors/versions/*/version.yaml": {"version-vector.schema.json", typeOf[formatv0.VersionVector]()},
 }
 
-// A part of a module's layout as the types hold it (R72 spec).
+// A part of a module's layout as the types hold it.
 type partType struct {
 	value func() any                  // a new value of its type of formatv0
 	view  func() any                  // a new value of its type of formatv0/open

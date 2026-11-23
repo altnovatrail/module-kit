@@ -27,7 +27,7 @@ import (
 )
 
 // version is the release a build comes from: the release's own version, which release-files
-// sets at link time (R07), or dev, which currentVersion replaces by the version of the module the
+// sets at link time, or dev, which currentVersion replaces by the version of the module the
 // binary was built from, when there is one.
 var version = "dev"
 
@@ -57,7 +57,7 @@ func main() {
 
 // run carries out a command line with ctx, which a signal makes done, and returns its exit status.
 // --version tells the release, and the version of Unicode that the normalization of the check kinds
-// follows, which the format leaves to the release (R27).
+// follows, which the format leaves to the release.
 func run(ctx context.Context, args []string, stdout, stderr io.Writer) int {
 	switch {
 	case len(args) == 1 && args[0] == "--version":
@@ -81,7 +81,7 @@ func run(ctx context.Context, args []string, stdout, stderr io.Writer) int {
 // check checks the module whose folder is dir and writes its report to stdout: a line for each
 // breach, its place from dir, the ID of its rule and what breaks it, in the order of their places;
 // then a line for each warning, which refuses nothing: those of the texts of the whole module that
-// hold a number, in the order of their places (R50), and then those of the pictures (R39); and a last
+// hold a number, in the order of their places, and then those of the pictures; and a last
 // line that says whether the format accepts the module. The warnings change no exit status.
 func check(ctx context.Context, dir string, stdout, stderr io.Writer) int {
 	fsys, err := moduleFolder(dir)

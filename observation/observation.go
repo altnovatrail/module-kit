@@ -15,12 +15,12 @@ import (
 )
 
 // ErrNotValid is what an observation that is not valid gives: it is no observation, as a failure of
-// AI is none, and every answer slot that AI reads gets unchecked (R29).
+// AI is none, and every answer slot that AI reads gets unchecked.
 var ErrNotValid = errors.New("not valid")
 
 // reasons is the table of the reasons of the observation, each with the reason of the verdict it
 // gives. A reason that the package adds after this release is not in it, and not valid to this
-// release (R29).
+// release.
 var reasons = map[observationv1.Unreadable]verdict.Reason{
 	observationv1.Unreadable_UNREADABLE_BLANK:                 verdict.Blank,
 	observationv1.Unreadable_UNREADABLE_ILLEGIBLE:             verdict.Illegible,
@@ -197,7 +197,7 @@ func listOf(places []string) string {
 // module format's numbers has it.
 func isWhiteSpace(r rune) bool { return unicode.Is(unicode.White_Space, r) }
 
-// validBox says whether a crop_box is valid: from 0 to 1000, ymin < ymax and xmin < xmax (R53 spec).
+// validBox says whether a crop_box is valid: from 0 to 1000, ymin < ymax and xmin < xmax.
 func validBox(b *observationv1.CropBox) bool {
 	for _, n := range []int32{b.GetYmin(), b.GetXmin(), b.GetYmax(), b.GetXmax()} {
 		if n < 0 || n > 1000 {
@@ -440,8 +440,8 @@ func tapsOf(t task, tapped []Tapped) (map[string]*string, error) {
 // Essay says how the submission of an essay ends on its observation: SubmissionAssessment when it
 // gives the essay's text, which goes on to the assessment by the rubric, without the picture;
 // SubmissionUnreadable when the sheet is blank or illegible, and the learner writes it again; and
-// SubmissionUnchecked when there is no observation, nil — AI failed, or a limit ran out (R75 spec,
-// R87 spec). A rubric normalizes nothing, so the text is the value as the reader gave it. An error
+// SubmissionUnchecked when there is no observation, nil — AI failed, or a limit ran out.
+// A rubric normalizes nothing, so the text is the value as the reader gave it. An error
 // gives no end: the task is no essay, whose one answer slot is bound sheet; or the observation is
 // not valid, ErrNotValid, and the submission then ends unchecked.
 func Essay(items []formatv0.Item, o *observationv1.Observation) (Submission, error) {

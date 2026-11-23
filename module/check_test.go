@@ -539,7 +539,7 @@ func ExampleCheck() {
 }
 
 // The check keeps the value of each file of a part that the YAML rules and its schema accept, and
-// knows whether every file of a part is such, for the rules that read them (R23).
+// knows whether every file of a part is such, for the rules that read them.
 func TestPartsThatPassed(t *testing.T) {
 	var all []string
 	for name := range base {

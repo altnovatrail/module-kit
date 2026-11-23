@@ -23,7 +23,7 @@ const MaxInteger = 1<<53 - 1
 
 // An Error is a value that the canonical text cannot hold, at its place in the value as a JSON
 // Pointer in URI fragment form, such as #/tasks/sum/items/0. Of a module that passed its check, it
-// is a fault of module-kit, not of the author (R09).
+// is a fault of module-kit, not of the author.
 type Error struct {
 	Pointer string
 	Message string
@@ -37,7 +37,7 @@ func (e *Error) Error() string {
 // to this: the members of an object in the order of the UTF-16 code units of their names, no
 // whitespace between tokens, an integer in decimal digits, in a string only ", \, the five short
 // escapes and \u00XX for the rest of U+0000 to U+001F, and every other character as it is; UTF-8,
-// with no byte order mark and no newline at the end (R09).
+// with no byte order mark and no newline at the end.
 //
 // value is a tree of map[string]any, []any, string, int64, bool and nil, as the reader of YAML
 // gives it once an integer that it gave as a double is an int64. Text stops with an *Error, rather
@@ -117,7 +117,7 @@ func (w *writer) value(value any, at []string) error {
 	return nil
 }
 
-// The short escapes; every other character from U+0000 to U+001F is written \u00XX (R09).
+// The short escapes; every other character from U+0000 to U+001F is written \u00XX.
 var short = map[rune]string{'"': `\"`, '\\': `\\`, '\b': `\b`, '\t': `\t`, '\n': `\n`, '\f': `\f`, '\r': `\r`}
 
 const hexDigits = "0123456789abcdef"

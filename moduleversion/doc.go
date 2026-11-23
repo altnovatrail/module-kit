@@ -1,6 +1,6 @@
 // Package moduleversion compares a new version of a module with its published ones: it finds the
 // part of the version that the change asks for, by the format's table of changes and parts, and
-// reports every change at its place (R89 spec, R101 spec; R13, R36). The CLI's diff calls it, and
+// reports every change at its place. The CLI's diff calls it, and
 // module-registry from stage 4.
 //
 // Compare reads each published package by the chain of digests, without the files of its device

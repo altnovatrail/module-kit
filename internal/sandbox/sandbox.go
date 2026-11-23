@@ -16,14 +16,14 @@ import (
 
 // options are the options of the dialect, those that the solvers of mathtrail-standalone run with:
 // Recursion stays off, so that a function that calls itself fails when it does, through a lambda
-// too (R88 spec). A value of its own each time, since the parser, the resolver and the compiler
+// too. A value of its own each time, since the parser, the resolver and the compiler
 // each take a pointer.
 func options() *syntax.FileOptions {
 	return &syntax.FileOptions{Set: true, While: true, TopLevelControl: true, GlobalReassign: true}
 }
 
 // builtins are the dialect's built-in names, by a list of its own rather than starlark.Universe,
-// which a process may add to (R88 spec; R28).
+// which a process may add to.
 var builtins = []string{
 	"None", "True", "False", "abs", "all", "any", "bool", "bytes", "chr", "dict", "dir", "enumerate", "fail", "float",
 	"getattr", "hasattr", "hash", "int", "len", "list", "max", "min", "ord", "print", "range", "repr", "reversed", "set",
@@ -33,25 +33,24 @@ var builtins = []string{
 func builtin(name string) bool { return slices.Contains(builtins, name) }
 
 // Limits are what one evaluation may take. Steps is the format's: the evaluation stops when the
-// count of steps on its thread, as go.starlark.net at the format's version counts them, reaches it
-// (R88 spec). Clock is module-kit's: the wall time after which it stops the evaluation (R11). Zero
-// is no limit.
+// count of steps on its thread, as go.starlark.net at the format's version counts them, reaches it.
+// Clock is module-kit's: the wall time after which it stops the evaluation (R11). Zero is no limit.
 type Limits struct {
 	Steps uint64
 	Clock time.Duration
 }
 
 // Predicate are the limits of a predicate: the format's steps, and module-kit's clock with a margin
-// over them (R11).
+// over them.
 var Predicate = Limits{Steps: 1_000_000, Clock: time.Second}
 
 // Solver are the limits of the solver of a template, for the top level of its program and every
 // call of solve together: the format's budget of steps, and module-kit's clock with a margin over
-// it (R11, R33).
+// it.
 var Solver = Limits{Steps: 100_000_000, Clock: time.Minute}
 
 // Why an evaluation stopped without its result. A context that is done stops it too, and then the
-// error is the context's, wrapped: that is the caller's stop, not the sandbox's (R28).
+// error is the context's, wrapped: that is the caller's stop, not the sandbox's.
 var (
 	ErrSteps = errors.New("the count of steps reached the limit")
 	ErrClock = errors.New("the clock stopped the evaluation")
@@ -59,7 +58,7 @@ var (
 )
 
 // ContextDone says whether an error of the sandbox is that of a context that is done: the caller's
-// stop, which gives no verdict and no breach (R28).
+// stop, which gives no verdict and no breach.
 func ContextDone(err error) bool {
 	return errors.Is(err, context.Canceled) || errors.Is(err, context.DeadlineExceeded)
 }
@@ -78,7 +77,7 @@ func CheckExpr(src string, names ...string) error {
 }
 
 // Eval evaluates the expression src, with env binding the names it is written on, on a thread of
-// its own with the limits and ctx (R11). src is checked first as CheckExpr checks it, on the names
+// its own with the limits and ctx. src is checked first as CheckExpr checks it, on the names
 // of env, so that it names nothing else even in a process that changed starlark.Universe.
 //
 // The error is the context's, wrapped, when ctx is done before the evaluation or stops it;
@@ -95,7 +94,7 @@ func Eval(ctx context.Context, limits Limits, src string, env starlark.StringDic
 }
 
 // A Func is an expression of the dialect compiled once on the names it is written on, so that it is
-// evaluated on many bindings of them (R32). It holds nothing that changes, so one Func is called
+// evaluated on many bindings of them. It holds nothing that changes, so one Func is called
 // from many goroutines at once.
 type Func struct {
 	names  []string
@@ -110,7 +109,7 @@ type Func struct {
 // The Func is a program of one statement, which assigns the parsed src to a global that names do not
 // hold: built from its tree rather than its text, so that it compiles whatever CheckExpr takes — a
 // comment, a line break — and is as deep to the parser as src, which a lambda around it would not be;
-// and with the steps of src, as Eval counts them (R32).
+// and with the steps of src, as Eval counts them.
 func Compile(src string, names ...string) (*Func, error) {
 	expr, err := checked(src, names)
 	if err != nil {
@@ -173,12 +172,12 @@ func CheckProgram(src string) error {
 func none(string) bool { return false }
 
 // A Program is a program of the dialect whose top level has run on a thread of its own, and whose
-// functions Call calls on the same thread (R33). The limits are the program's, not each call's: the
+// functions Call calls on the same thread. The limits are the program's, not each call's: the
 // steps of the top level and of every call count together against one limit, and one clock runs
 // from Exec to Close, as does the watch of ctx.
 //
 // Its globals are frozen once the top level has run, as Starlark freezes those of a module, so a
-// call changes nothing that the next one reads (R33). A Program is for one goroutine at a time.
+// call changes nothing that the next one reads. A Program is for one goroutine at a time.
 type Program struct {
 	thread   *thread
 	globals  starlark.StringDict
@@ -272,7 +271,7 @@ func run(ctx context.Context, limits Limits, evaluate func(*starlark.Thread) (st
 }
 
 // A thread is a thread of Starlark with limits and a context, for one evaluation, or for a program
-// and every call of its functions: with a print that writes nothing and no load (R28). The limit of
+// and every call of its functions: with a print that writes nothing and no load. The limit of
 // steps, the clock and ctx each cancel it with their own cause, and the first to come is the one
 // that an error names, as the thread keeps the first reason it is cancelled with. The interpreter
 // sees a cancel between its instructions and on the entry to each call, so a built-in function that
@@ -309,7 +308,7 @@ func (t *thread) end() {
 }
 
 // do recovers a panic of the interpreter. An evaluation that ends before the interpreter sees a
-// cancel keeps its own result or error, whatever cause comes as it ends (R28).
+// cancel keeps its own result or error, whatever cause comes as it ends.
 func (t *thread) do(evaluate func(*starlark.Thread) (starlark.Value, error)) (result starlark.Value, err error) {
 	defer func() {
 		if r := recover(); r != nil {

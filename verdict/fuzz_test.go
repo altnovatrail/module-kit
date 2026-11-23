@@ -21,7 +21,7 @@ func fuzzSlots() []AnswerSlot {
 
 // FuzzOfSlot judges any value in the answer slots of the cases: a value that is UTF-8 gets a verdict
 // and nothing else, and that verdict holds together with Same. The corpus is the values of the cases
-// and a run of 31 combining marks, which NFKC breaks by U+034F (R27).
+// and a run of 31 combining marks, which NFKC breaks by U+034F.
 func FuzzOfSlot(f *testing.F) {
 	for i, c := range slotCases {
 		if c.value != nil {

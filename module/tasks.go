@@ -11,7 +11,7 @@ import (
 )
 
 // The IDs of the rules of a task and of a lesson that need no check kind, no leak check and no
-// template (R26).
+// template.
 const (
 	RuleTaskKnownSkills     = "task.known-skills"
 	RuleTaskSkillRoles      = "task.skill-roles"
@@ -61,7 +61,7 @@ func namedSkills(task formatv0.Task) []skillsAt {
 	return named
 }
 
-// itemSkills gives the skills of an item, with their place: its own, or else its task's (R26).
+// itemSkills gives the skills of an item, with their place: its own, or else its task's.
 func itemSkills(task formatv0.Task, i int) skillsAt {
 	if item := task.Items[i]; item.Skills != nil {
 		return ownSkillsOf(item, i)
@@ -225,7 +225,7 @@ func (c *checker) ageCategories(rule, path string, categories []formatv0.AgeCate
 // pictures checks that the picture of every part of a list is a file of the module, in media/
 // (task.known-pictures, lesson.known-pictures). P is a part of a statement, of an explanation or of
 // a demo; a task's picture path may hold placeholders only in a template, which is checked through
-// its instances, each with its numbers in place (R52).
+// its instances, each with its numbers in place.
 func pictures[P formatv0.StatementPart | formatv0.ExplanationPart | formatv0.DemoPart](c *checker, rule, path string, media map[string]bool, parts []P, place ...string) {
 	for k, part := range parts {
 		var picture string
@@ -343,7 +343,7 @@ func (c *checker) suits(path string, lesson formatv0.Lesson, tasks map[int]forma
 // lesson B when a skill of A needs, through its prerequisites among the module's skills and theirs,
 // a skill of B that is not one of A's own skills. The order comes from the skill graph, so a graph
 // whose prerequisites run in a cycle, which breaks skill-graph.acyclic, gives no order, and the rule
-// waits for it, as a rule between parts waits for a file that its schema refuses (R26).
+// waits for it, as a rule between parts waits for a file that its schema refuses.
 func (c *checker) order(lessons map[string]formatv0.Lesson, g *formatv0.SkillGraph) {
 	if g == nil {
 		return

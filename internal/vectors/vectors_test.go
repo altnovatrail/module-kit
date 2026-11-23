@@ -54,8 +54,8 @@ const (
 
 // rule passes a case of a format rule: refused with the ID of the rule its folder names and with no
 // other, since a case breaks its rule and nothing else. The reader of YAML refuses a case of a rule
-// yaml.* (R21). The check of a module refuses a case laid out as a module, and a case in a file is
-// a file of the part its rule is of, which it checks on its own (R22).
+// yaml.*. The check of a module refuses a case laid out as a module, and a case in a file is
+// a file of the part its rule is of, which it checks on its own.
 func rule(v vector) error {
 	id := strings.Split(v.path, "/")[2]
 	rules, refusal, err := refuse(v, id)
@@ -123,8 +123,8 @@ type finding struct {
 }
 
 // checkPart checks a file of a part on its own: a part of the layout of a module by the check of a
-// module (R22), and the inventory of a package and the module index, which are no parts of a
-// module, by the YAML rules and the roots of their schemas (R23). A module index that its schema
+// module, and the inventory of a package and the module index, which are no parts of a
+// module, by the YAML rules and the roots of their schemas. A module index that its schema
 // accepts is held also to what the schema cannot say (indexForm).
 func checkPart(part string, data []byte) ([]finding, error) {
 	if !slices.Contains(layoutParts, part) {
@@ -145,7 +145,7 @@ func checkPart(part string, data []byte) ([]finding, error) {
 // indexForm gives what a module index that its schema accepts breaks, as indexFormProblems of
 // spec's format-check finds it: its root names another format version than FormatVersion, the one
 // in format/VERSION; or an entry lists teaches out of the order of the code units of their IDs,
-// which are ASCII (R35).
+// which are ASCII.
 func indexForm(value any) []finding {
 	index, err := schema.Decode[formatv0.ModuleIndex](value)
 	if err != nil {
@@ -209,7 +209,7 @@ func examplePart(v vector) ([]byte, []finding, error) {
 }
 
 // validExample passes a valid example of a part: valid against its schema, and breaking no rule
-// within its part that module-kit holds (R23).
+// within its part that module-kit holds.
 func validExample(v vector) error {
 	_, found, err := examplePart(v)
 	if err != nil {
@@ -223,7 +223,7 @@ func validExample(v vector) error {
 
 // invalidExample passes an invalid example of a part: it breaks its schema alone, and the
 // validator, reporting all its errors, reports one with the keyword its first line names at the
-// place it names (R23). Two places compare as the JSON Pointers they encode, since a fragment of a
+// place it names. Two places compare as the JSON Pointers they encode, since a fragment of a
 // URI may encode one in more than one way.
 func invalidExample(v vector) error {
 	data, found, err := examplePart(v)
@@ -308,7 +308,7 @@ func moduleExample(v vector) error {
 // open-view.yaml as read, as spec's format-check does, so that a field left out is told from one at
 // its zero value; and the value of formatv0/open that the function of the part gives with
 // open-view.yaml read strictly by that type, so that the library gives the open view in the type
-// that holds it (R24). Of a task, the digest of its open view is what digest.yaml holds (R51).
+// that holds it. Of a task, the digest of its open view is what digest.yaml holds.
 func openView(v vector) error {
 	name := strings.Split(v.path, "/")[2]
 	kind := partTypes[name]
@@ -362,8 +362,7 @@ func differ(what string, got, want any) error {
 }
 
 // leaks passes a case of the leak check: in each text, the leak check finds every key and leak
-// phrase of the task that the vector names, as the task writes them, and no other, in any order
-// (R30).
+// phrase of the task that the vector names, as the task writes them, and no other, in any order.
 func leaks(v vector) error {
 	var lv formatv0.LeakVector
 	if _, err := readVector(v.fsys, v.path, "leak-vector.schema.json", &lv); err != nil {
@@ -389,8 +388,8 @@ func leaks(v vector) error {
 }
 
 // randomDraws passes a case of the generator: the seed and the names, when given, derive the words
-// of state, and the stream that the words start gives each draw's value, in order (R10). Its
-// integers, written as strings, are read by strconv; a fraction is compared as a double (R31).
+// of state, and the stream that the words start gives each draw's value, in order. Its
+// integers, written as strings, are read by strconv; a fraction is compared as a double.
 func randomDraws(v vector) error {
 	var rv formatv0.RandomVector
 	if _, err := readVector(v.fsys, v.path, "random-vector.schema.json", &rv); err != nil {
@@ -473,7 +472,7 @@ func unsigned(text formatv0.Unsigned) (uint64, error) {
 // gets the numbers of inputs, in any order; and each attempt's seed picks the instance of the
 // attempt's numbers, the results of the solver among them as module-kit's own run of the solver
 // finds them, which is the attempt's instance, whatever the order of keys, and has its open view,
-// whose digest is the attempt's open_view_digest (R32; R33; R51).
+// whose digest is the attempt's open_view_digest.
 func templates(v vector) error {
 	var tv formatv0.TemplateVector
 	value, err := readVector(v.fsys, v.path, "template-vector.schema.json", &tv)
@@ -542,8 +541,8 @@ func templates(v vector) error {
 	return nil
 }
 
-// packages passes a case of packages: the package that module-kit builds of module/ is package.yaml
-// (R34). The canonical view, the listing of the device part and the inventory compare as their
+// packages passes a case of packages: the package that module-kit builds of module/ is package.yaml.
+// The canonical view, the listing of the device part and the inventory compare as their
 // canonical texts, so whatever the order of keys, and their digests and sizes, and the digest of
 // the package, pin those texts byte for byte. The results of a solver are module-kit's own run of
 // it, compared with the vector's in the canonical view. The package as files is read back by the
@@ -599,7 +598,7 @@ func packages(v vector) error {
 // indexes passes a case of the module index: the release that index.yaml gives — the previous
 // index, unless it is the first release, its tag and its withdrawals — with the package of each
 // module of modules/ builds the index that index.yaml gives, byte for byte as its canonical text, or
-// is refused by the rule it names and by no other (R35). The previous index goes to the build as
+// is refused by the rule it names and by no other. The previous index goes to the build as
 // its canonical text, as a release of modules holds it, and it reads back, as the index built does,
 // as the vector gives it.
 func indexes(v vector) error {
@@ -662,8 +661,8 @@ func indexes(v vector) error {
 // versions passes a case of versions of a module: the new version, module/, compared with every
 // published version, published/X.Y.Z/, gives the part of the version that version.yaml gives, or is
 // refused by the rule it names. A published version laid out as a module is built into its
-// package, which goes to the comparison as files, without device/, as the CI of modules gives it
-// (R36); one of an earlier version of the format is its files as they are, by the digest of
+// package, which goes to the comparison as files, without device/, as the CI of modules gives it;
+// one of an earlier version of the format is its files as they are, by the digest of
 // inventory.json. Each folder is named by the version its package names.
 func versions(v vector) error {
 	var vv formatv0.VersionVector
@@ -752,7 +751,7 @@ func asFiles(files map[string][]byte) map[string]*fstest.MapFile {
 	return m
 }
 
-// tiers passes a case of tiers: the tiers of skill_graph are skill_tiers (R25).
+// tiers passes a case of tiers: the tiers of skill_graph are skill_tiers.
 func tiers(v vector) error {
 	var tv formatv0.TierVector
 	if _, err := readVector(v.fsys, v.path, "tier-vector.schema.json", &tv); err != nil {
@@ -769,8 +768,8 @@ func tiers(v vector) error {
 }
 
 // verdicts passes a case of verdicts: each reading of the item gets the verdict, the reason and the
-// trap that the vector gives each answer slot, and the item the verdict it gives (R27). A predicate
-// runs in the sandbox of Starlark, with the limits of a predicate (R28).
+// trap that the vector gives each answer slot, and the item the verdict it gives. A predicate
+// runs in the sandbox of Starlark, with the limits of a predicate.
 func verdicts(v vector) error {
 	var vv formatv0.VerdictVector
 	if _, err := readVector(v.fsys, v.path, "verdict-vector.schema.json", &vv); err != nil {
@@ -827,7 +826,7 @@ func quoted(value *string) string {
 }
 
 // runners passes a case of each kind: nil when module-kit gives what the case says, and an error
-// that says why not otherwise (R20).
+// that says why not otherwise.
 var runners = withPaper(map[string]func(vector) error{
 	"examples/valid":   validExample,
 	"examples/invalid": invalidExample,
@@ -944,8 +943,7 @@ func classifyContracts(name string) (casePath, kind string, known bool) {
 	case len(parts) == 3 && parts[0] == "paper" && parts[1] == "v1" && strings.HasSuffix(parts[2], ".json") && paperRunners[strings.TrimSuffix(parts[2], ".json")] != nil:
 		return name, paperKind(strings.TrimSuffix(parts[2], ".json")), true
 	case len(parts) == 3 && parts[0] == "eval" && parts[1] == "v1":
-		// The rules the device and the runner share: canvas's CI and tutor's pass them, not
-		// module-kit's (R20).
+		// The rules the device and the runner share: canvas's CI and tutor's pass them, not module-kit's.
 		return "", "", true
 	}
 	return "", "", false
@@ -1033,14 +1031,13 @@ func kindsWithoutCase(cases []vector) []string {
 
 // Every example and test vector of spec.Format, and every vector of the observation and of the key
 // of a task from paper in contracts.Vectors, passes, and none is skipped, so a vector a new tag of spec brings comes with
-// its code. A file of a kind the test does not know fails it, and so does a kind left with no case
-// (R20; R42). The cases share nothing but the read-only file systems and tables of the test, so
+// its code. A file of a kind the test does not know fails it, and so does a kind left with no case.
+// The cases share nothing but the read-only file systems and tables of the test, so
 // they run in parallel, but for the verdicts of a predicate, which run one at a time and before the
 // rest, since a parallel subtest waits for its parent's function to return: two of them take the
 // predicate to its million steps, which under -race takes a good part of the sandbox's clock of a
-// second, and cases running beside them can push one past it (sandbox.Predicate; R59). ci-test
-// runs them in a go test of their own, after the rest, so that no other package runs beside them
-// (R60).
+// second, and cases running beside them can push one past it (sandbox.Predicate). ci-test
+// runs them in a go test of their own, after the rest, so that no other package runs beside them.
 func TestVectors(t *testing.T) {
 	cases, err := inventory(spec.Format, contracts.Vectors)
 	if err != nil {

@@ -63,7 +63,7 @@ func drawn(t *testing.T, before Stream, call func(*Stream), limit int) int {
 	return 0
 }
 
-// Each function draws as many integers as the format's text says (R10).
+// Each function draws as many integers as the format's text says.
 func TestDraws(t *testing.T) {
 	below := func(b uint64) func(*Stream) { return func(s *Stream) { s.Below(b) } }
 	between := func(a, c int64) func(*Stream) { return func(s *Stream) { s.Between(a, c) } }

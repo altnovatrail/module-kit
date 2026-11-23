@@ -7,7 +7,7 @@ import (
 )
 
 // Time gives a value as a time reads it: steps 1 to 5 of a number, with the spaces at either end
-// dropped, so that "07:30." is "07:30"; "" when it is blank (R52).
+// dropped, so that "07:30." is "07:30"; "" when it is blank.
 func Time(value string) string {
 	return trimmed(upToStep5(value))
 }

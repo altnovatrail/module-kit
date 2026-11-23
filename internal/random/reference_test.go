@@ -22,7 +22,7 @@ import (
 
 // The reference is Go's: the generator PCG of math/rand/v2 with its methods Uint64, Uint64N,
 // Int64N, Float64 and Perm, and FNV-1a of 64 bits of hash/fnv, which the format's text names beside
-// its own. It lives in the tests alone (R10), and a failure here after a move to a newer Go means
+// its own. It lives in the tests alone, and a failure here after a move to a newer Go means
 // that Go changed its streams: a question for spec, while the code stays as the format's text has
 // it.
 
@@ -256,7 +256,7 @@ func TestStateAsPCGWritesIt(t *testing.T) {
 	}
 }
 
-// The generator, the five functions and the words of a place are Go's, on every go test (R31).
+// The generator, the five functions and the words of a place are Go's, on every go test.
 func TestReference(t *testing.T) {
 	for _, in := range fixedInputs(t) {
 		compare(t, in)
@@ -266,7 +266,7 @@ func TestReference(t *testing.T) {
 	}
 }
 
-// The corpus is the inputs of TestReference that do not depend on the generator (R31).
+// The corpus is the inputs of TestReference that do not depend on the generator.
 func FuzzReference(f *testing.F) {
 	for _, in := range fixedInputs(f) {
 		f.Add(in.high, in.low, in.bound, in.from, in.to, in.count, in.seed, in.names)

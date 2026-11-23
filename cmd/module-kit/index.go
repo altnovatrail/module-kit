@@ -14,7 +14,7 @@ import (
 	"github.com/altnovatrail/module-kit/moduleindex"
 )
 
-// index builds the module index of a release of modules within the shared release (R63 spec; R40):
+// index builds the module index of a release of modules within the shared release:
 //
 //	module-kit index (--previous <module-index.json> | --first) --tag vX.Y.Z
 //	    (--withdrawals <withdrawals.yaml> | --no-withdrawals) --out <file> <package folder>...

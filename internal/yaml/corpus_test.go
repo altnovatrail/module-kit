@@ -10,8 +10,7 @@ import (
 
 // Every YAML file of the format but the vectors of the rules yaml.* keeps those rules — the
 // examples, invalid ones too, and the other vectors — so the reader reads each with no breach. It
-// holds each move to a newer go-yaml too, since the format's files use most of what YAML 1.2.2 has
-// (R21).
+// holds each move to a newer go-yaml too, since the format's files use most of what YAML 1.2.2 has.
 func TestReadsTheFormat(t *testing.T) {
 	read := 0
 	err := fs.WalkDir(spec.Format, ".", func(name string, entry fs.DirEntry, err error) error {

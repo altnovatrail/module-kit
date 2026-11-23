@@ -21,8 +21,7 @@ func Units(c formatv0.Check) []string {
 // normal form by its notation, ChoiceOf, always; a number, a fraction and a predicate, its value in
 // the kind's notation, exactly, written in lowest terms; a time, its hours and its minutes, each as a
 // number, when it is in the notation of a time read. units are the forms of a number's units, as
-// Units gives them. The verdict and the comparison of the versions of a module compare by it alike
-// (R36).
+// Units gives them. The verdict and the comparison of the versions of a module compare by it alike.
 func Compared(c formatv0.Check, units []string, text string) (string, bool) {
 	switch c.Kind {
 	case formatv0.CheckKindChoice:

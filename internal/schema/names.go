@@ -16,7 +16,7 @@ import (
 // (santhosh-tekuri/jsonschema#276). An error the vocabulary adds gets a copy of the place. collect
 // leaves out the validator's own error of propertyNames and keeps this one: they fail on the same
 // names, so the vocabulary does not change whether a value passes. A release with the fix is a
-// reason to remove it (R23).
+// reason to remove it.
 var propertyNames = &jsonschema.Vocabulary{
 	URL: "https://altnovatrail.github.io/module-kit/vocabulary/property-names",
 	Compile: func(ctx *jsonschema.CompilerContext, obj map[string]any) (jsonschema.SchemaExt, error) {

@@ -19,7 +19,7 @@ import (
 )
 
 // A Change is one change from a published version of a module to a new one, and the part of the
-// version that it raises (R36): where it is — the file of the package, modulepackage.ServerFile for
+// version that it raises: where it is — the file of the package, modulepackage.ServerFile for
 // the canonical view and modulepackage.DeviceFile for the listing of the device part, and the place
 // in it as a JSON Pointer in URI fragment form, in the new version, or in the published one for what
 // is gone — the numbers of the parameters of the instance of a template that it is of, and what
@@ -71,7 +71,7 @@ func (c *comparer) add(part Part, tokens []string, parameters formatv0.Numbers, 
 
 // Changes compares two packages of one module and one version of the format — before, the published
 // version, and after, the new one — and gives the part of the version that the comparison finds, the
-// highest that a change raises, and every change, by the format's table of changes and parts (R36):
+// highest that a change raises, and every change, by the format's table of changes and parts:
 // each row of the table at its place, and anything else that differs in the canonical view or in the
 // listing of the device part, but the version, as a patch at each place where the two differ. A
 // difference at or within the place of a change that a row gives is not given again. The changes come
@@ -458,8 +458,8 @@ func slotsOf(item formatv0.Item) []slot {
 	return s
 }
 
-// A meaning is what decides the verdict and the trap of an answer slot, as its check kind reads it
-// (R13, R36): the kind; for number, the key as a rational number and the set of the forms of its
+// A meaning is what decides the verdict and the trap of an answer slot, as its check kind reads it:
+// the kind; for number, the key as a rational number and the set of the forms of its
 // units; for fraction, the key as a rational number and the form, any when absent; for choice, the
 // notation, options when absent, and the key and the set of options — the check's own, or the
 // answer slot's when it is bound choice — each as a choice of that notation normalizes it; for time,
@@ -520,7 +520,7 @@ func meaningOf(s verdict.AnswerSlot) meaning {
 // instances compares a template of both versions through its instances, matched by the numbers of
 // their parameters, not by their places: parameters of other names match none, a major change; an
 // instance in one version alone is a minor change; and the checks of two matched ones compare, each
-// the task with its numbers in place (R13).
+// the task with its numbers in place.
 func (c *comparer) instances(id formatv0.TaskID, b, a formatv0.CanonicalView) error {
 	was, is := b.Tasks[id], a.Tasks[id]
 	names := slices.Sorted(maps.Keys(was.Template.Parameters))

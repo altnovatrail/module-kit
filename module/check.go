@@ -19,8 +19,8 @@ import (
 )
 
 // FormatVersion is the version of the module format that this library reads: the version of the
-// schemas that internal/schema holds, a copy of those of spec.Format, and of the test vectors (R23).
-// While the format is v0, it is the one version the library reads (R22, R52).
+// schemas that internal/schema holds, a copy of those of spec.Format, and of the test vectors.
+// While the format is v0, it is the one version the library reads.
 const FormatVersion = "0.4"
 
 // ReadsFormat says whether the library reads a module written in the format version v, as a
@@ -32,7 +32,7 @@ func ReadsFormat(v string) bool {
 // NewerFormat says whether v, a format version MAJOR.MINOR, is newer than FormatVersion: by its
 // major number, then its minor, each by its value, so that 0.10 is newer than 0.9. A v that is no
 // version MAJOR.MINOR is newer than none. The build of the module index reads a previous index by
-// it (R35).
+// it.
 func NewerFormat(v string) bool {
 	// MAJOR.MINOR are two numerals with no leading zero, and so is each number of X.Y.Z: the version
 	// MAJOR.MINOR orders as the version of a module MAJOR.MINOR.0.
@@ -62,7 +62,7 @@ type Breach struct {
 	Rule string
 	// The keyword of JSON Schema 2020-12 that fails, such as required or pattern, when the breach is
 	// of the schema; its place is then Pointer, where the schema holding the keyword applies, as an
-	// example of the format names it (R23).
+	// example of the format names it.
 	Keyword string
 	// The file or folder from the module's folder, with / between names, as the folder lists them;
 	// "." for the module's folder itself, as fs.FS names it, and empty for the file that CheckFile
@@ -105,7 +105,7 @@ func (b Breach) String() string {
 // its index —, and at one place in the order of their rules and keywords, so that it does not
 // depend on the order in which the folder lists its files. A report with no breach accepts the
 // module. Its warnings, in the order of their places, refuse nothing: a module with warnings and no
-// breach is accepted (R50). Check gives them and CheckFile none, since a warning has no test vectors.
+// breach is accepted. Check gives them and CheckFile none, since a warning has no test vectors.
 type Report struct {
 	Breaches []Breach
 	Warnings []Warning
@@ -128,7 +128,7 @@ func (r Report) String() string {
 //
 // The solvers of the module's templates run with ctx, one on each CPU that the process may use at
 // once, runtime.GOMAXPROCS(0), and the report holds their breaches in the order of their places, as
-// it holds every other (R38). Once ctx is done the check stops, and its error is that of ctx.
+// it holds every other. Once ctx is done the check stops, and its error is that of ctx.
 func Check(ctx context.Context, fsys fs.FS) (Report, error) {
 	report, _, err := CheckModule(ctx, fsys)
 	return report, err
@@ -138,7 +138,7 @@ func Check(ctx context.Context, fsys fs.FS) (Report, error) {
 // that breaks no rule, by the local ID of its task, in the order of the template's counter with the
 // results of its solver, as the canonical view holds them; none when the module has no template or
 // is refused. The build of a package takes them, so that a solver runs once for the check and the
-// package together (R38).
+// package together.
 func CheckModule(ctx context.Context, fsys fs.FS) (Report, map[string][]formatv0.Numbers, error) {
 	c := checker{fsys: fsys, parts: map[string]any{}}
 	p, err := c.check(ctx)
@@ -192,14 +192,14 @@ type checker struct {
 	// The value of each file of a part that the YAML rules and the schema of its part accept, by
 	// its path. A rule reads only a file that passed, and a rule between parts runs only when every
 	// file of a part passed (allParts), as format-check of spec has it: a file that its schema
-	// refuses breaks the schema and nothing more (R23).
+	// refuses breaks the schema and nothing more.
 	parts map[string]any
 	// The leak check of each task that a rule of the leak check searches for, by its path.
 	searches map[string]*leak.Search
 }
 
 // allParts says whether every file of a part passed, the manifest among them: a rule between parts
-// runs only then (R23).
+// runs only then.
 func (c *checker) allParts() bool {
 	if !slices.Contains(c.files, manifestPath) {
 		return false
@@ -228,7 +228,7 @@ func (c *checker) report() Report {
 }
 
 // check runs the rules of a whole module, the format version that the manifest names before all the
-// others (R22), and gives the parts that the rules read: none when the manifest stops the check.
+// others, and gives the parts that the rules read: none when the manifest stops the check.
 func (c *checker) check(ctx context.Context) (*parts, error) {
 	if err := c.list(); err != nil {
 		return nil, err
@@ -253,7 +253,7 @@ func (c *checker) check(ctx context.Context) (*parts, error) {
 
 // rules checks the rules of the parts on the files of a part that passed, read into their types
 // once, with the templates among them expanded with ctx: those within a part on each, and then, when
-// every file of a part passed, those between parts (R23). It gives the parts it read.
+// every file of a part passed, those between parts. It gives the parts it read.
 func (c *checker) rules(ctx context.Context) (*parts, error) {
 	p := newParts(false)
 	for path, value := range c.parts {

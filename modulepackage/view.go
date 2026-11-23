@@ -41,7 +41,7 @@ var (
 // canonicalView builds the canonical view of a module that passed its check: each part under its
 // member, as the JSON value of its file is, with an integer that the reader of YAML gave as a
 // double as an integer; skill_tiers, when it has a skill graph; and instances, when a task is a
-// template, with the results of its solver, as the check of the module counted them (R34).
+// template, with the results of its solver, as the check of the module counted them.
 func canonicalView(fsys fs.FS, files []string, instances map[string][]formatv0.Numbers) (map[string]any, error) {
 	view := map[string]any{}
 	for _, file := range files {
@@ -100,7 +100,7 @@ func memberOf(file string) (member, id string, ok bool) {
 }
 
 // integers gives a JSON value of the reader of YAML with every double that is an integer within
-// ±(2^53 − 1) — 50.0 or 5e1 — as that integer, as the canonical view holds it (R34). Any other
+// ±(2^53 − 1) — 50.0 or 5e1 — as that integer, as the canonical view holds it. Any other
 // double stays, and the canonical text refuses it.
 func integers(value any) any {
 	switch v := value.(type) {

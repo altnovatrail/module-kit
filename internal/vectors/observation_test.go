@@ -62,7 +62,7 @@ type observationCase struct {
 // options tapped, gives each item the verdicts that verdicts gives it. The vector is read strictly:
 // JSON with no field that it does not name, its canvas and items by the schema of a task and the
 // types of formatv0, and its observations by protojson, which refuses a field that the message
-// does not have (R29).
+// does not have.
 func observations(v vector) error {
 	data, err := fs.ReadFile(v.fsys, v.path)
 	if err != nil {

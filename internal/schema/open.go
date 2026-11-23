@@ -18,7 +18,7 @@ import (
 //
 // The view is the format's of a value valid against the schema at location; of another value Open
 // gives what the same walk gives. Like Validate, it panics on a location or a reference that names
-// nothing in the set, and it may be called from many goroutines at once (R24).
+// nothing in the set, and it may be called from many goroutines at once.
 func Open(location string, value any) any {
 	return format().open(location, value)
 }
@@ -118,7 +118,7 @@ func (s *set) passes(n subschema, value any) bool {
 
 // applicable gives the subschemas that start at a place, and every subschema they bring to it, that
 // apply to value and pass. A subschema reached twice — two references to one definition, or
-// references that run in a circle — is taken once (R24).
+// references that run in a circle — is taken once.
 func (s *set) applicable(value any, start ...subschema) []subschema {
 	var found []subschema
 	seen := map[string]bool{}

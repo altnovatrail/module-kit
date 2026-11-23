@@ -1,6 +1,6 @@
 // Package yaml reads a file of a module, YAML 1.2.2 under its Core schema, into a JSON value, and
 // refuses a file that breaks a rule yaml.*, naming the rule and its place, or that is not YAML
-// 1.2.2 at all (R45 spec).
+// 1.2.2 at all.
 //
 // go.yaml.in/yaml/v4 parses the file into its tree of nodes. It keeps some of YAML 1.1 and lets
 // through some of what YAML 1.2.2 refuses, so passes of this package go around it: text.go before

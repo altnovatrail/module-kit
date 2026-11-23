@@ -14,7 +14,7 @@ import (
 
 // The copy of page.yaml is format/page.yaml of spec.Format: the same file, byte for byte, of the
 // version that spec.Format holds. A move to a new tag of spec that changes it fails it until the
-// copy follows (R52).
+// copy follows.
 func TestPageIsSpecs(t *testing.T) {
 	want, err := fs.ReadFile(spec.Format, "page.yaml")
 	if err != nil {

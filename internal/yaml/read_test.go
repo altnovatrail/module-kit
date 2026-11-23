@@ -19,7 +19,7 @@ type readCase struct {
 }
 
 // The cases hold every rule, and each place where go-yaml reads otherwise than YAML 1.2.2 and a
-// pass of this package reads as YAML 1.2.2 does (R21). A case named after the YAML test suite is
+// pass of this package reads as YAML 1.2.2 does. A case named after the YAML test suite is
 // that case of it, data-2022-01-17.
 var readCases = []readCase{
 	// What is read.

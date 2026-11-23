@@ -36,7 +36,7 @@ type Leak struct {
 }
 
 // ErrTemplate is what a template gives: the leak check searches it through its instances, each a
-// task with the numbers of the instance in place of its placeholders (R30).
+// task with the numbers of the instance in place of its placeholders.
 var ErrTemplate = errors.New("leak: a template is searched through its instances, and an instance is a task with its numbers in place")
 
 // Search is what the leak check searches a text for, for one task: the key of every check of a
@@ -101,7 +101,7 @@ func (s *Search) In(text string) []Leak {
 // Numbers gives the numbers that the leak check reads in a text, each as it stands in the text's
 // normal form, in the order of the text: a key of a number or a fraction is found where one of them
 // has its value. A text of the whole module SHOULD hold none, and the check of a module warns of
-// each (R50). A byte of the text that is not UTF-8 counts as U+FFFD, as in Search.In.
+// each. A byte of the text that is not UTF-8 counts as U+FFFD, as in Search.In.
 func Numbers(text string) []string {
 	runes := []rune(form(text))
 	var written []string

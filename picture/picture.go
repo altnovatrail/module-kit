@@ -17,7 +17,7 @@ import (
 // MaxPixels is the most pixels a picture may have for Warnings to decode it: 1<<25, 33 554 432, such
 // as 5792 × 5792. A picture decodes into at most 8 bytes a pixel, so one takes at most 256 MiB, and a
 // file whose header names a larger size, as a picture packed to explode would, is not decoded but
-// warned of (R39).
+// warned of.
 const MaxPixels = 1 << 25
 
 // maxPixels is MaxPixels, which the fuzz test lowers.

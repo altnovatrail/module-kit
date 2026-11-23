@@ -99,7 +99,7 @@ func tokensOf(src string) ([]token, error) {
 // parenthesis, unary - and not is a level within the one around it, so -(a - (b)) nests three. The
 // dialect reads a space before an expression as an indent, and go.starlark.net at the version of the
 // format parses no deeper than about 75 parentheses, or 987 unary minus signs in a row, so every
-// expression of the subset is one of the dialect (R32, R102 spec).
+// expression of the subset is one of the dialect (R32).
 func typeOf(src string, names []string) (t exprType, err error) {
 	if strings.HasPrefix(src, " ") {
 		return "", errors.New("it begins with a space, where an expression begins with a token")
@@ -130,7 +130,7 @@ type problem string
 
 func (p problem) Error() string { return string(p) }
 
-// maxDepth is the most levels an expression of a template nests (R102 spec).
+// maxDepth is the most levels an expression of a template nests.
 const maxDepth = 64
 
 // parser reads the tokens of an expression by the grammar of the subset, and types each part as it

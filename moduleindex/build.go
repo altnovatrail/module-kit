@@ -17,7 +17,7 @@ import (
 	"github.com/altnovatrail/module-kit/modulepackage"
 )
 
-// File is the name of the module index among the files of a release of modules (R63 spec).
+// File is the name of the module index among the files of a release of modules.
 const File = "module-index.json"
 
 // The rules of the module index, which refuse to build an index rather than a module.
@@ -37,7 +37,7 @@ var (
 	// module-kit reads, or one that is not what a build writes — the canonical text of a value valid
 	// against the schema of the module index of the version module-kit reads, with teaches in order
 	// —, or none where the release is not the first, or one where it is. Such a release fails: it does
-	// not start a new index (R35).
+	// not start a new index.
 	ErrPrevious = errors.New("the previous index cannot be read")
 	// ErrRelease is a release of which no index can be built: a tag that is not one of a release of
 	// modules, withdrawals not in the form of $defs/withdrawals, a package that package
@@ -94,7 +94,7 @@ func (r *Refusal) Error() string {
 
 // Build builds the module index of a release by the format version module-kit reads,
 // FormatVersion of package module, and gives its file, module-index.json: the canonical text of the
-// index (R63 spec; R35). Every entry of the previous index stands in the new one as it was; a
+// index. Every entry of the previous index stands in the new one as it was; a
 // package of a version that the previous index names keeps that entry, its release among it; every
 // other package gets a new entry, which names the release's tag; and last, the release's
 // withdrawals are marked.

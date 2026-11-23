@@ -15,7 +15,7 @@ import (
 
 // The validator gives its errors as a tree, each node a keyword at a place in the value, with the
 // errors inside it as its causes. collect turns the tree into the errors that the examples of the
-// format name (R23):
+// format name:
 //
 //   - $ref, allOf, properties, items and if, then and else are never named: the keyword that
 //     failed inside them is. The validator gives the errors of properties, items, then and else

@@ -14,7 +14,7 @@ import (
 	"github.com/altnovatrail/module-kit/verdict"
 )
 
-// The IDs of the rules of the leak check on the texts of a module (R30).
+// The IDs of the rules of the leak check on the texts of a module.
 const (
 	RuleTaskNoLeaks   = "task.no-leaks"
 	RuleLessonNoLeaks = "lesson.no-leaks"
@@ -27,7 +27,7 @@ type searchedText struct {
 	text, place, at string
 	// phrasesOnly is set for a text piece of a line of a worked example on a workbook, which is
 	// searched for leak phrases but for no key: the keys of its lesson's pages are numbers that
-	// the example's lines write by their nature (R52).
+	// the example's lines write by their nature.
 	phrasesOnly bool
 }
 
@@ -40,8 +40,7 @@ func (t searchedText) said() string {
 
 // searchOf gives the leak check of the task at path, a task that is no template, built once for
 // every rule that searches for its keys and leak phrases. The check of a module reads a template
-// through its instances, each on a checker of its own, so a template here is a fault of module-kit
-// (R32).
+// through its instances, each on a checker of its own, so a template here is a fault of module-kit.
 func (c *checker) searchOf(path string, task formatv0.Task) *leak.Search {
 	if s, ok := c.searches[path]; ok {
 		return s
@@ -61,7 +60,7 @@ func (c *checker) searchOf(path string, task formatv0.Task) *leak.Search {
 // before the task is solved: its givens, unknown and leading question, the text of each of its trap
 // values and the simpler case of each of its items; and, of an instance of a template, the picture
 // path of each part of its statement and its solution, whose names the numbers of the instance fill.
-// The picture path of a task that is no template is its author's name, and not searched (R52).
+// The picture path of a task that is no template is its author's name, and not searched.
 // They are in its file, so the rule searches them within the part.
 func ownShown(task formatv0.Task, instance bool) []searchedText {
 	var texts []searchedText
@@ -179,7 +178,7 @@ func namedTraps(task formatv0.Task) []trapAt {
 // taskLeaks checks task.no-leaks on texts of a module: none of them holds a key or a leak phrase of
 // the task, as the leak check finds them. A breach for each text that holds one, naming each it
 // holds. It reads a task that is no template: a template is searched through its instances, each a
-// task of its own (R32).
+// task of its own.
 func (c *checker) taskLeaks(path string, task formatv0.Task, texts []searchedText) {
 	if len(texts) == 0 {
 		return
@@ -196,8 +195,7 @@ func (c *checker) taskLeaks(path string, task formatv0.Task, texts []searchedTex
 // lessonShown gives the texts of a lesson that lesson.no-leaks searches, each at its place: its
 // title, the paragraphs, the alt of the pictures and the texts of the numbered lists of each
 // explanation, the paragraphs and the alt of the pictures of each worked example's statement and
-// demo, and, for leak phrases alone, the text pieces of the lines of a worked example on a workbook
-// (R52).
+// demo, and, for leak phrases alone, the text pieces of the lines of a worked example on a workbook.
 func lessonShown(lesson formatv0.Lesson) []searchedText {
 	texts := []searchedText{{text: string(lesson.Title), place: at("title")}}
 	add := func(text *formatv0.Text, alt *string, tokens ...string) {
@@ -241,8 +239,7 @@ func lessonShown(lesson formatv0.Lesson) []searchedText {
 // the module that it names, as the leak check finds them, after the task's segment too, since the
 // open view of a lesson reaches the learner's app whole. A breach for each text and each task whose
 // keys or leak phrases it holds. A task that the module does not have breaks lesson.known-tasks
-// instead, and a template is searched through its instances, for the keys and leak phrases of each
-// (R32).
+// instead, and a template is searched through its instances, for the keys and leak phrases of each.
 func (c *checker) lessonLeaks(path string, lesson formatv0.Lesson, p parts) {
 	named := lessonTasks(lesson, p.tasks)
 	texts := lessonShown(lesson)
@@ -302,8 +299,8 @@ func leaksSaid(task formatv0.Task, file string, found []leak.Leak) string {
 // workbook, for one task that the lesson names, at the segment segment, a task of the file file that
 // is no template: an instance, for a template. A line of the example solves a line of the task when
 // it has the same pieces in the same order, its texts are those of the task's line in their normal
-// form, and the value of each box is equal, as its box's check compares it, to that box's key
-// (R52). A box whose check has no key, a predicate's, is solved by no value.
+// form, and the value of each box is equal, as its box's check compares it, to that box's key.
+// A box whose check has no key, a predicate's, is solved by no value.
 func (c *checker) exampleSolves(path string, lesson formatv0.Lesson, segment int, file string, task formatv0.Task) {
 	for i, s := range lesson.Segments {
 		example := s.WorkedExample

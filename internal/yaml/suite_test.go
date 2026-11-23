@@ -42,12 +42,12 @@ func suiteCases() ([]suiteCase, error) {
 }
 
 // The cases of the suite the reader does not pass, each with why. A case in the list that passes
-// fails the test, so the list only shrinks (R21).
+// fails the test, so the list only shrinks.
 var suiteUnpassed = map[string]string{}
 
 // Each case of the YAML test suite, data-2022-01-17, that YAML 1.2.2 refuses, the reader refuses
 // too. Each case it reads, the reader reads to the value its JSON holds, or refuses by a rule
-// yaml.* and not as not YAML (R21).
+// yaml.* and not as not YAML.
 func TestYAMLTestSuite(t *testing.T) {
 	cases, err := suiteCases()
 	if err != nil {

@@ -150,7 +150,7 @@ func written(o *observationv1.Observation) string {
 }
 
 // Each reason of the package is in the table, named as the value is, in lower case and without its
-// prefix: a reason that a new tag of spec adds fails this test until the table names it (R29).
+// prefix: a reason that a new tag of spec adds fails this test until the table names it.
 func TestReasonsAreThePackages(t *testing.T) {
 	values := observationv1.Unreadable(0).Descriptor().Values()
 	for i := range values.Len() {
@@ -432,7 +432,7 @@ func TestEssay(t *testing.T) {
 }
 
 // A value that is not UTF-8 is not valid since no message of the package holds one: protobuf-go
-// refuses to write it, as proto3 has a string hold UTF-8 alone (R29).
+// refuses to write it, as proto3 has a string hold UTF-8 alone.
 func TestNotUTF8IsNoMessage(t *testing.T) {
 	if _, err := proto.Marshal(boxesRead("5\xff", "3/4", ">", "6")); err == nil || !strings.Contains(err.Error(), "invalid UTF-8") {
 		t.Errorf("proto.Marshal writes a value that is not UTF-8: %v", err)

@@ -46,7 +46,7 @@ type Step struct {
 }
 
 // Steps gives the next versions after a version of a module, each by one of its parts, and the part
-// that each step raises, in the order patch, minor and major of the number it raises (R13). From
+// that each step raises, in the order patch, minor and major of the number it raises. From
 // X.Y.Z with X from 1 on, X.Y.(Z+1) is a patch, X.(Y+1).0 a minor and (X+1).0.0 a major. While X is
 // 0, y plays the major, as Cargo reads it: from 0.y.z with y from 1 on, 0.y.(z+1) is a minor, which
 // serves a patch too, and 0.(y+1).0 and 1.0.0 are majors; and from 0.0.z, 0.0.(z+1), 0.1.0 and
@@ -91,7 +91,7 @@ func StepPart(from, to string) (Part, error) {
 }
 
 // SameMajor says whether two versions of a module are of the same major, as diff reads it and api
-// does when it moves a learner to a newer version of a module (R36): one X from 1 on, one 0.y for y
+// does when it moves a learner to a newer version of a module: one X from 1 on, one 0.y for y
 // from 1 on, and each 0.0.z alone.
 func SameMajor(a, b string) (bool, error) {
 	v, err := semver.Parse(a)

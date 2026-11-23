@@ -18,7 +18,7 @@ import (
 )
 
 // solverLimits are the limits that the solver of a template runs with: sandbox.Solver, the format's
-// budget and module-kit's clock (R11), which a test of the clock lowers.
+// budget and module-kit's clock, which a test of the clock lowers.
 var solverLimits = sandbox.Solver
 
 // Inputs gives the names of the numbers that the solver of a template gets on each instance, in the
@@ -27,8 +27,7 @@ var solverLimits = sandbox.Solver
 // item, a text piece of its line, an option of an answer slot bound choice. A number that only a
 // closed field shows — a key, a trap value, the solution — is not among them, so the solver solves
 // the task that the learner sees and cannot read an answer that an expression already gives. The
-// open view is that of the template as it is written, as spec's second implementation builds it
-// (R33).
+// open view is that of the template as it is written, as spec's second implementation builds it.
 //
 // A task that is no template gives none, and a string that breaks task.placeholders gives none of
 // its own.
@@ -73,14 +72,14 @@ func beforeTheFirst(reason string) Breach {
 // solve runs the solver of a template on its instances: the program once, on one thread within
 // solverLimits, and then solve on every instance in their order, on the same thread, each with a
 // frozen dict of the numbers that Inputs names, inserted in their order. The top level and every call
-// count their steps together, and one clock runs for them all: the budget is the template's, not each
-// instance's (R11, R33).
+// count their steps together, and one clock runs for them all: the budget is the template's, not
+// each instance's.
 //
 // It gives the numbers of every instance with the results that solve returns among them; or the
 // breach of task.template-solver where the solver first fails — before the first instance, or on an
 // instance, named by its numbers —, since the steps and the clock that remain after a failure tell
 // nothing of the instances after it; or the error of ctx when ctx is done before the solver ends,
-// which is no breach (R11).
+// which is no breach.
 func solve(ctx context.Context, task formatv0.Task, instances []formatv0.Numbers) ([]formatv0.Numbers, *Breach, error) {
 	solver := task.Template.Solver
 	program, err := sandbox.Exec(ctx, solverLimits, solver.Program)

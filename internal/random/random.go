@@ -11,11 +11,11 @@ import (
 )
 
 // ErrDomain is what a function gives on an argument outside its domain, and a place on a name that
-// is none: the function draws no integer, and no place is built (R10).
+// is none: the function draws no integer, and no place is built.
 var ErrDomain = errors.New("outside the domain")
 
 // The multiplier M and the increment C of a step, each a high and a low word, and the multiplier
-// of DXSM, as the format's text gives them (R10).
+// of DXSM, as the format's text gives them.
 const (
 	multiplierHigh = 2549297995355413924  // 0x2360ed051fc65da4
 	multiplierLow  = 4865540595714422341  // 0x4385df649fccf645

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Runs one binary of a release on the runner of its own system, as the job Binaries of ci.yml does on
-# each of the six (R41). Bash on Linux, macOS and the Git Bash of
+# each of the six. Bash on Linux, macOS and the Git Bash of
 # Windows, with nothing but coreutils.
 #
 #   .github/binaries.sh <dist> <binary> <samples> <reference>

@@ -1,6 +1,6 @@
 # module-kit's own recipes. The ci- ones are what .github's shared go.yml runs, one job each, in
 # the toolchain stage of .devcontainer/Dockerfile, and ci-lint, ci-vuln and ci-licenses in
-# toolchain-core once toolchain holds more than it (R16 .github, R47 .github; R04): so a tool they
+# toolchain-core once toolchain holds more than it: so a tool they
 # run goes into the core, and one only the tests need, into toolchain. Their names are the same in
 # every Go repository of NovaTrail, and what they run is this repository's own.
 
@@ -19,8 +19,8 @@ build:
     go build -o bin/module-kit ./cmd/module-kit
 
 # What .github's shared release.yml runs to build a release, in the toolchain-core stage of the
-# commit it releases, from that commit's tree with no git in it, and then signs every file (R07;
-# R18 .github, R47 .github). dist/ is made afresh and holds plain files alone: the CLI for each
+# commit it releases, from that commit's tree with no git in it, and then signs every file (R07).
+# dist/ is made afresh and holds plain files alone: the CLI for each
 # platform below, built without cgo and named module-kit_<version>_<os>_<arch>, the licenses a
 # binary has to come with, and SHA256SUMS over the rest.
 # Build a release's files into dist/, for a version such as v0.1.0.
@@ -42,7 +42,7 @@ release-files version:
     # processes: each target compiles packages of its own, and one build after another leaves cores
     # idle in each link. A binary is the same as one built alone. Each build writes what it says to
     # a log of its own, outside dist/, which a failure prints under its platform; a recipe that stops
-    # before the builds end stops them too (R59).
+    # before the builds end stops them too.
     logs="$(mktemp -d)"
     pids=()
     trap 'kill "${pids[@]}" 2> /dev/null || true; rm -rf "$logs"' EXIT
@@ -79,10 +79,10 @@ release-files version:
     just release-licenses dist
     (cd dist && sha256sum -- module-kit_* LICENSE LICENSE-* NOTICE-* > SHA256SUMS)
 
-# What the job Binaries of ci.yml runs each binary of a release on (R41): an example module with
+# What the job Binaries of ci.yml runs each binary of a release on: an example module with
 # templates and a solver, a test vector of a rule, the test vector of a package with a solver and
 # the modules of the test vector of a first release, copied from spec's Go module at the version
-# go.mod requires (R20), as CI checks out no submodule. The Go module cache holds its files
+# go.mod requires, as CI checks out no submodule. The Go module cache holds its files
 # read-only, and the copies are made writable.
 # Copy the samples that the job Binaries runs the binaries on into a folder.
 binaries-samples folder:
@@ -101,7 +101,7 @@ binaries-samples folder:
 # The modules besides the standard library that the CLI is built from, on any of the six platforms
 # of a release, each with the name its license takes in a release: LICENSE-<name>, and NOTICE-<name>
 # beside it when the module has a NOTICE. spec's LICENSE is this repository's own, Apache-2.0 word
-# for word, so LICENSE stands for it, and the recipe checks that it still is (R38).
+# for word, so LICENSE stands for it, and the recipe checks that it still is.
 THIRD_PARTY := "go.yaml.in/yaml/v4=go-yaml github.com/santhosh-tekuri/jsonschema/v6=jsonschema go.starlark.net=starlark golang.org/x/text=x-text golang.org/x/sys=x-sys golang.org/x/image=x-image"
 SAME_LICENSE := "github.com/altnovatrail/spec"
 
@@ -158,7 +158,7 @@ ci-lint:
     go vet ./...
     # gopls comes into the devcontainer image from its lock file, .devcontainer/gopls/, the go kind's
     # of spec's repo-template, and the image's build stops when the gopls it built does not name
-    # GOPLS_VERSION (R102 spec; R19, R51). CI never builds that stage, so the two are held to each
+    # GOPLS_VERSION (R19). CI never builds that stage, so the two are held to each
     # other here: a pull request that raises one alone, as a security update of Dependabot may, fails
     # here.
     lock="$(sed -n 's/^[[:space:]]*\(require[[:space:]]\{1,\}\)\{0,1\}golang\.org\/x\/tools\/gopls[[:space:]]\{1,\}v\([^[:space:]]\{1,\}\).*$/\2/p' \
@@ -170,12 +170,12 @@ ci-lint:
         exit 1
     fi
     # A module that the CLI comes to be built from, without its license in a release, fails here,
-    # on its pull request, rather than at the release (R38).
+    # on its pull request, rather than at the release.
     licenses="$(mktemp -d)"
     trap 'rm -rf "$licenses"' EXIT
     just release-licenses "$licenses"
     # The code takes spec's files from its Go modules, and the documents from the submodule spec/,
-    # and the two move together, to one tag (R64 spec; R20): the commit the index records for the
+    # and the two move together, to one tag: the commit the index records for the
     # submodule is the one the Go module proxy names as the origin of each module's version, and
     # contracts carries the number of spec's tag. The index is the commit's tree in CI, which checks
     # out no submodule, and here it holds a move to a new tag once spec/ is added, before a commit.
@@ -208,13 +208,13 @@ CLOCK_PACKAGES := "./internal/sandbox ./verdict"
 PREDICATE_CASES := '^TestVectors$/^format$/^vectors$/^verdicts$/^predicate$'
 
 # The coverage goes into coverage/go.out, one Go profile, which the job coverage of .github's shared
-# go.yml sends to Codecov, as "Go / coverage" (R48 spec; R18). Go counts statements and leaves the
+# go.yml sends to Codecov, as "Go / coverage". Go counts statements and leaves the
 # tests themselves out; a package that no test runs is in it too, its statements at zero. Every
 # test counts for every package of the module, -coverpkg=./...: the test of vectors in
-# internal/vectors runs the code of the other packages, and its lines count where they are (R20).
+# internal/vectors runs the code of the other packages, and its lines count where they are.
 # The tests at the clock run after the rest, one package at a time with nothing beside them: under
 # -race a Starlark step is several times slower, and packages running beside them pushed one past
-# the clock (R11, R60). The run of PREDICATE_CASES prints each case with its time, the margin on
+# the clock. The run of PREDICATE_CASES prints each case with its time, the margin on
 # this machine, and fails if it ran none, so that a folder spec renames cannot drop them unseen.
 # The profiles of the later runs join coverage/go.out without their mode line, as go test joins
 # the profiles of its packages.
