@@ -19,17 +19,17 @@ concurrency:
 jobs:
   secrets:
     name: Secrets
-    uses: altnovatrail/.github/.github/workflows/secrets.yml@f1c7e9e6f8245fdbdbc23c4091f3c26350e3a44e # v0.1.33
+    uses: altnovatrail/.github/.github/workflows/secrets.yml@baa18cde370b3515e85b180d0563cb3eaa4955f2 # v0.1.34
 
   # A pull request's commits are what it checks; a push to main has been checked as one.
   dco:
     name: DCO
     if: github.event_name == 'pull_request'
-    uses: altnovatrail/.github/.github/workflows/dco.yml@f1c7e9e6f8245fdbdbc23c4091f3c26350e3a44e # v0.1.33
+    uses: altnovatrail/.github/.github/workflows/dco.yml@baa18cde370b3515e85b180d0563cb3eaa4955f2 # v0.1.34
 
   documents:
     name: Documents
-    uses: altnovatrail/.github/.github/workflows/documents.yml@f1c7e9e6f8245fdbdbc23c4091f3c26350e3a44e # v0.1.33
+    uses: altnovatrail/.github/.github/workflows/documents.yml@baa18cde370b3515e85b180d0563cb3eaa4955f2 # v0.1.34
 
   # The repository's Go code, by its own ci- recipes in its toolchain stage, and the coverage of
   # its tests, which the shared workflow sends to Codecov. id-token: write is for its
@@ -40,7 +40,7 @@ jobs:
     permissions:
       contents: read
       id-token: write
-    uses: altnovatrail/.github/.github/workflows/go.yml@f1c7e9e6f8245fdbdbc23c4091f3c26350e3a44e # v0.1.33
+    uses: altnovatrail/.github/.github/workflows/go.yml@baa18cde370b3515e85b180d0563cb3eaa4955f2 # v0.1.34
 
   # The six binaries of a release, each run on a runner of its own system: what the binary of
   # linux/amd64 builds is the reference that every other runner's must equal, byte for byte.
@@ -141,7 +141,7 @@ jobs:
       # go mod verify checks on an exact hit alone. Only a push to main saves: the image at once,
       # the Go caches by the second call, once the binaries and their reference are built.
       - name: Toolchain image and Go caches
-        uses: altnovatrail/.github/.github/actions/toolchain@f1c7e9e6f8245fdbdbc23c4091f3c26350e3a44e # v0.1.33
+        uses: altnovatrail/.github/.github/actions/toolchain@baa18cde370b3515e85b180d0563cb3eaa4955f2 # v0.1.34
         with:
           check: binaries
 
@@ -166,7 +166,7 @@ jobs:
           if-no-files-found: error
 
       - name: Go caches into the cache
-        uses: altnovatrail/.github/.github/actions/toolchain@f1c7e9e6f8245fdbdbc23c4091f3c26350e3a44e # v0.1.33
+        uses: altnovatrail/.github/.github/actions/toolchain@baa18cde370b3515e85b180d0563cb3eaa4955f2 # v0.1.34
         with:
           check: binaries
           save: "true"
