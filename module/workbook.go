@@ -140,5 +140,5 @@ func noRoom(lines [][]page.Piece) (int, bool) {
 // roomSaid writes why a page refuses its lines at the line n: its row has no room, or it comes after
 // the most_items of page.yaml, which, with the numbers of page.yaml, rows run out long before.
 func roomSaid(n int, what string) string {
-	return fmt.Sprintf("the row of %s %d has no room on the page of a workbook, which lays the lines out as format/README.md, section 14, says, holds %d at most and shrinks nothing", what, n+1, page.MostItems())
+	return fmt.Sprintf("the row of %s %d has no room on the page of a workbook, which lays the lines out as format/README.md says, holds %d at most and shrinks nothing", what, n+1, page.MostItems())
 }

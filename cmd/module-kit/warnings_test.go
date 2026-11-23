@@ -37,6 +37,7 @@ func TestCheckWarns(t *testing.T) {
 	lines := strings.Split(strings.TrimSuffix(stdout.String(), "\n"), "\n")
 	want := file + ": warning: the pixel at x = 0, y = 0 has alpha 0 of 65535"
 	if status != statusAccepted || stderr.Len() > 0 || len(lines) != 2 || !strings.HasPrefix(lines[0], want) ||
+		!strings.HasSuffix(lines[0], "in forced colours, as format/README.md says of a picture") ||
 		lines[1] != accepted+": the module breaks no rule of the format 0.4" {
 		t.Errorf("status %d, stdout %q, stderr %q; want 0, a warning that begins %q and the last line", status, stdout.String(), stderr.String(), want)
 	}

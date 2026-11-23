@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://altnovatrail.github.io/spec/format/0.4/canonical-view.schema.json",
   "title": "Canonical view",
-  "description": "The canonical view of a module, the server part of its package (section 25 of the format text): each part of the module as its file gives it, a part that a module has many of as an object by local ID, the tier of each skill, and the numbers of every instance of each template. module-kit builds it from the module's folder by the format version that the manifest names, and so does spec's CI for the vectors of packages; sim reads it by these types. No field of it is open: the learner's app gets the open view of a part from the server, never the canonical view.",
+  "description": "The canonical view of a module, the server part of its package: each part of the module as its file gives it, a part that a module has many of as an object by local ID, the tier of each skill, and the numbers of every instance of each template. module-kit builds it from the module's folder by the format version that the manifest names, and so does spec's CI for the vectors of packages; sim reads it by these types. No field of it is open: the learner's app gets the open view of a part from the server, never the canonical view.",
   "type": "object",
   "properties": {
     "manifest": {
@@ -17,7 +17,7 @@
     },
     "skill_tiers": {
       "$ref": "#/$defs/skill_tiers",
-      "description": "The tier of each skill of the skill graph, which section 12 computes from its prerequisites: there when the module has a skill graph, and only then."
+      "description": "The tier of each skill of the skill graph, which the rules of the skill graph compute from its prerequisites: there when the module has a skill graph, and only then."
     },
     "traps": {
       "$ref": "traps.schema.json",
@@ -72,7 +72,7 @@
         },
         "minItems": 1,
         "maxItems": 10000,
-        "description": "The numbers of each instance of the template of this ID, in the order of its instances (section 23): the instance of an attempt is number below(count) of them, where count is how many there are."
+        "description": "The numbers of each instance of the template of this ID, in the order of its instances, as the rules of templates give them: the instance of an attempt is number below(count) of them, where count is how many there are."
       },
       "minProperties": 1,
       "description": "The instances of the templates among the tasks, when there is one, each template's under its local ID. The server picks the instance of an attempt among them and puts its numbers in the place of the template's placeholders, and so runs no Starlark when an attempt begins."
@@ -102,7 +102,7 @@
         "maximum": 9007199254740991,
         "description": "The tier of the skill: 1 when it has no prerequisite among the module's skills, and otherwise one above the highest tier of those prerequisites."
       },
-      "description": "The tier of every skill of a skill graph, by the skill's local ID (section 12)."
+      "description": "The tier of every skill of a skill graph, by the skill's local ID, as the rules of the skill graph compute it."
     },
     "numbers": {
       "type": "object",
@@ -116,7 +116,7 @@
         "description": "The number of this parameter, derived number or result in the instance."
       },
       "minProperties": 1,
-      "description": "The numbers of an instance of a template: every parameter, every derived number and every result of the solver of the template, by its name (sections 23 and 24)."
+      "description": "The numbers of an instance of a template: every parameter, every derived number and every result of the solver of the template, by its name."
     }
   }
 }

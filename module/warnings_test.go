@@ -51,7 +51,7 @@ func TestWarnings(t *testing.T) {
 		t.Errorf("the numbered module gives %v, %q and %v; want no breach and %q", shortReport(report), warningsOf(report), err, want)
 	}
 	if w := report.Warnings[0].String(); w != "manifest.yaml #/rung_templates/0: warning: the text holds the number \"1000\": "+
-		"a text of the whole module is searched for the keys of every task that can show it, so it SHOULD hold no number (format/README.md, section 20)" {
+		"a text of the whole module is searched for the keys of every task that can show it, so it SHOULD hold no number, by the leak rules of format/README.md" {
 		t.Errorf("a warning is written %q", w)
 	}
 

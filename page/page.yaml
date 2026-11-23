@@ -1,8 +1,9 @@
-# The numbers and the table of widths of the workbook's page (section 14): canvas lays every page out
-# by them, and task.workbook-page holds every task on a workbook to them. Units are those of the
-# page, 1000 × 1400, as the handwriting sheet's; a width of a character is in whole hundredths of the
-# type size. They are canvas's, R35 canvas at its commit 73807f2: each width the mean of Liberation
-# Sans and Liberation Serif, rounded. A change of a number or a width is a version of the format.
+# The numbers and the table of widths of the workbook's page: canvas lays every page out by them,
+# and task.workbook-page holds every task on a workbook to them. Units are those of the page,
+# 1000 × 1400, as the handwriting sheet's; a width of a character is in whole hundredths of the
+# type size. They are canvas's own, as canvas measured them at its commit 73807f2: each width the
+# mean of Liberation Sans and Liberation Serif, rounded. A change of a number or a width is a version
+# of the format.
 sheet: {width: 1000, height: 1400}
 numbers: {size: 30, box_width: 100, box_height: 100, line: 46, lead: 12, gap: 16, apart: 32, items: 32, gutter: 40, margin: 40}
 most_items: 99

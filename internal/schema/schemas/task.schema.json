@@ -988,7 +988,7 @@
           }
         }
       ],
-      "description": "The check of an answer slot: its kind and the kind's parameters. Section 15 of the format text says how each kind reads the value and gives its verdict."
+      "description": "The check of an answer slot: its kind and the kind's parameters. The format's rules of checks say how each kind reads the value and gives its verdict."
     },
     "written_check": {
       "$ref": "#/$defs/check",
@@ -1240,7 +1240,7 @@
       "type": "string",
       "minLength": 1,
       "maxLength": 1000,
-      "description": "An expression of the narrow subset of Starlark of section 23 of the format text: integers and names, + - * // %, comparisons, and, or and not."
+      "description": "An expression of the narrow subset of Starlark of the format's templates: integers and names, + - * // %, comparisons, and, or and not."
     }
   }
 }
