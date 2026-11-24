@@ -85,7 +85,7 @@
                 "anthropic.claude-code@2.1.331",
                 // OpenAI's coding agent, signed in with a ChatGPT plan. The extension brings
                 // its own CLI and sandbox, so the image installs nothing for it.
-                "openai.chatgpt@26.1117.41037",
+                "openai.chatgpt@26.1120.41243",
                 "redhat.vscode-yaml@2.0.0",
                 // Starts just-lsp, which the image installs at JUST_LSP_VERSION.
                 "nefrob.vscode-just-syntax@0.10.2",
