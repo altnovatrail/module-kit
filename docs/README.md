@@ -4,7 +4,7 @@ What is under `docs/` and beside it, and what README.md leaves out: how a releas
 
 - [architecture.md](architecture.md) — the component: what it does and does not do, its data and links, what is still to decide, and how it is built.
 - [decisions.md](decisions.md) — the decision log, `R01`…: what was decided, why, and what was rejected.
-- [sources.md](sources.md) — the records of external facts, each with its source, its date and its quote.
+- [sources.md](sources.md) — the records of the facts no run checks that the documents rest on, each with its address, the date read and a quote.
 - [measurements.md](measurements.md) — the results of measurements: the sandbox, the sessions of Claude Code, the speed of CI.
 - [plan/](plan/) — the archives of done epics, `plan/<epic>.md`, in Russian.
 - [RUN.md](../RUN.md) — the work plan, in epics, with the current epic; `run/` — the plan's other tables: [the epics for later](../run/EPICS.md), [the open questions](../run/QUESTIONS.md) and [the technical debt](../run/DEBT.md).

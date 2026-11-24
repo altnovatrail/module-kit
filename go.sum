@@ -1,7 +1,7 @@
-github.com/altnovatrail/spec v0.19.17 h1:53INNDz3ddu0WpaHXhsedS8/DMLYqli4dES78AjDXrc=
-github.com/altnovatrail/spec v0.19.17/go.mod h1:/JG4n8d9/3wY4DZg8V7PLoB1Y48uPjAyIBqoH/rwxXE=
-github.com/altnovatrail/spec/contracts v0.19.17 h1:fDUKZ6Edo4fkcwbGd82XdVD3aKhB65iyDXjKsrIGUS4=
-github.com/altnovatrail/spec/contracts v0.19.17/go.mod h1:omw6CYiQyGSNSQq+AlnKB6M18GNeWda+OPU1f2RyI8s=
+github.com/altnovatrail/spec v0.19.20 h1:2aA0ux5nLPvlVl0DWt3C/J0gY+uyhhD6BKpXbvzR9oc=
+github.com/altnovatrail/spec v0.19.20/go.mod h1:/JG4n8d9/3wY4DZg8V7PLoB1Y48uPjAyIBqoH/rwxXE=
+github.com/altnovatrail/spec/contracts v0.19.20 h1:fozlagXUYMRwFhO2ghj/8SvbQ2M5+nKr+amxO97sXQA=
+github.com/altnovatrail/spec/contracts v0.19.20/go.mod h1:omw6CYiQyGSNSQq+AlnKB6M18GNeWda+OPU1f2RyI8s=
 github.com/dlclark/regexp2 v1.11.0 h1:G/nrcoOa7ZXlpoa/91N3X7mM3r8eIlMBBJZvsz/mxKI=
 github.com/dlclark/regexp2 v1.11.0/go.mod h1:DHkYz0B9wPfa6wondMfaivmHpzrQ3v9q8cnmRbL6yW8=
 github.com/google/go-cmp v0.7.0 h1:wk8382ETsv4JYUZwIsn6YpYiWiBsYLSJiTsyBybVuN8=
