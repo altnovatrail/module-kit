@@ -110,7 +110,7 @@ func (s *source) nodeStart(line, column int) bool {
 
 // anchorChar says whether a character is an ns-anchor-char of YAML 1.2.2.
 func anchorChar(c rune) bool {
-	return c != ' ' && c != '\t' && c != '\n' && c != 0 && c != 0xfeff && !strings.ContainsRune(",[]{}", c)
+	return c != ' ' && c != '\t' && c != '\n' && c != 0 && c != byteOrderMark && !strings.ContainsRune(",[]{}", c)
 }
 
 // at records a breach at a place of go-yaml, whose line 0 is no place: the start of the file.
