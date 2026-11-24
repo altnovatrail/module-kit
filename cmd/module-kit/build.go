@@ -13,6 +13,13 @@ import (
 	"github.com/altnovatrail/module-kit/modulepackage"
 )
 
+// The modes of the files and folders the CLI writes, before the process's umask: their owner may
+// change them and everyone may read them, since a package or an index is written to be published.
+const (
+	worldReadableFile   fs.FileMode = 0o644
+	worldReadableFolder fs.FileMode = 0o755
+)
+
 // build builds the package of the module whose folder is dir into the folder out, as files: out must
 // not exist yet, or be an empty folder. A module that the format refuses has no package, and its
 // report goes to stdout as check writes it. The files are written in a folder of their own beside
@@ -68,7 +75,7 @@ func writePackage(out string, files map[string][]byte) (err error) {
 	}
 	defer func() { err = errors.Join(err, os.RemoveAll(temp)) }()
 	built := filepath.Join(temp, "package")
-	if err := os.MkdirAll(built, 0o755); err != nil {
+	if err := os.MkdirAll(built, worldReadableFolder); err != nil {
 		return err
 	}
 	if err := writeFiles(built, files); err != nil {
@@ -86,10 +93,10 @@ func writeFiles(root string, files map[string][]byte) error {
 			return fmt.Errorf("a file at %q is no path in the folder", name)
 		}
 		file := filepath.Join(root, filepath.FromSlash(name))
-		if err := os.MkdirAll(filepath.Dir(file), 0o755); err != nil {
+		if err := os.MkdirAll(filepath.Dir(file), worldReadableFolder); err != nil {
 			return err
 		}
-		if err := os.WriteFile(file, data, 0o644); err != nil {
+		if err := os.WriteFile(file, data, worldReadableFile); err != nil {
 			return err
 		}
 	}

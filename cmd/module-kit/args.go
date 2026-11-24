@@ -104,7 +104,7 @@ func writeNew(out string, data []byte) (err error) {
 	}
 	defer func() { err = errors.Join(err, os.RemoveAll(temp)) }()
 	written := filepath.Join(temp, "file")
-	if err := os.WriteFile(written, data, 0o644); err != nil {
+	if err := os.WriteFile(written, data, worldReadableFile); err != nil {
 		return err
 	}
 	if _, err := os.Lstat(out); err == nil {

@@ -5,6 +5,8 @@ import (
 	"math"
 	"strconv"
 	"strings"
+	"unicode"
+	"unicode/utf16"
 
 	goyaml "go.yaml.in/yaml/v4"
 )
@@ -242,10 +244,10 @@ func (r *reader) escapes(line, column int) (refused bool) {
 		case kind == '/':
 			r.breach(RuleCharacters, line, column, `the escape \/: write /`)
 		case width == 0 || err != nil:
-		case code >= 0xd800 && code <= 0xdfff:
+		case code <= unicode.MaxRune && utf16.IsSurrogate(rune(code)):
 			refused = true
 			r.breach(RuleCharacters, line, column, "the escape "+escape+", a surrogate")
-		case code > 0x10ffff:
+		case code > unicode.MaxRune:
 			refused = true
 			r.breach("", line, column, "the escape "+escape+" names no character")
 		}

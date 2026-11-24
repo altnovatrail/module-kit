@@ -343,7 +343,7 @@ func (l *layout) implicitKeys(n *goyaml.Node) {
 func (r *reader) byteOrderMarks() {
 	for line, text := range r.src.lines {
 		for column, c := range text {
-			if c != 0xfeff {
+			if c != byteOrderMark {
 				continue
 			}
 			inside := false

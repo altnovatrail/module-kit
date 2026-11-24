@@ -57,7 +57,7 @@ func codePoint(c rune) string {
 	return fmt.Sprintf("U+%04X", c)
 }
 
-const byteOrderMark = "\ufeff"
+const byteOrderMark = '\ufeff'
 
 // streamLevel is the second pass. It reads the lines that stand between documents: from the start
 // of the file and after each line "...", while they hold nothing but comments. There a byte order
@@ -82,9 +82,9 @@ func (r *reader) streamLevel(text string) string {
 	}
 	for i := range lines {
 		content := lines[i].content
-		if strings.HasPrefix(content, byteOrderMark) && (between || beforeDocument(lines[i:], content[len(byteOrderMark):])) {
+		if rest, ok := strings.CutPrefix(content, string(byteOrderMark)); ok && (between || beforeDocument(lines[i:], rest)) {
 			r.breaches = append(r.breaches, Breach{RuleEncoding, i + 1, 1, "a byte order mark"})
-			content = content[len(byteOrderMark):]
+			content = rest
 			r.shifted[i] = true
 		}
 		switch {

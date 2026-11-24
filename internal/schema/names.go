@@ -10,10 +10,10 @@ import (
 )
 
 // propertyNames is the vocabulary that checks propertyNames once more, to give its error the right
-// place. The validator, v6.0.3, gives the error of propertyNames the live slice of its place in the
-// value rather than a copy, and the validation of a later sibling writes over it, so that the error
-// names another place, which also depends on the order in which Go goes through a map
-// (santhosh-tekuri/jsonschema#276). An error the vocabulary adds gets a copy of the place. collect
+// place. The validator, at the version go.mod requires, gives the error of propertyNames the live
+// slice of its place in the value rather than a copy, and the validation of a later sibling writes
+// over it, so that the error names another place, which also depends on the order in which Go goes
+// through a map (santhosh-tekuri/jsonschema#276). An error the vocabulary adds gets a copy of the place. collect
 // leaves out the validator's own error of propertyNames and keeps this one: they fail on the same
 // names, so the vocabulary does not change whether a value passes. A release with the fix is a
 // reason to remove it.
