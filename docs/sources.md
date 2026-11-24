@@ -34,7 +34,7 @@ The rule "Go dependencies should be locked to verified versions" (the SonarCloud
 
 The two licenses:
 - Apache-2.0 — [LICENSE](../LICENSE), section 4 (a): "You must give any other recipients of the Work or Derivative Works a copy of this License";
-- Go's license — `LICENSE` at the root of Go 1.27.3 of the stage `toolchain`, `$(go env GOROOT)/LICENSE`, read 2026-10-21: "Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution". A Go binary carries the standard library.
+- Go's license — `LICENSE` at the root of Go 1.27.4 of the stage `toolchain`, `$(go env GOROOT)/LICENSE`, read 2026-11-24: "Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution". A Go binary carries the standard library.
 
 ### 3.10. gopls from a lock file
 
@@ -55,7 +55,7 @@ The code and documentation of a library at a version or commit are links beside 
 ### 4.1. JCS libraries for Go
 
 The Go module proxy and the GitHub API, read 2026-11-02:
-- `github.com/gowebpki/jcs` — `@latest` v1.0.2 of 2026-09-21, the license Apache-2.0. In `go.mod` — `require github.com/stretchr/testify v1.12.1`. Issue #5 "RFC 8785: reversed surrogate pair becomes U+FFFD and invalid UTF-8 passes through" was closed 2026-09-20. It reads a number as a double: `jcs.go` at the tag v1.0.2, lines 530 and 539, — `strconv.ParseFloat(value, 64)`, then `NumberToJSON(ieeeF64)`;
+- `github.com/gowebpki/jcs` — `@latest` v1.0.2 of 2026-09-21, the license Apache-2.0. In `go.mod` — `require github.com/stretchr/testify v1.12.1`. Issue #5 "RFC 8785: reversed surrogate pair becomes U+FFFD and invalid UTF-8 passes through" was closed 2026-09-20;
 - `github.com/cyberphone/json-canonicalization` — there are no version tags, `@latest` is the pseudo-version `v0.0.0-20261011152517-32a48195b9b2`. The license by the GitHub API is `NOASSERTION`, and the repository has no `go.mod`. Issue #33 "Go import (as documented) broken" has been open since 2025-03-11.
 
 ### 4.5. The JSON Schema validator
