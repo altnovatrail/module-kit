@@ -15,6 +15,7 @@ import (
 	"github.com/altnovatrail/spec/types/formatv0"
 	"github.com/altnovatrail/spec/types/formatv0/open"
 
+	"github.com/altnovatrail/module-kit/internal/formattree"
 	"github.com/altnovatrail/module-kit/internal/yaml"
 	"github.com/altnovatrail/module-kit/openview"
 )
@@ -116,8 +117,8 @@ var partTypes = map[string]partType{
 // the runners of those kinds can read them so. The runner of the open view reads both files of its
 // vectors itself, each by its type.
 func TestVectorFiles(t *testing.T) {
-	if parts := slices.Sorted(maps.Keys(partTypes)); !slices.Equal(parts, layoutParts) {
-		t.Errorf("the types are of the parts %v, and the layout has %v", parts, layoutParts)
+	if parts := slices.Sorted(maps.Keys(partTypes)); !slices.Equal(parts, formattree.LayoutParts) {
+		t.Errorf("the types are of the parts %v, and the layout has %v", parts, formattree.LayoutParts)
 	}
 	for _, pattern := range slices.Sorted(maps.Keys(vectorFiles)) {
 		names, err := fs.Glob(spec.Format, pattern)

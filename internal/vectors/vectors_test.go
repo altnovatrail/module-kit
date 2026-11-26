@@ -23,6 +23,7 @@ import (
 	"github.com/altnovatrail/spec/types/formatv0"
 
 	"github.com/altnovatrail/module-kit/internal/canonical"
+	"github.com/altnovatrail/module-kit/internal/formattree"
 	"github.com/altnovatrail/module-kit/internal/random"
 	"github.com/altnovatrail/module-kit/internal/schema"
 	"github.com/altnovatrail/module-kit/internal/yaml"
@@ -127,7 +128,7 @@ type finding struct {
 // module, by the YAML rules and the roots of their schemas. A module index that its schema
 // accepts is held also to what the schema cannot say (indexForm).
 func checkPart(part string, data []byte) ([]finding, error) {
-	if !slices.Contains(layoutParts, part) {
+	if !slices.Contains(formattree.LayoutParts, part) {
 		value, found, err := readBySchema(data, part+".schema.json")
 		if err == nil && len(found) == 0 && part == "module-index" {
 			found = indexForm(value)
@@ -313,12 +314,12 @@ func openView(v vector) error {
 	name := strings.Split(v.path, "/")[2]
 	kind := partTypes[name]
 	part := kind.value()
-	value, err := readVector(v.fsys, path.Join(v.path, "part.yaml"), name+".schema.json", part)
+	value, err := readVector(v.fsys, path.Join(v.path, formattree.CasePart), name+".schema.json", part)
 	if err != nil {
 		return err
 	}
 	want := kind.view()
-	expected, err := readOpenView(v.fsys, path.Join(v.path, "open-view.yaml"), want)
+	expected, err := readOpenView(v.fsys, path.Join(v.path, formattree.CaseOpenView), want)
 	if err != nil {
 		return err
 	}
@@ -336,7 +337,7 @@ func openView(v vector) error {
 		return nil
 	}
 	var dv digestVector
-	if _, err := readOpenView(v.fsys, path.Join(v.path, "digest.yaml"), &dv); err != nil {
+	if _, err := readOpenView(v.fsys, path.Join(v.path, formattree.CaseDigest), &dv); err != nil {
 		return err
 	}
 	digest, err := openview.TaskDigest(*part.(*formatv0.Task))
@@ -549,11 +550,11 @@ func templates(v vector) error {
 // chain of digests from its digest, and gives the same package.
 func packages(v vector) error {
 	var pv formatv0.PackageVector
-	value, err := readVector(v.fsys, path.Join(v.path, "package.yaml"), "package-vector.schema.json", &pv)
+	value, err := readVector(v.fsys, path.Join(v.path, formattree.CasePackage), "package-vector.schema.json", &pv)
 	if err != nil {
 		return err
 	}
-	folder, err := fs.Sub(v.fsys, path.Join(v.path, "module"))
+	folder, err := fs.Sub(v.fsys, path.Join(v.path, formattree.CaseModule))
 	if err != nil {
 		return err
 	}
@@ -603,17 +604,17 @@ func packages(v vector) error {
 // as the vector gives it.
 func indexes(v vector) error {
 	var iv formatv0.IndexVector
-	value, err := readVector(v.fsys, path.Join(v.path, "index.yaml"), "index-vector.schema.json", &iv)
+	value, err := readVector(v.fsys, path.Join(v.path, formattree.CaseIndex), "index-vector.schema.json", &iv)
 	if err != nil {
 		return err
 	}
 	release := moduleindex.Release{First: iv.Previous == nil, Tag: iv.Release, Withdrawals: iv.Withdrawals}
-	modules, err := fs.ReadDir(v.fsys, path.Join(v.path, "modules"))
+	modules, err := fs.ReadDir(v.fsys, path.Join(v.path, formattree.CaseModules))
 	if err != nil {
 		return err
 	}
 	for _, m := range modules {
-		folder, err := fs.Sub(v.fsys, path.Join(v.path, "modules", m.Name()))
+		folder, err := fs.Sub(v.fsys, path.Join(v.path, formattree.CaseModules, m.Name()))
 		if err != nil {
 			return err
 		}
@@ -666,10 +667,10 @@ func indexes(v vector) error {
 // inventory.json. Each folder is named by the version its package names.
 func versions(v vector) error {
 	var vv formatv0.VersionVector
-	if _, err := readVector(v.fsys, path.Join(v.path, "version.yaml"), "version-vector.schema.json", &vv); err != nil {
+	if _, err := readVector(v.fsys, path.Join(v.path, formattree.CaseVersion), "version-vector.schema.json", &vv); err != nil {
 		return err
 	}
-	folder, err := fs.Sub(v.fsys, path.Join(v.path, "module"))
+	folder, err := fs.Sub(v.fsys, path.Join(v.path, formattree.CaseModule))
 	if err != nil {
 		return err
 	}
@@ -677,13 +678,13 @@ func versions(v vector) error {
 	if err != nil {
 		return fmt.Errorf("module: %w", err)
 	}
-	entries, err := fs.ReadDir(v.fsys, path.Join(v.path, "published"))
+	entries, err := fs.ReadDir(v.fsys, path.Join(v.path, formattree.CasePublished))
 	if err != nil {
 		return err
 	}
 	var published []moduleversion.Published
 	for _, e := range entries {
-		dir := path.Join(v.path, "published", e.Name())
+		dir := path.Join(v.path, formattree.CasePublished, e.Name())
 		files, err := fs.Sub(v.fsys, dir)
 		if err != nil {
 			return err
@@ -828,21 +829,21 @@ func quoted(value *string) string {
 // runners passes a case of each kind: nil when module-kit gives what the case says, and an error
 // that says why not otherwise.
 var runners = withPaper(map[string]func(vector) error{
-	"examples/valid":   validExample,
-	"examples/invalid": invalidExample,
-	"examples/module":  moduleExample,
-	"rules":            rule,
-	"open-view":        openView,
-	"verdicts":         verdicts,
-	"leaks":            leaks,
-	"random":           randomDraws,
-	"templates":        templates,
-	"pages":            pages,
-	"tiers":            tiers,
-	"packages":         packages,
-	"indexes":          indexes,
-	"versions":         versions,
-	"observation/v1":   observations,
+	formattree.KindValidExample:   validExample,
+	formattree.KindInvalidExample: invalidExample,
+	formattree.KindModuleExample:  moduleExample,
+	formattree.KindRules:          rule,
+	formattree.KindOpenView:       openView,
+	formattree.KindVerdicts:       verdicts,
+	formattree.KindLeaks:          leaks,
+	formattree.KindRandom:         randomDraws,
+	formattree.KindTemplates:      templates,
+	formattree.KindPages:          pages,
+	formattree.KindTiers:          tiers,
+	formattree.KindPackages:       packages,
+	formattree.KindIndexes:        indexes,
+	formattree.KindVersions:       versions,
+	"observation/v1":              observations,
 })
 
 // withPaper adds to runners each file of paper/v1/, a kind of its own.
@@ -854,85 +855,6 @@ func withPaper(runners map[string]func(vector) error) map[string]func(vector) er
 }
 
 func paperKind(name string) string { return "paper/v1/" + name }
-
-// The parts of a module's layout, whose open views have vectors.
-var layoutParts = []string{"lesson", "manifest", "skill-graph", "solving-steps", "task", "techniques", "traps"}
-
-// The parts that have examples of their own, each with its schema: the parts of a module's layout,
-// the inventory of a package and the module index.
-var exampleParts = slices.Concat(layoutParts, []string{"inventory", "module-index"})
-
-// The check kinds that give verdicts, by the names of their folders; rubric gives none.
-var verdictKinds = []string{"choice", "fraction", "number", "predicate", "time"}
-
-var fileVectors = []string{"leaks", "pages", "random", "templates", "tiers"}
-
-// The vectors whose cases are folders of their own kind, by the things each folder holds and
-// nothing else, in order.
-var folderVectors = map[string][]string{
-	"packages": {"module", "package.yaml"},
-	"indexes":  {"index.yaml", "modules"},
-	"versions": {"module", "published", "version.yaml"},
-}
-
-// The files a case of the open view holds, and nothing else, in order.
-func openViewFiles(part string) []string {
-	if part == "task" {
-		return []string{"digest.yaml", "open-view.yaml", "part.yaml"}
-	}
-	return []string{"open-view.yaml", "part.yaml"}
-}
-
-// The ID of a format rule: <part>.<name>, in kebab-case. The rules of the module index and of
-// versions of a module have their vectors among those of indexes and versions, not under rules/.
-var ruleID = regexp.MustCompile(`^[a-z0-9]+(-[a-z0-9]+)*\.[a-z0-9]+(-[a-z0-9]+)*$`)
-
-func ruleFolder(name string) bool {
-	return ruleID.MatchString(name) && !strings.HasPrefix(name, "module-index.") &&
-		!strings.HasPrefix(name, "module-version.")
-}
-
-// classifyFormat says where a file of spec.Format belongs: the path of its case within the folder
-// and the case's kind; no kind for a file of no case — the text, VERSION and the schemas —; and
-// false for a file of no kind the test knows.
-func classifyFormat(name string) (casePath, kind string, known bool) {
-	parts := strings.Split(name, "/")
-	yaml := strings.HasSuffix(name, ".yaml")
-	switch {
-	case name == "README.md" || name == "VERSION" || name == "page.yaml":
-		return "", "", true
-	case len(parts) == 2 && parts[0] == "schemas":
-		return "", "", strings.HasSuffix(parts[1], ".schema.json")
-	case parts[0] == "examples":
-		switch {
-		case len(parts) >= 5 && parts[1] == "module" && parts[2] == "valid":
-			return path.Join(parts[:4]...), "examples/module", true
-		case len(parts) == 4 && slices.Contains(exampleParts, parts[1]) && (parts[2] == "valid" || parts[2] == "invalid") && yaml:
-			return name, "examples/" + parts[2], true
-		}
-	case parts[0] == "vectors" && len(parts) >= 3:
-		vectors := parts[1]
-		switch {
-		case vectors == "rules" && len(parts) >= 4 && ruleFolder(parts[2]):
-			// A file of its own, or a folder laid out as a module.
-			if len(parts) == 4 && !yaml {
-				return "", "", false
-			}
-			return path.Join(parts[:4]...), vectors, true
-		case vectors == "open-view" && len(parts) == 5 && slices.Contains(layoutParts, parts[2]) &&
-			slices.Contains(openViewFiles(parts[2]), parts[4]):
-			return path.Join(parts[:4]...), vectors, true
-		case vectors == "verdicts" && len(parts) == 4 && slices.Contains(verdictKinds, parts[2]) && yaml:
-			return name, vectors, true
-		case slices.Contains(fileVectors, vectors) && len(parts) == 3 && yaml:
-			return name, vectors, true
-		case len(parts) >= 4 && slices.Contains(folderVectors[vectors], parts[3]) &&
-			(len(parts) == 4) == strings.HasSuffix(parts[3], ".yaml"):
-			return path.Join(parts[:3]...), vectors, true
-		}
-	}
-	return "", "", false
-}
 
 // classifyContracts does the same for a file of contracts.Vectors.
 func classifyContracts(name string) (casePath, kind string, known bool) {
@@ -970,7 +892,7 @@ func inventory(format, vectors fs.FS) ([]vector, error) {
 			return nil
 		})
 	}
-	if err := walk(formatRoot, format, classifyFormat); err != nil {
+	if err := walk(formatRoot, format, formattree.Classify); err != nil {
 		return nil, err
 	}
 	if err := walk(contractsRoot, vectors, classifyContracts); err != nil {
@@ -983,9 +905,9 @@ func inventory(format, vectors fs.FS) ([]vector, error) {
 	// thing left out makes no case.
 	var incomplete []string
 	for _, c := range found {
-		want := folderVectors[c.kind]
-		if c.kind == "open-view" {
-			want = openViewFiles(strings.Split(c.path, "/")[2])
+		want := formattree.FolderVectors[c.kind]
+		if c.kind == formattree.KindOpenView {
+			want = formattree.OpenViewFiles(strings.Split(c.path, "/")[2])
 		}
 		if want == nil {
 			continue

@@ -8,6 +8,8 @@ import (
 	"testing/fstest"
 
 	"github.com/altnovatrail/spec"
+
+	"github.com/altnovatrail/module-kit/internal/formattree"
 )
 
 // A digest that is not the open view's fails, of a task's case of the open view and of an attempt of
@@ -16,7 +18,7 @@ func TestDigestsRefuse(t *testing.T) {
 	const task = "vectors/open-view/task/answer-anywhere"
 	const wrong = "sha256:0000000000000000000000000000000000000000000000000000000000000000"
 	files := fstest.MapFS{}
-	for _, name := range []string{"digest.yaml", "open-view.yaml", "part.yaml"} {
+	for _, name := range formattree.OpenViewFiles("task") {
 		data, err := fs.ReadFile(spec.Format, path.Join(task, name))
 		if err != nil {
 			t.Fatal(err)
@@ -31,13 +33,13 @@ func TestDigestsRefuse(t *testing.T) {
 	}{
 		{"another digest", "open_view_digest: " + wrong + "\n", "digest.yaml holds " + wrong},
 		{"no digest", "{}\n", "digest.yaml holds \n"},
-		{"a field besides", string(files[path.Join(task, "digest.yaml")].Data) + "note: x\n", "unknown field"},
+		{"a field besides", string(files[path.Join(task, formattree.CaseDigest)].Data) + "note: x\n", "unknown field"},
 	} {
 		changed := fstest.MapFS{}
 		for name, f := range files {
 			changed[name] = f
 		}
-		changed[path.Join(task, "digest.yaml")] = &fstest.MapFile{Data: []byte(c.digest)}
+		changed[path.Join(task, formattree.CaseDigest)] = &fstest.MapFile{Data: []byte(c.digest)}
 		if err := openView(vector{fsys: changed, path: task}); err == nil || !strings.Contains(err.Error()+"\n", c.says) {
 			t.Errorf("%s: %v, want %q", c.name, err, c.says)
 		}

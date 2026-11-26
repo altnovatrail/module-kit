@@ -12,6 +12,7 @@ import (
 
 	"github.com/altnovatrail/spec"
 
+	"github.com/altnovatrail/module-kit/internal/formattree"
 	"github.com/altnovatrail/module-kit/internal/schema"
 	"github.com/altnovatrail/module-kit/internal/yaml"
 )
@@ -79,8 +80,12 @@ func FuzzCheck(f *testing.F) {
 	if err != nil {
 		f.Fatal(err)
 	}
-	for name, part := range partFiles(f) {
-		if !strings.HasPrefix(name, "examples/") {
+	files, err := formattree.PartFiles(spec.Format)
+	if err != nil {
+		f.Fatal(err)
+	}
+	for name, part := range files {
+		if part.Kind != formattree.KindValidExample && part.Kind != formattree.KindInvalidExample {
 			continue
 		}
 		data, err := fs.ReadFile(spec.Format, name)
@@ -88,7 +93,7 @@ func FuzzCheck(f *testing.F) {
 			f.Fatal(err)
 		}
 		for _, r := range layout {
-			if r.part == part[0] {
+			if r.part == part.Part {
 				f.Add(strings.Replace(r.path, anyID, "a", 1), data)
 			}
 		}

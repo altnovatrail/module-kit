@@ -5,13 +5,14 @@ import (
 	"encoding/json"
 	"io/fs"
 	"maps"
-	"path"
 	"regexp"
 	"slices"
 	"strings"
 	"testing"
 
 	"github.com/altnovatrail/spec"
+
+	"github.com/altnovatrail/module-kit/internal/formattree"
 )
 
 // What the check takes from the format as code is the format's: a move to a new tag of spec that
@@ -149,70 +150,6 @@ func TestFormsAreTheSchemas(t *testing.T) {
 	}
 }
 
-// moduleFolders finds the folders of spec.Format laid out as a module, each with the rule it is a
-// case of, or "" for a module that breaks no rule.
-func moduleFolders(t testing.TB) map[string]string {
-	t.Helper()
-	folders := map[string]string{}
-	err := fs.WalkDir(spec.Format, ".", func(name string, entry fs.DirEntry, err error) error {
-		if err != nil || !entry.IsDir() {
-			return err
-		}
-		parts := strings.Split(name, "/")
-		laidOut := func() bool {
-			_, err := fs.Stat(spec.Format, path.Join(name, manifestPath))
-			return err == nil
-		}
-		switch {
-		case len(parts) == 4 && parts[0] == "examples" && parts[1] == "module" && parts[2] == "valid":
-			folders[name] = ""
-		case len(parts) == 4 && parts[0] == "vectors" && parts[1] == "rules":
-			folders[name] = parts[2]
-		case len(parts) == 4 && parts[0] == "vectors" && (parts[1] == "packages" || parts[1] == "versions") && parts[3] == "module",
-			len(parts) == 5 && parts[0] == "vectors" && parts[1] == "indexes" && parts[3] == "modules",
-			// A published version of an earlier format is the files of its package, and no module.
-			len(parts) == 5 && parts[0] == "vectors" && parts[1] == "versions" && parts[3] == "published" && laidOut():
-			folders[name] = ""
-		}
-		return nil
-	})
-	if err != nil {
-		t.Fatal(err)
-	}
-	return folders
-}
-
-// partFiles finds the files of spec.Format that are files of a part on their own: the examples of
-// the parts of the layout, the cases in a file of a part's rule and the parts of the vectors of the
-// open view. Each with its part, and the rule it is a case of, or "".
-func partFiles(t testing.TB) map[string][2]string {
-	t.Helper()
-	files := map[string][2]string{}
-	err := fs.WalkDir(spec.Format, ".", func(name string, entry fs.DirEntry, err error) error {
-		if err != nil || entry.IsDir() {
-			return err
-		}
-		parts := strings.Split(name, "/")
-		inLayout := func(part string) bool {
-			return part != "" && slices.ContainsFunc(layout, func(r row) bool { return r.part == part })
-		}
-		switch {
-		case len(parts) == 4 && parts[0] == "examples" && inLayout(parts[1]):
-			files[name] = [2]string{parts[1], ""}
-		case len(parts) == 4 && parts[0] == "vectors" && parts[1] == "rules" && !strings.HasPrefix(parts[2], "yaml."):
-			part, _, _ := strings.Cut(parts[2], ".")
-			files[name] = [2]string{part, parts[2]}
-		case len(parts) == 5 && parts[0] == "vectors" && parts[1] == "open-view" && parts[4] == "part.yaml":
-			files[name] = [2]string{parts[2], ""}
-		}
-		return nil
-	})
-	if err != nil {
-		t.Fatal(err)
-	}
-	return files
-}
-
 // Every module laid out in spec.Format and every file of a part breaks nothing that the check holds
 // but the rule it is a case of: each of them breaks that rule and nothing else, its files are valid
 // against their schemas, and a valid example and a module that is no case break nothing at all. An
@@ -229,8 +166,14 @@ func TestChecksTheFormat(t *testing.T) {
 		}
 		return rule == "" || b.Rule != rule || b.Keyword != ""
 	}
-	folders := moduleFolders(t)
-	files := partFiles(t)
+	folders, err := formattree.Modules(spec.Format)
+	if err != nil {
+		t.Fatal(err)
+	}
+	files, err := formattree.PartFiles(spec.Format)
+	if err != nil {
+		t.Fatal(err)
+	}
 	t.Logf("%d modules and %d files of a part", len(folders), len(files))
 	for _, name := range slices.Sorted(maps.Keys(folders)) {
 		t.Run(name, func(t *testing.T) {
@@ -257,13 +200,13 @@ func TestChecksTheFormat(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			report, err := CheckFile(files[name][0], data)
+			report, err := CheckFile(files[name].Part, data)
 			if err != nil {
 				t.Fatal(err)
 			}
-			invalid := strings.HasPrefix(name, "examples/") && strings.Contains(name, "/invalid/")
+			invalid := files[name].Kind == formattree.KindInvalidExample
 			for _, b := range report.Breaches {
-				if beside(b, files[name][1], invalid) {
+				if beside(b, files[name].Rule, invalid) {
 					t.Error(b)
 				}
 			}
