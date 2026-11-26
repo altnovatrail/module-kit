@@ -1,6 +1,7 @@
 package yaml
 
 import (
+	"errors"
 	"fmt"
 	"strconv"
 	"strings"
@@ -46,11 +47,16 @@ func (r *reader) decode(data []byte) (text string, ok bool) {
 	return b.String(), ok
 }
 
-// printable says whether YAML 1.2.2 allows a character in its streams, c-printable. U+FFFD,
-// which decode puts for a byte that is no part of a UTF-8 character, is one.
+// printable says whether YAML 1.2.2 allows a character in its streams, c-printable, range by range
+// as its production gives them. U+FFFD, which decode puts for a byte that is no part of a UTF-8
+// character, is one.
 func printable(c rune) bool {
-	return c == 0x09 || c == 0x0a || c == 0x0d || (c >= 0x20 && c <= 0x7e) || c == 0x85 ||
-		(c >= 0xa0 && c <= 0xd7ff) || (c >= 0xe000 && c <= 0xfffd) || (c >= 0x10000 && c <= 0x10ffff)
+	return c == '\t' || c == '\n' || c == '\r' || // of C0, only these three
+		(c >= ' ' && c <= '~') || // printable ASCII, without DEL
+		c == 0x85 || // NEL, the one character of C1
+		(c >= 0xa0 && c <= 0xd7ff) || // the BMP after C1, up to the surrogates
+		(c >= 0xe000 && c <= unicode.ReplacementChar) || // the BMP after the surrogates, without U+FFFE and U+FFFF
+		(c >= 0x10000 && c <= unicode.MaxRune) // beyond the BMP
 }
 
 func codePoint(c rune) string {
@@ -156,8 +162,10 @@ var lineSeparators = []rune{0x85, 0x2028, 0x2029}
 // private use area that the text neither holds nor writes with an escape. Such a character is
 // ns-char to YAML 1.2.2, as the three are, and go-yaml reads it as one, so go-yaml reads the text
 // as YAML 1.2.2 reads the file. The values get the three back through r.restore, and since one
-// character stands for one, no place moves.
-func (r *reader) standIns(text string) string {
+// character stands for one, no place moves. A text that holds or escapes so many characters of the
+// private use areas that too few are left has no stand-ins: module-kit cannot read it, though the
+// format may accept it, and the error is errNoStandIn.
+func (r *reader) standIns(text string) (string, error) {
 	var present []rune
 	for _, c := range lineSeparators {
 		if strings.ContainsRune(text, c) {
@@ -165,7 +173,7 @@ func (r *reader) standIns(text string) string {
 		}
 	}
 	if len(present) == 0 {
-		return text
+		return text, nil
 	}
 	used := map[rune]bool{}
 	for _, c := range text {
@@ -175,21 +183,42 @@ func (r *reader) standIns(text string) string {
 		used[c] = true
 	}
 	var forth, back []string
-	next := rune(0xe000)
 	for _, c := range present {
-		for used[next] {
-			next++
-			if next == 0xf900 {
-				// The basic plane's area is full: on to plane 15's.
-				next = 0xf0000
-			}
+		standIn, ok := firstUnused(unicode.Co, used)
+		if !ok {
+			return "", errNoStandIn
 		}
-		used[next] = true
-		forth = append(forth, string(c), string(next))
-		back = append(back, string(next), string(c))
+		used[standIn] = true
+		forth = append(forth, string(c), string(standIn))
+		back = append(back, string(standIn), string(c))
 	}
 	r.restore = strings.NewReplacer(back...)
-	return strings.NewReplacer(forth...).Replace(text)
+	return strings.NewReplacer(forth...).Replace(text), nil
+}
+
+// errNoStandIn is a text that leaves too few characters of the private use areas for the
+// stand-ins of U+0085, U+2028 and U+2029.
+var errNoStandIn = errors.New("yaml: the file holds so many characters of the private use areas, U+E000 to U+F8FF, " +
+	"U+F0000 to U+FFFFD and U+100000 to U+10FFFD, that module-kit has none left to read U+0085, U+2028 and U+2029 by")
+
+// firstUnused gives the first character of the table that used does not hold, in the order of its
+// ranges.
+func firstUnused(table *unicode.RangeTable, used map[rune]bool) (rune, bool) {
+	for _, r := range table.R16 {
+		for c := rune(r.Lo); c <= rune(r.Hi); c += rune(r.Stride) {
+			if !used[c] {
+				return c, true
+			}
+		}
+	}
+	for _, r := range table.R32 {
+		for c := rune(r.Lo); c <= rune(r.Hi); c += rune(r.Stride) {
+			if !used[c] {
+				return c, true
+			}
+		}
+	}
+	return 0, false
 }
 
 // escapedCharacters gives every character the text writes with an escape \x, \u or \U, wherever

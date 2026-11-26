@@ -72,10 +72,14 @@ const panicMessage = "go-yaml failed on this file: "
 
 // Read reads a file of a module into its JSON value: a map[string]any, []any, string, int64 for a
 // number written with neither a fraction nor an exponent, float64 for any other number, bool, or
-// nil. A file that breaks a rule yaml.*, or is not YAML 1.2.2, gives a *Refusal and no value.
+// nil. A file that breaks a rule yaml.*, or is not YAML 1.2.2, gives a *Refusal and no value. Any
+// other error is a file that module-kit cannot read, though the format may accept it.
 func Read(data []byte) (any, error) {
 	r := reader{shifted: map[int]bool{}, tagHandles: map[string]bool{}}
-	value := r.read(data)
+	value, err := r.read(data)
+	if err != nil {
+		return nil, err
+	}
 	if len(r.breaches) > 0 {
 		slices.SortStableFunc(r.breaches, func(a, b Breach) int {
 			return cmp.Or(cmp.Compare(a.Line, b.Line), cmp.Compare(a.Column, b.Column), cmp.Compare(a.Rule, b.Rule))
@@ -100,14 +104,17 @@ type reader struct {
 	quoted  []span
 }
 
-// read gives the value of the file, which counts only when no pass found a breach.
-func (r *reader) read(data []byte) any {
+// read gives the value of the file, which counts only when no pass found a breach, or the error of
+// a file it cannot read.
+func (r *reader) read(data []byte) (any, error) {
 	text, ok := r.decode(data)
 	if !ok {
-		return nil
+		return nil, nil
 	}
-	text = r.streamLevel(text)
-	text = r.standIns(text)
+	text, err := r.standIns(r.streamLevel(text))
+	if err != nil {
+		return nil, err
+	}
 	r.src = newSource(text)
 	// On an error, the documents go-yaml read before it are YAML, and their breaches count too.
 	docs, err := parse(text)
@@ -115,7 +122,7 @@ func (r *reader) read(data []byte) any {
 		r.parseError(err)
 	} else if len(docs) == 0 {
 		r.breaches = append(r.breaches, Breach{RuleSingleDocument, 1, 1, "no document: the file holds comments at most"})
-		return nil
+		return nil, nil
 	}
 	for _, doc := range docs[min(1, len(docs)):] {
 		r.breach(RuleSingleDocument, doc.Line-1, doc.Column-1, "a second document")
@@ -131,7 +138,7 @@ func (r *reader) read(data []byte) any {
 	// Where the strings in quotes of the text past the error stand is not known, so a byte order
 	// mark outside them is looked for only in a text go-yaml read to its end.
 	r.layout(docs, err == nil)
-	return value
+	return value, nil
 }
 
 // parse reads the documents of the text until the end or the first error. A panic of go-yaml comes

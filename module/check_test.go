@@ -13,6 +13,7 @@ import (
 	"strings"
 	"testing"
 	"testing/fstest"
+	"unicode"
 
 	"github.com/altnovatrail/spec"
 
@@ -570,5 +571,35 @@ func TestPartsThatPassed(t *testing.T) {
 		if got := slices.Sorted(maps.Keys(check.parts)); !slices.Equal(got, c.passed) || check.allParts() != c.allParts {
 			t.Errorf("%s: passed %v, every one %t; want %v, %t", c.name, got, check.allParts(), c.passed, c.allParts)
 		}
+	}
+}
+
+// unreadable gives a file that the reader of YAML cannot read, though the format may accept it: it
+// holds every character of the private use areas and U+2028, which needs one of them for a
+// stand-in.
+func unreadable() []byte {
+	var b strings.Builder
+	b.WriteString("# ")
+	for c := rune(0); c <= unicode.MaxRune; c++ {
+		if unicode.Is(unicode.Co, c) {
+			b.WriteRune(c)
+		}
+	}
+	b.WriteRune(0x2028)
+	b.WriteString("\n")
+	return []byte(b.String())
+}
+
+// A file that the reader of YAML cannot read is an error of the check, by its path, and no report:
+// the format may accept it, so no breach can say it refuses it.
+func TestCheckOfAFileTheReaderCannotRead(t *testing.T) {
+	for _, path := range []string{manifestPath, gapsLadder} {
+		report, err := Check(context.Background(), module(fstest.MapFS{path: {Data: unreadable()}}))
+		if err == nil || !strings.HasPrefix(err.Error(), path+": yaml: ") || len(report.Breaches) > 0 {
+			t.Errorf("%s: %v, with %d breaches; want an error by its path and no report", path, err, len(report.Breaches))
+		}
+	}
+	if report, err := CheckFile("task", unreadable()); err == nil || !strings.HasPrefix(err.Error(), "yaml: ") || len(report.Breaches) > 0 {
+		t.Errorf("CheckFile: %v, with %d breaches; want an error and no report", err, len(report.Breaches))
 	}
 }
