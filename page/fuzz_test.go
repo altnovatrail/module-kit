@@ -15,7 +15,7 @@ func FuzzLay(f *testing.F) {
 	for _, seed := range []string{
 		"7 ×[]= 56", "[]÷ 8 = 4", "Tom has 3 bags of 4 apples. He has[]apples.", "47 ÷ 6 =[]r[]",
 		"He has[]|.", "(|[]|)", "apples|.[]", "Fill in the boxes:[][][][][][][]", "\t7  ×\n[] = 56 ",
-		"2\u00a0км =[]м", "👨\u200d👩\u200d👧 =[]", "🇺🇦[]", "е\u0308 = ё[]", "[]",
+		"2\u00a0км =[]м", "👨\u200d👩\u200d👧 =[]", "\U0001F1E6\U0001F1E6[]", "е\u0308 = ё[]", "[]",
 		"The longest word: supercalifragilisticsupercalifragilisticsupercalifragilisticsupercalifragilistic[]",
 		"Marks: .x .x .x .x .x .x .x .x .x .x .x .x .x .x .x .x .x .x .x .x .x .x .x .x .x .x .x .x .x[]",
 	} {
