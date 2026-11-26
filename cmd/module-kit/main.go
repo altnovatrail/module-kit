@@ -12,6 +12,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"io/fs"
@@ -59,53 +60,82 @@ func main() {
 // --version tells the release, and the version of Unicode that the normalization of the check kinds
 // follows, which the format leaves to the release.
 func run(ctx context.Context, args []string, stdout, stderr io.Writer) int {
-	switch {
-	case len(args) == 1 && args[0] == "--version":
+	if len(args) == 1 && args[0] == "--version" {
 		fmt.Fprintf(stdout, "module-kit %s\nUnicode %s\n", currentVersion(), verdict.UnicodeVersion)
 		return statusAccepted
-	case len(args) == 2 && args[0] == "check":
-		return check(ctx, args[1], stdout, stderr)
-	case len(args) == 3 && args[0] == "build":
-		return build(ctx, args[1], args[2], stdout, stderr)
-	case len(args) > 0 && args[0] == "index":
-		return index(ctx, args[1:], stdout, stderr)
-	case len(args) > 0 && args[0] == "diff":
-		return diff(ctx, args[1:], stdout, stderr)
-	case len(args) > 0 && args[0] == "open":
-		return openViews(ctx, args[1:], stdout, stderr)
+	}
+	for _, c := range commands {
+		if len(args) == 0 || args[0] != c.name {
+			continue
+		}
+		status, err := c.run(ctx, args[1:], stdout)
+		if err == nil {
+			return status
+		}
+		var wrong *usageError
+		if !errors.As(err, &wrong) {
+			fmt.Fprintf(stderr, "module-kit %s: %v\n", c.name, err)
+			return statusFailed
+		}
+		if wrong.err != nil {
+			fmt.Fprintf(stderr, "module-kit %s: %v\n", c.name, wrong.err)
+		}
+		break
 	}
 	fmt.Fprint(stderr, usage)
 	return statusFailed
 }
 
-// check checks the module whose folder is dir and writes its report to stdout: a line for each
-// breach, its place from dir, the ID of its rule and what breaks it, in the order of their places;
-// then a line for each warning, which refuses nothing: those of the texts of the whole module that
-// hold a number, in the order of their places, and then those of the pictures; and a last
-// line that says whether the format accepts the module. The warnings change no exit status.
-func check(ctx context.Context, dir string, stdout, stderr io.Writer) int {
+// A command is one command of the CLI, by the name that is the first argument of its line. It is
+// given the rest of the line and writes its report to stdout. It returns its exit status, or an
+// error when it could not do its work: then run writes the error to stderr after the command's
+// name, and the usage too when the error is a line the command does not take, and exits 2.
+type command struct {
+	name string
+	run  func(ctx context.Context, args []string, stdout io.Writer) (int, error)
+}
+
+var commands = []command{
+	{"check", check},
+	{"build", build},
+	{"index", index},
+	{"diff", diff},
+	{"open", openViews},
+}
+
+// check checks the module whose folder is the one argument and writes its report to stdout: a line
+// for each breach, its place from the folder, the ID of its rule and what breaks it, in the order
+// of their places; then a line for each warning, which refuses nothing: those of the texts of the
+// whole module that hold a number, in the order of their places, and then those of the pictures;
+// and a last line that says whether the format accepts the module. The warnings change no exit
+// status.
+func check(ctx context.Context, args []string, stdout io.Writer) (int, error) {
+	if len(args) != 1 {
+		return statusFailed, usageOf(nil)
+	}
+	dir := args[0]
 	fsys, err := moduleFolder(dir)
 	if err != nil {
-		return failed(stderr, "check", err)
+		return statusFailed, err
 	}
 	report, err := module.Check(ctx, fsys)
 	if err != nil {
-		return failed(stderr, "check", err)
+		return statusFailed, err
 	}
 	pictures, err := picture.Warnings(ctx, fsys)
 	if err != nil {
-		return failed(stderr, "check", err)
+		return statusFailed, err
 	}
 	warnings := warningLines(dir, report.Warnings, pictures)
 	if len(report.Breaches) > 0 {
 		writeReport(stdout, dir, report, warnings)
-		return statusRefused
+		return statusRefused, nil
 	}
 	for _, line := range warnings {
 		fmt.Fprintln(stdout, line)
 	}
 	fmt.Fprintf(stdout, "%s: the module breaks no rule of the format %s\n", dir, module.FormatVersion)
-	return statusAccepted
+	return statusAccepted, nil
 }
 
 func warningLines(dir string, texts []module.Warning, pictures []picture.Warning) []string {
@@ -153,11 +183,6 @@ func writeReport(w io.Writer, dir string, report module.Report, warnings []strin
 		noun = "breach"
 	}
 	fmt.Fprintf(w, "%s: the format %s refuses the module: %d %s\n", dir, module.FormatVersion, len(report.Breaches), noun)
-}
-
-func failed(stderr io.Writer, command string, err error) int {
-	fmt.Fprintf(stderr, "module-kit %s: %v\n", command, err)
-	return statusFailed
 }
 
 // currentVersion is version when a release set it. Otherwise it is the version of the module the

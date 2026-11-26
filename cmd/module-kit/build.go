@@ -20,32 +20,37 @@ const (
 	worldReadableFolder fs.FileMode = 0o755
 )
 
-// build builds the package of the module whose folder is dir into the folder out, as files: out must
-// not exist yet, or be an empty folder. A module that the format refuses has no package, and its
-// report goes to stdout as check writes it. The files are written in a folder of their own beside
-// out and moved to out once all are written, so that a failure leaves no part of a package behind.
-func build(ctx context.Context, dir, out string, stdout, stderr io.Writer) int {
+// build builds the package of the module whose folder is the first argument into the folder that
+// is the second, out, as files: out must not exist yet, or be an empty folder. A module that the
+// format refuses has no package, and its report goes to stdout as check writes it. The files are
+// written in a folder of their own beside out and moved to out once all are written, so that a
+// failure leaves no part of a package behind.
+func build(ctx context.Context, args []string, stdout io.Writer) (int, error) {
+	if len(args) != 2 {
+		return statusFailed, usageOf(nil)
+	}
+	dir, out := args[0], args[1]
 	fsys, err := moduleFolder(dir)
 	if err != nil {
-		return failed(stderr, "build", err)
+		return statusFailed, err
 	}
 	if err := emptyOrAbsent(out); err != nil {
-		return failed(stderr, "build", err)
+		return statusFailed, err
 	}
 	pkg, err := modulepackage.Build(ctx, fsys)
 	var refusal *modulepackage.Refusal
 	if errors.As(err, &refusal) {
 		writeReport(stdout, dir, refusal.Report, nil)
-		return statusRefused
+		return statusRefused, nil
 	}
 	if err != nil {
-		return failed(stderr, "build", err)
+		return statusFailed, err
 	}
 	if err := writePackage(out, pkg.Files); err != nil {
-		return failed(stderr, "build", err)
+		return statusFailed, err
 	}
 	fmt.Fprintf(stdout, "%s: the package of %s %s, %s, is in %s\n", dir, pkg.Inventory.ID, pkg.Inventory.Version, pkg.Digest, out)
-	return statusAccepted
+	return statusAccepted, nil
 }
 
 // emptyOrAbsent says, by no error, that out does not exist or is an empty folder.

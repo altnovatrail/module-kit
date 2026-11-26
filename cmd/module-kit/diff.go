@@ -26,8 +26,8 @@ import (
 // the package of every version the index names is needed, and others are skipped. Exit 0 when the
 // new version is accepted or the module has not changed, 1 when a rule refuses it — of the check of
 // the module or of versions —, 2 when it cannot be compared.
-func diff(ctx context.Context, args []string, stdout, stderr io.Writer) int {
-	f := newFlags("diff")
+func diff(ctx context.Context, args []string, stdout io.Writer) (int, error) {
+	f := newFlags()
 	asJSON := f.Bool("json", false, "")
 	var indexFile optional
 	f.Var(&indexFile, "index", "")
@@ -35,42 +35,42 @@ func diff(ctx context.Context, args []string, stdout, stderr io.Writer) int {
 	var published repeated
 	f.Var(&published, "published", "")
 	if err := f.Parse(args); err != nil {
-		return usageOf(stderr, "diff", err)
+		return statusFailed, usageOf(err)
 	}
 	if err := oneOf(&indexFile, *first); err != nil || f.NArg() != 1 {
-		return usageOf(stderr, "diff", err)
+		return statusFailed, usageOf(err)
 	}
 	dir := f.Arg(0)
 	next, report, err := newVersion(ctx, dir)
 	if err != nil {
-		return failed(stderr, "diff", err)
+		return statusFailed, err
 	}
 	if next == nil {
 		if *asJSON {
-			return writeJSON(stdout, stderr, map[string]any{"check": breachesOf(dir, report)}, statusRefused)
+			return writeJSON(stdout, map[string]any{"check": breachesOf(dir, report)}, statusRefused)
 		}
 		writeReport(stdout, dir, report, nil)
-		return statusRefused
+		return statusRefused, nil
 	}
 	var versions []moduleversion.Published
 	if indexFile.set {
 		if versions, err = publishedOf(indexFile.value, next.Inventory.ID, published); err != nil {
-			return failed(stderr, "diff", err)
+			return statusFailed, err
 		}
 	}
 	c, err := moduleversion.Compare(next, versions)
 	if err != nil {
-		return failed(stderr, "diff", err)
+		return statusFailed, err
 	}
 	status := statusAccepted
 	if c.Refused() {
 		status = statusRefused
 	}
 	if *asJSON {
-		return writeJSON(stdout, stderr, c, status)
+		return writeJSON(stdout, c, status)
 	}
 	fmt.Fprintln(stdout, c)
-	return status
+	return status, nil
 }
 
 // newVersion reads the new version of a module from dir: a package as files when inventory.json
@@ -116,11 +116,11 @@ func breachesOf(dir string, report module.Report) []checkBreach {
 	return out
 }
 
-func writeJSON(stdout, stderr io.Writer, v any, status int) int {
+func writeJSON(stdout io.Writer, v any, status int) (int, error) {
 	data, err := json.MarshalIndent(v, "", "  ")
 	if err != nil {
-		return failed(stderr, "diff", err)
+		return statusFailed, err
 	}
 	fmt.Fprintln(stdout, strings.TrimSpace(string(data)))
-	return status
+	return status, nil
 }
