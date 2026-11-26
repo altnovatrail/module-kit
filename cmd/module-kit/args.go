@@ -14,14 +14,30 @@ import (
 	"github.com/altnovatrail/module-kit/modulepackage"
 )
 
-// errUsage is a command line that a command does not take: its usage goes to stderr, and the
-// status is 2.
+// errUsage is a command line that a command does not take, with nothing more to say of it than the
+// usage.
 var errUsage = errors.New("usage")
 
-// newFlags gives the flags of a command, which say nothing themselves: a command that cannot parse
-// its line writes its usage.
-func newFlags(name string) *flag.FlagSet {
-	f := flag.NewFlagSet(name, flag.ContinueOnError)
+// A usageError is a command line that a command does not take: its usage goes to stderr, after
+// err when there is one, and the status is 2.
+type usageError struct{ err error }
+
+func (e *usageError) Error() string { return errors.Join(errUsage, e.err).Error() }
+
+// usageOf says that a command does not take its line, by err, the error of its flags: nil, or one
+// that is errUsage, says nothing more than the usage.
+func usageOf(err error) error {
+	if errors.Is(err, errUsage) {
+		err = nil
+	}
+	return &usageError{err}
+}
+
+// newFlags gives the flags of a command, which say nothing themselves and so need no name: a
+// command that cannot parse its line returns the error by usageOf, and run writes it after the
+// command's name.
+func newFlags() *flag.FlagSet {
+	f := flag.NewFlagSet("", flag.ContinueOnError)
 	f.SetOutput(io.Discard)
 	return f
 }

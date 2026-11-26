@@ -51,37 +51,37 @@ const (
 // beside it: the instance an attempt of that seed gets. Beside it go modules/<ID>/<version>/ with the
 // files of the device part, LICENSE, NOTICE and media/, byte for byte as the chain of digests checked
 // them. The command checks no rule of the format, so it exits 0 or 2.
-func openViews(_ context.Context, args []string, stdout, stderr io.Writer) int {
-	f := newFlags("open")
+func openViews(_ context.Context, args []string, stdout io.Writer) (int, error) {
+	f := newFlags()
 	indexFile := f.String("index", "", "")
 	latestFile := f.String("latest", "", "")
 	var seeds seedList
 	f.Var(&seeds, "seed", "")
 	out := f.String("out", "", "")
 	if err := f.Parse(args); err != nil {
-		return usageOf(stderr, "open", err)
+		return statusFailed, usageOf(err)
 	}
 	if *indexFile == "" || *latestFile == "" || len(seeds) == 0 || *out == "" {
-		return usageOf(stderr, "open", nil)
+		return statusFailed, usageOf(nil)
 	}
 	release, err := readIndex("the index", *indexFile)
 	if err != nil {
-		return failed(stderr, "open", err)
+		return statusFailed, err
 	}
 	latest, err := readIndex("the newest index", *latestFile)
 	if err != nil {
-		return failed(stderr, "open", err)
+		return statusFailed, err
 	}
 	index, err := moduleindex.WithLatest(release, latest)
 	if err != nil {
-		return failed(stderr, "open", fmt.Errorf("%s as the newest index of %s: %w", *latestFile, *indexFile, err))
+		return statusFailed, fmt.Errorf("%s as the newest index of %s: %w", *latestFile, *indexFile, err)
 	}
 	if err := emptyOrAbsent(*out); err != nil {
-		return failed(stderr, "open", err)
+		return statusFailed, err
 	}
 	byDigest, err := packagesByDigest(f.Args())
 	if err != nil {
-		return failed(stderr, "open", err)
+		return statusFailed, err
 	}
 	slices.Sort(seeds)
 	files := map[string][]byte{}
@@ -95,20 +95,20 @@ func openViews(_ context.Context, args []string, stdout, stderr io.Writer) int {
 		entry := index.Modules[id][version]
 		dir, found := byDigest[entry.PackageDigest]
 		if !found {
-			return failed(stderr, "open", fmt.Errorf("the index names %s %s, with the package %s, and no package folder holds it",
-				id, version, entry.PackageDigest))
+			return statusFailed, fmt.Errorf("the index names %s %s, with the package %s, and no package folder holds it",
+				id, version, entry.PackageDigest)
 		}
 		pkg, err := modulepackage.Read(os.DirFS(dir), entry.PackageDigest)
 		if err != nil {
-			return failed(stderr, "open", fmt.Errorf("%s: %w", dir, err))
+			return statusFailed, fmt.Errorf("%s: %w", dir, err)
 		}
 		if inv := pkg.Inventory; inv.ID != id || inv.Version != version || inv.ModuleFormatVersion != entry.ModuleFormatVersion {
-			return failed(stderr, "open", fmt.Errorf("the index names the package %s as %s %s of the format %s, and it is %s %s of the format %s",
-				pkg.Digest, id, version, entry.ModuleFormatVersion, inv.ID, inv.Version, inv.ModuleFormatVersion))
+			return statusFailed, fmt.Errorf("the index names the package %s as %s %s of the format %s, and it is %s %s of the format %s",
+				pkg.Digest, id, version, entry.ModuleFormatVersion, inv.ID, inv.Version, inv.ModuleFormatVersion)
 		}
 		views, count, err := moduleViews(pkg, entry, seeds)
 		if err != nil {
-			return failed(stderr, "open", fmt.Errorf("%s %s: %w", id, version, err))
+			return statusFailed, fmt.Errorf("%s %s: %w", id, version, err)
 		}
 		modules = append(modules, views)
 		for name, data := range pkg.Files {
@@ -125,14 +125,14 @@ func openViews(_ context.Context, args []string, stdout, stderr io.Writer) int {
 		"modules":               modules,
 	})
 	if err != nil {
-		return failed(stderr, "open", err)
+		return statusFailed, err
 	}
 	files[openViewsFile] = text
 	if err := writePackage(*out, files); err != nil {
-		return failed(stderr, "open", err)
+		return statusFailed, err
 	}
 	fmt.Fprintf(stdout, "the open views of %d %s are in %s\n", len(modules), plural(len(modules), "module", "modules"), *out)
-	return statusAccepted
+	return statusAccepted, nil
 }
 
 // moduleViews gives the member of open-views.json of one version of a module: what names it, the

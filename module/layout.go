@@ -175,7 +175,10 @@ func (c *checker) readManifest() (stop bool, err error) {
 	if err != nil {
 		return false, err
 	}
-	value, read := c.read(manifestPath, data)
+	value, read, err := c.read(manifestPath, data)
+	if err != nil {
+		return false, err
+	}
 	if b, other := otherVersion(manifestPath, partManifest, value); other {
 		c.breaches = []Breach{b}
 		return true, nil
@@ -203,7 +206,9 @@ func (c *checker) place() error {
 		if err != nil {
 			return err
 		}
-		c.part(file, r.part, data)
+		if err := c.part(file, r.part, data); err != nil {
+			return err
+		}
 		if value, passed := c.parts[file]; passed && id != "" {
 			c.fileID(file, id, value)
 		}

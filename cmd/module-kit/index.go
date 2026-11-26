@@ -26,8 +26,8 @@ import (
 // index goes to out, which must not exist yet. A release that breaks a rule of the index exits 1
 // with every breach on stdout; one whose previous index, tag, withdrawals or packages cannot be read
 // exits 2.
-func index(_ context.Context, args []string, stdout, stderr io.Writer) int {
-	f := newFlags("index")
+func index(_ context.Context, args []string, stdout io.Writer) (int, error) {
+	f := newFlags()
 	var previous, withdrawals optional
 	f.Var(&previous, "previous", "")
 	first := f.Bool("first", false, "")
@@ -36,30 +36,30 @@ func index(_ context.Context, args []string, stdout, stderr io.Writer) int {
 	noWithdrawals := f.Bool("no-withdrawals", false, "")
 	out := f.String("out", "", "")
 	if err := f.Parse(args); err != nil {
-		return usageOf(stderr, "index", err)
+		return statusFailed, usageOf(err)
 	}
 	if err := errors.Join(oneOf(&previous, *first), oneOf(&withdrawals, *noWithdrawals)); err != nil || *tag == "" || *out == "" || f.NArg() == 0 {
-		return usageOf(stderr, "index", err)
+		return statusFailed, usageOf(err)
 	}
 	release := moduleindex.Release{First: *first, Tag: formatv0.Release(*tag)}
 	if previous.set {
 		data, err := os.ReadFile(previous.value)
 		if err != nil {
-			return failed(stderr, "index", fmt.Errorf("the previous index: %w", err))
+			return statusFailed, fmt.Errorf("the previous index: %w", err)
 		}
 		release.Previous = data
 	}
 	if withdrawals.set {
 		w, err := readWithdrawals(withdrawals.value)
 		if err != nil {
-			return failed(stderr, "index", err)
+			return statusFailed, err
 		}
 		release.Withdrawals = w
 	}
 	for _, dir := range f.Args() {
 		pkg, err := readPackage(dir, true)
 		if err != nil {
-			return failed(stderr, "index", err)
+			return statusFailed, err
 		}
 		release.Packages = append(release.Packages, pkg)
 	}
@@ -71,17 +71,17 @@ func index(_ context.Context, args []string, stdout, stderr io.Writer) int {
 		}
 		fmt.Fprintf(stdout, "the release %s breaks the rules of the module index, so it has no index: %d %s\n",
 			*tag, len(refusal.Breaches), plural(len(refusal.Breaches), "breach", "breaches"))
-		return statusRefused
+		return statusRefused, nil
 	}
 	if err != nil {
-		return failed(stderr, "index", err)
+		return statusFailed, err
 	}
 	if err := writeNew(*out, text); err != nil {
-		return failed(stderr, "index", err)
+		return statusFailed, err
 	}
 	fmt.Fprintf(stdout, "the module index of %s, of %d %s, is in %s\n", *tag, len(release.Packages),
 		plural(len(release.Packages), "package", "packages"), *out)
-	return statusAccepted
+	return statusAccepted, nil
 }
 
 // readWithdrawals reads the withdrawals of a release, withdrawals.yaml of modules: YAML by the rules
@@ -113,12 +113,4 @@ func plural(n int, one, many string) string {
 		return one
 	}
 	return many
-}
-
-func usageOf(stderr io.Writer, command string, err error) int {
-	if err != nil && !errors.Is(err, errUsage) {
-		fmt.Fprintf(stderr, "module-kit %s: %v\n", command, err)
-	}
-	fmt.Fprint(stderr, usage)
-	return statusFailed
 }

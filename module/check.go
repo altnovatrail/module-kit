@@ -160,13 +160,16 @@ func CheckModule(ctx context.Context, fsys fs.FS) (Report, map[string][]formatv0
 // when both accept it, by the rules within its part; a manifest first by the format version it
 // names, which, when the library does not read it, is the report's only breach, as in Check. Its
 // breaches have no path. part is the term of a part of the layout, such as manifest or task; any
-// other is an error.
+// other is an error, and so is a file that the reader of YAML cannot read.
 func CheckFile(part string, data []byte) (Report, error) {
 	if part == "" || !slices.ContainsFunc(layout, func(r row) bool { return r.part == part }) {
 		return Report{}, fmt.Errorf("%q is no part of the layout of a module", part)
 	}
 	c := checker{}
-	value, read := c.read("", data)
+	value, read, err := c.read("", data)
+	if err != nil {
+		return Report{}, err
+	}
 	if b, other := otherVersion("", part, value); other {
 		return Report{Breaches: []Breach{b}}, nil
 	}
@@ -276,17 +279,23 @@ func (c *checker) rules(ctx context.Context) (*parts, error) {
 }
 
 // read reads a file of a part by the YAML rules, and gives its value, or nil and false when they
-// refuse it.
-func (c *checker) read(path string, data []byte) (any, bool) {
+// refuse it. The error is a file that the reader cannot read, though the format may accept it.
+func (c *checker) read(path string, data []byte) (any, bool, error) {
 	value, err := yaml.Read(data)
 	var refusal *yaml.Refusal
 	if errors.As(err, &refusal) {
 		for _, b := range refusal.Breaches {
 			c.add(b.Rule, path, b.Line, b.Column, "", b.Message)
 		}
-		return nil, false
+		return nil, false, nil
 	}
-	return value, true
+	if err != nil {
+		if path != "" {
+			err = fmt.Errorf("%s: %w", path, err)
+		}
+		return nil, false, err
+	}
+	return value, true, nil
 }
 
 // conform checks the value of a file of a part against the schema of its part,
@@ -302,11 +311,15 @@ func (c *checker) conform(path, part string, value any) bool {
 
 // part reads a file of a part at path by the YAML rules and checks it against the schema of its
 // part. A file that both accept is one that the rules may read: its value stands in parts.
-func (c *checker) part(path, part string, data []byte) {
-	value, read := c.read(path, data)
+func (c *checker) part(path, part string, data []byte) error {
+	value, read, err := c.read(path, data)
+	if err != nil {
+		return err
+	}
 	if read && c.conform(path, part, value) {
 		c.parts[path] = value
 	}
+	return nil
 }
 
 // The field at the root of a manifest that names the format version, at the same place in every

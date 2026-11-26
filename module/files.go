@@ -40,8 +40,11 @@ const headLength = 14
 // WHATWG's "match an mp3 header" refuses fewer (sources 5.6), as spec's
 // format-check does.
 func mp3Frame(head []byte) bool {
-	return len(head) >= 4 && head[0] == 0xff && head[1]&0xe0 == 0xe0 && head[1]&0x06 == 0x02 &&
-		head[2]&0xf0 != 0xf0 && head[2]&0x0c != 0x0c
+	return len(head) >= 4 &&
+		head[0] == 0xff && head[1]&0xe0 == 0xe0 && // the frame sync, eleven bits set
+		head[1]&0x06 == 0x02 && // the layer, 01: layer III
+		head[2]&0xf0 != 0xf0 && // the bitrate index, not 1111, which is bad
+		head[2]&0x0c != 0x0c // the sampling rate index, not 11, which is reserved
 }
 
 // media checks module.media on each file of media/: that it stands at a path of the form media_path

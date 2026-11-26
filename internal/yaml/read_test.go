@@ -3,10 +3,12 @@ package yaml
 import (
 	"errors"
 	"fmt"
+	"maps"
 	"reflect"
 	"slices"
 	"strings"
 	"testing"
+	"unicode"
 )
 
 // A case of TestRead: a file, and either the value it reads to or each breach that refuses it, as
@@ -265,5 +267,82 @@ func TestEscapedCharacters(t *testing.T) {
 	}
 	if got := escapedCharacters(`a\`); got != nil {
 		t.Errorf("%q from a backslash at the end", got)
+	}
+}
+
+// printable holds each bound of the printable set as the format's rule writes it, on both sides.
+// A surrogate is no character of a UTF-8 file, so the reader never meets one: the test asks
+// printable itself.
+func TestPrintable(t *testing.T) {
+	for _, c := range []rune{0x09, 0x0a, 0x0d, 0x20, 0x7e, 0x85, 0xa0, 0xd7ff, 0xe000, 0xfffd, 0x10000, 0x10ffff} {
+		if !printable(c) {
+			t.Errorf("printable(U+%04X) = false, want true", c)
+		}
+	}
+	for _, c := range []rune{0x00, 0x08, 0x0b, 0x0c, 0x0e, 0x1f, 0x7f, 0x84, 0x86, 0x9f, 0xd800, 0xdfff, 0xfffe, 0xffff, 0x110000, -1} {
+		if printable(c) {
+			t.Errorf("printable(U+%04X) = true, want false", c)
+		}
+	}
+}
+
+// privateUse gives every character of the private use areas that held says, and a file whose
+// value b holds them and whose value a holds U+2028, which needs a stand-in.
+func privateUse(held func(rune) bool) (chars, file string) {
+	var b strings.Builder
+	for c := rune(0); c <= unicode.MaxRune; c++ {
+		if unicode.Is(unicode.Co, c) && held(c) {
+			b.WriteRune(c)
+		}
+	}
+	return b.String(), "a: x\u2028y\nb: " + b.String() + "\n"
+}
+
+// A text that holds the whole private use area of the basic plane takes its stand-ins from plane
+// 15's, and reads back each character it holds; one that holds every area has none: module-kit
+// cannot read it, and says so by an error that is no refusal.
+func TestStandInsOfAFullArea(t *testing.T) {
+	basic, file := privateUse(func(c rune) bool { return c <= 0xffff })
+	if value, err := Read([]byte(file)); err != nil || !reflect.DeepEqual(value, map[string]any{"a": "x\u2028y", "b": basic}) {
+		t.Errorf("a text with the basic plane's area: %v, or its values read otherwise", err)
+	}
+	_, file = privateUse(func(rune) bool { return true })
+	value, err := Read([]byte(file))
+	var refusal *Refusal
+	if !errors.Is(err, errNoStandIn) || errors.As(err, &refusal) || value != nil {
+		t.Errorf("a text with every area read as %#v, with %v; want %v", value, err, errNoStandIn)
+	}
+}
+
+// firstUnused takes the areas in order, U+E000, then U+F0000, then U+100000, and steps over what
+// is used.
+func TestFirstUnused(t *testing.T) {
+	areaOf := func(first, last rune) map[rune]bool {
+		used := map[rune]bool{}
+		for c := first; c <= last; c++ {
+			used[c] = true
+		}
+		return used
+	}
+	planes := areaOf(0xe000, 0xf8ff)
+	maps.Copy(planes, areaOf(0xf0000, 0xffffd))
+	all := maps.Clone(planes)
+	maps.Copy(all, areaOf(0x100000, 0x10fffd))
+	tests := []struct {
+		name string
+		used map[rune]bool
+		want rune
+		ok   bool
+	}{
+		{"none used", nil, 0xe000, true},
+		{"the first used", map[rune]bool{0xe000: true}, 0xe001, true},
+		{"the basic plane's area used", areaOf(0xe000, 0xf8ff), 0xf0000, true},
+		{"plane 15's too", planes, 0x100000, true},
+		{"every area", all, 0, false},
+	}
+	for _, tt := range tests {
+		if got, ok := firstUnused(unicode.Co, tt.used); got != tt.want || ok != tt.ok {
+			t.Errorf("%s: firstUnused = U+%04X, %t; want U+%04X, %t", tt.name, got, ok, tt.want, tt.ok)
+		}
 	}
 }

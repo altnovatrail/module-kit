@@ -67,9 +67,10 @@ func TestWidths(t *testing.T) {
 		{"е\u0308", []string{"е\u0308"}, 50},
 		{"\u0301a", []string{"\u0301", "a"}, 50},
 		{"👨\u200d👩\u200d👧", []string{"👨\u200d👩\u200d👧"}, 100},
-		{"🇺🇦", []string{"🇺🇦"}, 100},
-		{"🇺🇦🇺", []string{"🇺🇦", "🇺"}, 200},
-		{"🇺\ufe0f🇦", []string{"🇺\ufe0f🇦"}, 100},
+		// Regional indicators A: a pair is one cluster, and AA names no country.
+		{"\U0001F1E6\U0001F1E6", []string{"\U0001F1E6\U0001F1E6"}, 100},
+		{"\U0001F1E6\U0001F1E6\U0001F1E6", []string{"\U0001F1E6\U0001F1E6", "\U0001F1E6"}, 200},
+		{"\U0001F1E6\ufe0f\U0001F1E6", []string{"\U0001F1E6\ufe0f\U0001F1E6"}, 100},
 		{"00.", []string{"0", "0", "."}, 132},
 	} {
 		if got := tab.clusters(c.word); !slices.Equal(got, c.clusters) {
